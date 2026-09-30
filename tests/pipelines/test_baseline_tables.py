@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 from wildfire.pipelines import baseline_tables as bt

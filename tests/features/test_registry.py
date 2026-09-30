@@ -19,7 +19,7 @@ def test_config_matches_registry():
     assert {n for names in cfg.values() for n in names} == set(REGISTRY)
 
 
-@pytest.mark.parametrize("name", ["weather_windows", "neighbourhood", "imagery_summary"])
+@pytest.mark.parametrize("name", ["imagery_summary"])
 def test_stubs_not_implemented(name):
     with pytest.raises(NotImplementedError):
         REGISTRY[name]().columns()

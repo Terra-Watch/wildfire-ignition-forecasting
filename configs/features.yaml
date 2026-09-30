@@ -8,8 +8,11 @@ tiers:
     - imagery_summary
 feature_sets:
   tabular: {enabled: true}
-  weather_windows: {enabled: true, window_days: []}    # to be decided
-  neighbourhood: {enabled: true, radii_cells: []}      # to be decided
+  weather_windows: {enabled: true}
+  neighbourhood:
+    enabled: true
+    vegetation_min_composite_coverage: 0.8   # composites observing less of the grid are treated as missing
+    day_chunk: 100                            # target days processed at a time (memory)
   imagery_summary: {enabled: false}                    # placeholder
 
 tabular:

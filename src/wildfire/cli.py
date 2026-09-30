@@ -8,32 +8,29 @@ from wildfire import __version__, config
 from wildfire.data import manifest
 from wildfire.features import REGISTRY
 
-PIPELINES = {
-    "build-labels": "labels",
-    "build-features": "features",
-    "build-model-table": "model_table",
-    "build-weather-series": "enriched",
-    "build-enriched": "enriched",
-    "score-holdout": "holdout",
-    "leave-year-out": "leave_year_out",
-    "out-of-fold": "out_of_fold",
-    "sanity-checks": "sanity",
+PIPELINES = {                     # command -> (module, function)
+    "build-labels": ("labels", "run"),
+    "build-features": ("features", "build_feature_table"),
+    "build-model-table": ("features", "build_model_table"),
+    "build-weather-series": ("enriched", "build_series"),
+    "build-enriched": ("enriched", "build_arrays"),
+    "build-fresh-rows": ("fresh_states", "build_rows"),
+    "build-fresh-dataset": ("fresh_states", "build_dataset"),
+    "score-holdout": ("holdout", "run"),
+    "leave-year-out": ("leave_year_out", "run"),
+    "out-of-fold": ("out_of_fold", "run"),
+    "sanity-checks": ("sanity", "run"),
+    "tune": ("tuning", "run"),
+    "rolling-origin": ("rolling_origin", "run"),
+    "baseline-tables": ("baseline_tables", "run"),
+    "score-fresh-states": ("fresh_states", "score_once"),
 }
 
 
 def _run_pipeline(name: str) -> None:
     import importlib
-    if name == "build-features":
-        from wildfire.pipelines import features
-        features.build_feature_table()
-    elif name == "build-model-table":
-        from wildfire.pipelines import features
-        features.build_model_table()
-    elif name in ("build-weather-series", "build-enriched"):
-        from wildfire.pipelines import enriched
-        (enriched.build_series if name == "build-weather-series" else enriched.build_arrays)()
-    else:
-        importlib.import_module(f"wildfire.pipelines.{PIPELINES[name]}").run()
+    module, function = PIPELINES[name]
+    getattr(importlib.import_module(f"wildfire.pipelines.{module}"), function)()
 
 
 def main(argv: list[str] | None = None) -> int:

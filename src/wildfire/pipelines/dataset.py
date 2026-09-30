@@ -44,9 +44,10 @@ def complete_rows(table: pd.DataFrame, columns: dict, arrays: dict, chunk: int =
     return ok
 
 
-def load_dataset() -> Dataset:
-    table, columns = load_model_table()
-    arrays = enriched.load_arrays()
+def load_dataset(table_name: str = "model_table", prefix: str = "") -> Dataset:
+    """The development dataset, or (with a table name and array prefix) another table built the same way."""
+    table, columns = load_model_table(table_name)
+    arrays = enriched.load_arrays(prefix)
     cells, _ = load_grid()
     return Dataset(table, columns, arrays, cells, complete_rows(table, columns, arrays))
 

@@ -43,3 +43,6 @@ roles:                               # grid.csv role -> group name; other roles 
   train: train
   heldout_UK: heldout_UK
   reserve: reserve
+fresh_test_roles:                    # grid roles of the cells used by the fresh geographic test
+  heldout_UK: fresh
+  unused: fresh

@@ -43,13 +43,13 @@ def training_weights(table: pd.DataFrame, idx: np.ndarray) -> np.ndarray:
     return prior_shift.design_weights(rows.label.values, weights.strata(rows), frame)
 
 
-def fit_network(ds, fit_idx, val_idx, cols, level, year, params, log) -> tuple[dict, dict]:
+def fit_network(ds, fit_idx, dv, val_idx, cols, level, year, params, log) -> tuple[dict, dict]:
     """One network per seed: fit on the years before the last fit year, stop early on the last fit year."""
     t = ds.table
     stop = t.year.values[fit_idx] == year - 1
     w = training_weights(t, fit_idx)
     x = dataset.matrix(ds, fit_idx, cols, level, year)
-    xv = dataset.matrix(ds, val_idx, cols, level, year)
+    xv = dataset.matrix(dv, val_idx, cols, level, year)
     y = t.label.values[fit_idx]
     preds, prevalence = {}, {}
     for seed in range(config.load("models")["network"]["seeds"]):
@@ -59,37 +59,37 @@ def fit_network(ds, fit_idx, val_idx, cols, level, year, params, log) -> tuple[d
     return preds, prevalence
 
 
-def fit_standard(ds, fit_idx, val_idx, cols, level, year, kind: str, params: dict) -> tuple[np.ndarray, float]:
+def fit_standard(ds, fit_idx, dv, val_idx, cols, level, year, kind: str, params: dict) -> tuple[np.ndarray, float]:
     """Logistic or boosting on the fit rows; returns validation probabilities and the fit prevalence."""
     x = dataset.matrix(ds, fit_idx, cols, level, year)
     m = Model(kind, params).fit(x, ds.table.label.values[fit_idx])
-    return m.predict(dataset.matrix(ds, val_idx, cols, level, year)), m.fit_prevalence
+    return m.predict(dataset.matrix(dv, val_idx, cols, level, year)), m.fit_prevalence
 
 
-def climatology_arm(ds, year, val_idx) -> tuple[np.ndarray, np.ndarray, float]:
+def climatology_arm(ds, year, dv, val_idx) -> tuple[np.ndarray, np.ndarray, float]:
     """Isotonic-calibrated same-cell same-week rate from the years before `year`."""
     t = ds.table
     col = arms.reference_arm()
     clim = ds.tabular_columns[col][0]
     fit = (t.year.values < year) & t[clim].notna().values
     iso = calibration.Isotonic(year - 1).fit(t[clim].values[fit], t.label.values[fit], t.year.values[fit])
-    score = t[clim].values[val_idx]
+    score = dv.table[clim].values[val_idx]
     return score, iso.transform(score), float(t.label.values[fit].mean())
 
 
-def diagnostic_arms(ds, fit_idx, val_idx, boosting_params) -> dict:
+def diagnostic_arms(ds, fit_idx, dv, val_idx, boosting_params) -> dict:
     """coords_only, cell_id_only and static_only: what a model learns without any daily information."""
     t = ds.table
     y = t.label.values[fit_idx]
     out = {}
     xc = diagnostics.coordinate_matrix(ds.cells, t.cell.values[fit_idx])
     m = Model("boosting", boosting_params).fit(xc, y)
-    out["coords_only"] = (m.predict(diagnostics.coordinate_matrix(ds.cells, t.cell.values[val_idx])), m.fit_prevalence)
-    rate = diagnostics.cell_rates(t.cell.values[fit_idx], y, t.cell.values[val_idx])
+    out["coords_only"] = (m.predict(diagnostics.coordinate_matrix(dv.cells, dv.table.cell.values[val_idx])), m.fit_prevalence)
+    rate = diagnostics.cell_rates(t.cell.values[fit_idx], y, dv.table.cell.values[val_idx])
     out["cell_id_only"] = (rate, float(y.mean()))
     static = dataset.feature_groups_static(ds)
     m = Model("boosting", boosting_params).fit(t[static].values[fit_idx].astype(np.float32), y)
-    out["static_only"] = (m.predict(t[static].values[val_idx].astype(np.float32)), m.fit_prevalence)
+    out["static_only"] = (m.predict(dv.table[static].values[val_idx].astype(np.float32)), m.fit_prevalence)
     return out
 
 
@@ -110,26 +110,34 @@ def validation_frame(ds, year: int, val_idx: np.ndarray) -> pd.DataFrame:
     return rows
 
 
-def run_fold(ds: dataset.Dataset, year: int, tuned: dict, log=print) -> tuple[pd.DataFrame, dict]:
-    """Predictions of every arm on the validation rows of `year`, and each arm's fit prevalence."""
-    fit_idx, val_idx = dataset.fit_rows(ds, year), dataset.validation_rows(ds, year)
-    out = validation_frame(ds, year, val_idx)
+def predict_all(ds, fit_idx, dv, val_idx, year: int, tuned: dict, log=print) -> tuple[pd.DataFrame, dict]:
+    """Fit every arm on `ds` rows `fit_idx` and predict rows `val_idx` of `dv`. `year` fixes the anomaly climatology
+    (fit years are the years before it). Returns predictions (one column per arm) and each arm's fit prevalence."""
     ref = arms.reference_arm()
-    prevalence = {}
-    score, prob, prevalence[ref] = climatology_arm(ds, year, val_idx)
+    out = pd.DataFrame(index=range(len(val_idx)))
+    score, prob, fit_prevalence = climatology_arm(ds, year, dv, val_idx)
     out["score_" + ref], out["p_" + ref] = score, prob
+    prevalence = {ref: fit_prevalence}
     for arm, level in arm_levels():
         name = arm_name(arm, level)
         if arm == ref:
             continue
         if arm == "tabular_network":
-            preds, prev = fit_network(ds, fit_idx, val_idx, columns_for(ds, arm), level, year, tuned["network"], log)
+            preds, prev = fit_network(ds, fit_idx, dv, val_idx, columns_for(ds, arm), level, year, tuned["network"], log)
             for k, v in preds.items():
                 out[f"p_{name}{k}"], prevalence[f"{name}{k}"] = v, prev[k]
             continue
         kind, params = settings_for(arm, tuned)
-        out["p_" + name], prevalence[name] = fit_standard(ds, fit_idx, val_idx, columns_for(ds, arm), level, year, kind, params)
+        out["p_" + name], prevalence[name] = fit_standard(ds, fit_idx, dv, val_idx, columns_for(ds, arm), level, year, kind, params)
         log("fitted", name, year)
-    for name, (p, prev) in diagnostic_arms(ds, fit_idx, val_idx, tuned["boosting"]).items():
+    for name, (p, prev) in diagnostic_arms(ds, fit_idx, dv, val_idx, tuned["boosting"]).items():
         out["p_" + name], prevalence[name] = p, prev
     return out, prevalence
+
+
+def run_fold(ds: dataset.Dataset, year: int, tuned: dict, log=print) -> tuple[pd.DataFrame, dict]:
+    """Predictions of every arm on the validation rows of `year`, with keys, true rates and design weights."""
+    fit_idx, val_idx = dataset.fit_rows(ds, year), dataset.validation_rows(ds, year)
+    keys = validation_frame(ds, year, val_idx)
+    preds, prevalence = predict_all(ds, fit_idx, ds, val_idx, year, tuned, log)
+    return pd.concat([keys, preds], axis=1), prevalence

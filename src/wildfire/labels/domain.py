@@ -7,7 +7,7 @@ from wildfire import config
 from wildfire.labels.detections import epoch
 
 
-def cells_with_domain(cells: pd.DataFrame) -> pd.DataFrame:
+def cells_with_domain(cells: pd.DataFrame, roles: dict | None = None) -> pd.DataFrame:
     dom = config.load("domain")
     tree = pd.read_csv(config.data_file("land_cover"), usecols=["cell", "wc_tree"])
     cells = cells.merge(tree, on="cell", how="left")
@@ -16,7 +16,7 @@ def cells_with_domain(cells: pd.DataFrame) -> pd.DataFrame:
     cells["domain10"] = cells.wc_tree >= f["secondary_band_min"]
     cells["domain40"] = cells.wc_tree >= f["dense_subset_min"]
     cells["bandB"] = cells.domain10 & ~cells.domain20
-    roles = dom["roles"]
+    roles = dom["roles"] if roles is None else roles
     cells["group"] = cells.role.map(roles).fillna("none")
     return cells
 

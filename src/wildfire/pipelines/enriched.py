@@ -25,27 +25,27 @@ def build_series(log=print) -> None:
     log("daily series", series["values"].shape, "runtime_s", round(time.time() - t0))
 
 
-def build_arrays(log=print) -> None:
-    """Window and neighbourhood features for every row of the model table, written as memory-mapped arrays."""
+def build_arrays(log=print, table_name: str = "model_table", prefix: str = "") -> None:
+    """Window and neighbourhood features for every row of a model table, written as memory-mapped arrays."""
     t0 = time.time()
     feats = config.output_dir("features")
-    table, _ = load_model_table()
+    table, _ = load_model_table(table_name)
     series = weather_windows.load_series(feats / SERIES_FOLDER)
     cell, day = table.cell.values, table.day.values
-    windows = np.lib.format.open_memmap(feats / WINDOWS_FILE, mode="w+", dtype=np.float32,
+    windows = np.lib.format.open_memmap(feats / (prefix + WINDOWS_FILE), mode="w+", dtype=np.float32,
                                         shape=(len(table), len(weather_windows.window_names())))
     weather_windows.window_matrix(series, cell, day, out=windows)
     windows.flush()
     log("windows", windows.shape, "runtime_s", round(time.time() - t0))
     cd = pd.read_csv(config.output_dir("labels") / "cell_days.csv")
     onsets = cd[cd.onset][["cell", "day"]]
-    np.save(feats / NEIGHBOURHOOD_FILE, neighbourhood.neighbourhood_matrix(cell, day, series, onsets))
+    np.save(feats / (prefix + NEIGHBOURHOOD_FILE), neighbourhood.neighbourhood_matrix(cell, day, series, onsets))
     log("neighbourhood done", "runtime_s", round(time.time() - t0))
 
 
-def load_arrays() -> dict:
+def load_arrays(prefix: str = "") -> dict:
     """Memory-mapped enriched arrays and the weather series."""
     feats = config.output_dir("features")
-    return dict(windows=np.load(feats / WINDOWS_FILE, mmap_mode="r"),
-                neighbourhood=np.load(feats / NEIGHBOURHOOD_FILE, mmap_mode="r"),
+    return dict(windows=np.load(feats / (prefix + WINDOWS_FILE), mmap_mode="r"),
+                neighbourhood=np.load(feats / (prefix + NEIGHBOURHOOD_FILE), mmap_mode="r"),
                 series=weather_windows.load_series(feats / SERIES_FOLDER))

@@ -10,10 +10,12 @@ from wildfire.labels import detections, domain, negatives
 ROW_COLUMNS = ["cell", "day", "label", "kind", "state", "year", "group", "band"]
 
 
-def build_rows(cd: pd.DataFrame, cells: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Return (rows, season months per state)."""
+def build_rows(cd: pd.DataFrame, cells: pd.DataFrame, roles: dict | None = None,
+               bands: tuple = ("A", "B")) -> tuple[pd.DataFrame, dict]:
+    """Return (rows, season months per state). `roles` maps grid roles to group names (default: the configured
+    roles); `bands` selects the tree-cover bands that get rows."""
     cfg = config.load("domain")
-    cells = domain.cells_with_domain(cells)
+    cells = domain.cells_with_domain(cells, roles)
     cd2 = cd.merge(cells[["cell", "group", "domain20", "domain10", "domain40", "bandB"]], on="cell")
     cd2 = cd2[(cd2.group != "none") & cd2.domain10]
     cd2 = domain.add_month(cd2)
@@ -27,7 +29,7 @@ def build_rows(cd: pd.DataFrame, cells: pd.DataFrame) -> tuple[pd.DataFrame, dic
             continue
         for band, in_band, onsets in (("A", cells.domain20.values, g[g.domain20]),
                                       ("B", cells.bandB.values, g[g.bandB])):
-            if not len(onsets):
+            if band not in bands or not len(onsets):
                 continue
             pos = onsets.assign(label=1, kind="onset", band=band)
             cand = cells.cell.values[(cells.group.values == group) & (cells.state.values == state) & in_band]

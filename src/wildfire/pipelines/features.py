@@ -26,7 +26,8 @@ def build_feature_table(log=print) -> pd.DataFrame:
     return table
 
 
-def build_model_table(features: pd.DataFrame | None = None, log=print) -> pd.DataFrame:
+def build_model_table(features: pd.DataFrame | None = None, log=print, group: str = "train",
+                      name: str = "model_table") -> pd.DataFrame:
     """Main population (training group, onset/negative, primary band, through the window end) with the union of all arm
     inputs, as float32; also writes the per-arm column lists next to it."""
     feats = config.output_dir("features")
@@ -34,19 +35,21 @@ def build_model_table(features: pd.DataFrame | None = None, log=print) -> pd.Dat
     cols_by_arm = arms.arm_columns(R)
     cols = sorted({c for v in cols_by_arm.values() for c in v})
     end = day_number(config.load("features")["tabular"]["window_end"])
-    m = (R.group == "train") & R.kind.isin(["onset", "negative"]) & (R.band == "A") & (R.day <= end)
+    m = (R.group == group) & R.kind.isin(["onset", "negative"]) & (R.band == "A") & (R.day <= end)
     T = R.loc[m, TABLE_META + cols].copy()
     T["state"] = T.state.astype(str)
     for c in cols:
         T[c] = T[c].astype(np.float32)
     T["label"] = T.label.astype(np.int8)
     T = T.reset_index(drop=True)
-    T.to_pickle(feats / "model_table.pkl")
-    (feats / "arm_columns.json").write_text(json.dumps(cols_by_arm, indent=1))
+    T.to_pickle(feats / f"{name}.pkl")
+    if group == "train":
+        (feats / "arm_columns.json").write_text(json.dumps(cols_by_arm, indent=1))
     log("model table", T.shape, "years", T.year.value_counts().sort_index().to_dict())
     return T
 
 
-def load_model_table() -> tuple[pd.DataFrame, dict]:
+def load_model_table(name: str = "model_table") -> tuple[pd.DataFrame, dict]:
+    """A saved model table and the input columns of every arm (always those of the training table)."""
     feats = config.output_dir("features")
-    return pd.read_pickle(feats / "model_table.pkl"), json.loads((feats / "arm_columns.json").read_text())
+    return pd.read_pickle(feats / f"{name}.pkl"), json.loads((feats / "arm_columns.json").read_text())

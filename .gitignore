@@ -9,3 +9,4 @@ data/*
 !data/MANIFEST.json
 artifacts/*
 !artifacts/.gitkeep
+!artifacts/MANIFEST.json

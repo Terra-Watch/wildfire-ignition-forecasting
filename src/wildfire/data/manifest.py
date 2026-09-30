@@ -42,10 +42,12 @@ def describe_dataset(root: Path, spec: dict, workers: int = 8) -> dict:
     }
 
 
-def build(root: Path | None = None) -> dict:
-    root = root or config.data_root()
-    specs = config.load("data")["datasets"]
-    return {"data_root_env": "DATA_ROOT",
+def build(root: Path | None = None, group: str = "datasets") -> dict:
+    """Describe the datasets of a group in configs/data.yaml: `datasets` (under DATA_ROOT) or `artifact_groups`
+    (under ARTIFACTS_ROOT)."""
+    root = root or (config.data_root() if group == "datasets" else config.artifacts_root())
+    specs = config.load("data")[group]
+    return {"root_env": "DATA_ROOT" if group == "datasets" else "ARTIFACTS_ROOT",
             "datasets": {n: describe_dataset(root, s) for n, s in specs.items()}}
 
 
@@ -53,10 +55,10 @@ def write(path: Path, manifest: dict) -> None:
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 
 
-def verify(path: Path, root: Path | None = None) -> list[str]:
+def verify(path: Path, root: Path | None = None, group: str = "datasets") -> list[str]:
     """Return a list of differences between the manifest and the files on disk."""
     recorded = json.loads(path.read_text())["datasets"]
-    current = build(root)["datasets"]
+    current = build(root, group)["datasets"]
     problems = []
     for name, rec in recorded.items():
         cur = current.get(name)

@@ -69,3 +69,18 @@ datasets:
       - processed/cellday_detections.csv
       - processed/firms_day_coverage.csv
     complete: true
+
+# Derived files, described by artifacts/MANIFEST.json (paths relative to ARTIFACTS_ROOT).
+artifact_groups:
+  labels:
+    description: Labelled rows, cell-days, season and satellite gap-day flags.
+    paths: [labels/*]
+    complete: true
+  features:
+    description: Feature tables, modelling table, enriched arrays and the daily weather series.
+    paths: [features/*, features/daily_weather/*]
+    complete: true
+  results:
+    description: Tuning trials, predictions, tables, guard results, ledger and the specification stamp.
+    paths: [results/*]
+    complete: true

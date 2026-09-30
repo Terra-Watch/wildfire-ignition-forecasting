@@ -42,6 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("data-root", help="print the resolved data root")
     verify = sub.add_parser("verify-data", help="compare data folders with data/MANIFEST.json")
     verify.add_argument("--manifest", default=str(config.REPO_ROOT / "data" / "MANIFEST.json"))
+    verify.add_argument("--artifacts", action="store_true", help="check the artifacts manifest instead")
     for name in PIPELINES:
         sub.add_parser(name, help=f"run the {name} pipeline (settings come from configs/ only)")
     args = parser.parse_args(argv)
@@ -52,7 +53,10 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "data-root":
         print(config.data_root())
     elif args.command == "verify-data":
-        problems = manifest.verify(Path(args.manifest))
+        path = Path(args.manifest)
+        if args.artifacts:
+            path = config.artifacts_root() / "MANIFEST.json"
+        problems = manifest.verify(path, group="artifact_groups" if args.artifacts else "datasets")
         for p in problems:
             print(p)
         return 1 if problems else 0

@@ -7,7 +7,7 @@ check_names = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check_names)
 
 FORBIDDEN = ["pi" + "lot", "pha" + "se_2", "au" + "dit", "rou" + "nd_3", "v" + "2", "experi" + "ments", "R" + "1"]
-ALLOWED = ["background", "around", "ground_truth", "era5", "t2m", "validation"]
+ALLOWED = ["background", "around", "ground_truth", "era5", "t2m", "v10", "validation"]
 
 
 def test_forbidden_words_are_flagged():
@@ -26,3 +26,9 @@ def test_file_content_is_checked(tmp_path):
     assert check_names.check_file(f)
     f.write_text("x = 1\n")
     assert not check_names.check_file(f)
+
+
+def test_builtin_numeric_function_is_allowed_in_code():
+    call = "ro" + "und"
+    assert not check_names.bad_tokens(f"x = {call}(1.5)", is_code=True)
+    assert check_names.bad_tokens(f"{call}_3 = 1", is_code=True)

@@ -4,8 +4,42 @@ bounding_box:            # degrees: north, west, south, east (weather download a
   west: 72
   south: 8
   east: 90
+epoch_day: "1970-01-01"  # day numbers are days since this date (UTC calendar days)
 target:
-  description: next-day fire ignition at a grid cell
-  horizon_days: null     # unset until decided
+  description: a cell-day on which a fire is first detected (onset) versus a cell-day with no recent detection
+  horizon_days: 1        # predictors come from the day before the target day
 grid:
-  cell_size_m: null      # unset until decided
+  cell_size_m: 5000
+  source_crs: "EPSG:4326"
+  projected_crs: "EPSG:6933"
+study_window:            # detections used for labels
+  start: "2019-01-01"
+  end: "2025-12-31"
+modelling_window_end: "2025-07-31"   # rows after this day are not built
+train_states: [OD, CG, TS, MP, MH, JH]
+forest:
+  tree_fraction_min: 0.20            # primary domain
+  secondary_band_min: 0.10           # secondary band: secondary_band_min <= tree < tree_fraction_min
+  dense_subset_min: 0.40
+detections:
+  file_patterns: ["raw/firms*/VIIRS*.csv"]   # relative to DATA_ROOT
+  columns: [latitude, longitude, acq_date, acq_time, satellite, confidence, frp]
+  confidence_keep: [n, h]
+  satellites_keep: [N, N20]
+  duplicate_key: [latitude, longitude, acq_date, acq_time, satellite]
+onset:
+  quiet_days_before: 3               # onset = detection with none in the 3 previous days
+season:
+  share_of_onsets: 0.9               # months holding this share of a state's onsets
+  last_reference_year: 2023
+negatives:
+  per_onset: 20
+  seed: 42
+  excluded_days_after_detection: 3   # no detection on days D-3..D of the cell
+  oversample_factor: 1.6
+  oversample_extra: 64
+  max_tries: 60
+roles:                               # grid.csv role -> group name; other roles are excluded
+  train: train
+  heldout_UK: heldout_UK
+  reserve: reserve

@@ -39,3 +39,15 @@ def data_root() -> Path:
 
 def artifacts_root() -> Path:
     return Path(_expand(load("data", expand=False)["artifacts_root"]))
+
+
+def data_file(key: str) -> Path:
+    """Path of a named input file under DATA_ROOT (see `inputs` in configs/data.yaml)."""
+    return data_root() / load("data", expand=False)["inputs"][key]
+
+
+def output_dir(key: str) -> Path:
+    """Directory for a named kind of output under the artifacts root (created on demand)."""
+    path = artifacts_root() / load("data", expand=False)["outputs"][key]
+    path.mkdir(parents=True, exist_ok=True)
+    return path

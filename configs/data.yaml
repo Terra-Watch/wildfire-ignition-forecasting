@@ -1,8 +1,26 @@
 # Where data lives and what each dataset is. Nothing is copied into this repository.
 # DATA_ROOT comes from the environment (see .env.example); it must contain
-# `raw/` and `processed/`.
+# `raw/` and `processed/`. Outputs are written under artifacts_root only.
 data_root: ${DATA_ROOT}
 artifacts_root: ${ARTIFACTS_ROOT:-./artifacts}
+
+inputs:                  # files read from data_root
+  grid: processed/grid.csv
+  grid_meta: processed/grid_meta.json
+  land_cover: processed/static_worldcover.csv
+  terrain: processed/static_dem.csv
+  human: processed/static_human.csv
+  night_lights: processed/static_nl.csv
+  roads: processed/static_osm.csv
+  burn: processed/burn_cells.npz
+  weather_dir: raw/era5
+  weather_file: "era5land_{group}_{year}-{month:02d}.nc"
+
+outputs:                 # relative to artifacts_root
+  labels: labels
+  features: features
+  models: models
+  results: results
 
 # Dataset definitions. `paths` are globs relative to data_root.
 # `data/MANIFEST.json` records size, file count and content hash for each.

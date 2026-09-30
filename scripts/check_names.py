@@ -1,7 +1,7 @@
 """Fail when a file name or file content carries a forbidden label.
 
-Labels are matched as whole tokens (split on punctuation, digits boundaries and
-camelCase), so ordinary words such as "background" do not match.
+Labels are matched as whole tokens (split on punctuation, digit boundaries and
+camelCase), so ordinary words such as "background" and names such as "v10" do not match.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 # Built from fragments so this file does not contain the labels it forbids.
 _WORDS = ["pi" + "lot", "pha" + "se", "rou" + "nd", "au" + "dit", "experi" + "ment"]
 _LABEL = re.compile(
-    r"^(?:" + "|".join(_WORDS) + r"|v\d+|[pr]\d)s?$", re.IGNORECASE
+    r"^(?:" + "|".join(_WORDS) + r"|v\d|[pr]\d)s?$", re.IGNORECASE
 )
 _TOKEN = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+|[A-Za-z]\d+")
 SELF = Path(__file__).resolve()
@@ -29,7 +29,13 @@ def tokens(text: str) -> list[str]:
     return out
 
 
-def bad_tokens(text: str) -> list[str]:
+# The built-in numeric function is not a label: "round(" in code is allowed.
+_BUILTIN_CALL = re.compile(r"(?<![A-Za-z0-9_])" + _WORDS[2] + r"\(")
+
+
+def bad_tokens(text: str, is_code: bool = False) -> list[str]:
+    if is_code:
+        text = _BUILTIN_CALL.sub("(", text)
     return sorted({t for t in tokens(text) if _LABEL.match(t)})
 
 
@@ -42,7 +48,7 @@ def check_file(path: Path) -> list[str]:
     except (UnicodeDecodeError, OSError):
         return problems
     for n, line in enumerate(lines, 1):
-        for t in bad_tokens(line):
+        for t in bad_tokens(line, is_code=True):
             problems.append(f"{path}:{n}: uses '{t}'")
     return problems
 

@@ -1,5 +1,43 @@
 # One harness scores every feature set and model identically.
-metrics: []
 splits:
-  seed: null
+  fit_last_year: 2024                # the holdout year is never used to fit, tune or select
+  holdout_year: 2025
+  leave_year_out:
+    fit_last_year: 2023
+    test_year: 2024
+  forward_fold_years: [2021, 2022, 2023, 2024]   # validation years; each fits on all earlier years from first_year
+  first_year: 2019
+  available: [train, validation, holdout_year, leave_year_out, out_of_fold]
+  refused: [test, geo_heldout]
   held_out_access: forbidden_until_final
+metrics: [average_precision, log_loss, brier, auc_pooled, auc_spatial_within_day, auc_temporal_within_cell]
+clusters:
+  scheme: week                       # one cluster per ISO week over all states (year is part of the label)
+bootstrap:
+  draws: 2000
+  seed: 0
+  bins: 1000
+  alpha: 0.05
+  alpha_verdict: 0.01
+  leave_year_out_draws: 1000         # paired bootstrap of within-state AUC, clusters state|year|week
+  leave_year_out_bins: 1000
+  power_z: [1.959964, 0.841621]      # 97.5% and 80% normal quantiles; minimum detectable effect = (sum) x SE
+verdict:
+  min_ap_gain: 0.010                 # about 0.2 x the sampled prevalence (1/21)
+  paired_auc_threshold: 0.015
+  paired_auc_worst_state_floor: -0.03
+probability_clip: 1.0e-15
+calibration:
+  max_train_year: 2024
+  clip: 1.0e-6
+sanity:
+  global_shuffle_seeds: 20
+  global_shuffle_seed_base: 1000
+  cell_week_shuffle_seeds: 3
+  cell_week_shuffle_seed_base: 2000
+  permuted_holdout_repeats: 20
+  permuted_holdout_seed: 3000
+  shuffle_fit_params: {C: 0.1}
+  band_global: 0.10                  # mean AP within this share of the prevalence
+  band_permuted: 0.05
+  univariate_auc_flag: [0.2, 0.8]

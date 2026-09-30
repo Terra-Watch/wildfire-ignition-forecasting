@@ -11,3 +11,52 @@ feature_sets:
   weather_windows: {enabled: true, window_days: []}    # to be decided
   neighbourhood: {enabled: true, radii_cells: []}      # to be decided
   imagery_summary: {enabled: false}                    # placeholder
+
+tabular:
+  groups:                # the 42 inputs = weather 11 + codes 6 + static 16 + human 5 + season 2 + burn 2
+    weather: [t2m, vpd, ws, rh, sw1, sw2, rain7, dsr, tmax09, sw1_anom, sw2_anom]
+    fire_weather_codes: [ffmc, dmc, dc, isi, bui, fwi]
+    season: [sin_doy, cos_doy]
+    land_cover: [wc_10, wc_20, wc_30, wc_40, wc_50, wc_60, wc_80, wc_90]
+    terrain: [dem_mean, dem_sd, dem_slope, dem_sin_aspect, dem_cos_aspect, dem_tpi]
+    land_structure: [wc_edge_density, log_dist_built]
+    human: [hb_log_pop, hb_ghm_aa, hb_ghm_bu, hb_nl_rank, hb_road_km]
+    burn: [bf_log_n10_nbhd, bf_years_since]
+  static_order: [terrain, land_cover, land_structure]   # static = terrain + land_cover + land_structure, in this order
+  min_non_missing_share: 0.95       # a human layer is used only if at least this share of rows is non-missing
+  climatology_column: climatology_cell
+  table_columns: [cell, day, year, week, state, label]   # carried with the inputs
+  window_end: "2025-07-31"
+  weather:
+    hours_utc: [0, 6, 7, 9]         # hours read from each day: 00 (accumulation reset), 06 and 07 (noon mean), 09 (afternoon)
+    grid_step_deg: 0.1
+    first_day: "2017-01-01"         # fire-weather recursion starts here
+    first_row_margin_days: 90       # rows must start at least this many days after first_day
+    soil_climatology_years: [2017, 2023]
+    iso_week_cap: 53
+    lat_bands: [[0, 20], [20, 30], [30, 90]]   # (lo, hi] degrees north, each with its own mean latitude
+    initial_codes: {ffmc: 85.0, dmc: 6.0, dc: 15.0}
+    rain_threshold_mm: 2.5          # dry-spell counter resets above this daily total
+    dry_spell_cap_days: 60
+    rain_window_days: 7
+    humidity_bounds: [1, 100]
+  gap_days:
+    lookback_days: 7                # a row is dropped when D-7..D touches a flagged day
+    ratio_threshold: 0.5
+    min_noaa20_detections: 50
+    named_spans:
+      - ["2022-07-24", "2022-08-08"]
+      - ["2024-05-29", "2024-06-02"]
+    include_data_driven: false
+    policy: drop
+  burn:
+    min_observed_share: 0.95
+    lookback_days: 3652
+    years_since_cap: 10.0
+    lag_days: 30
+    censor_years_since: true
+    archive_start_day: 11262        # 2000-11-01
+  human_frozen_epoch: {pop: 2020, ghm: 2020, roads: 2021, night_lights: 2018}
+  climatology:
+    first_year: 2019
+    years: 7

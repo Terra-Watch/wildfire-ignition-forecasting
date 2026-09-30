@@ -1,1 +1,38 @@
-models: {}
+# Arms, in the order they are fitted and reported. `inputs` lists feature groups (see features.yaml)
+# in column order. Hyperparameters were chosen by forward-chaining validation on 2021-2024 and are fixed.
+arms:
+  climatology_cell:
+    kind: climatology
+  landcover_season:
+    kind: logistic
+    inputs: [land_cover, season]
+    params: {C: 1.0}
+  fwi_season:
+    kind: logistic
+    inputs: [fire_weather_codes, season]
+    params: {C: 0.01}
+  logistic_weather_static:
+    kind: logistic
+    inputs: [weather, fire_weather_codes, static, human, season]
+    params: {C: 0.01}
+  logistic_with_burn:
+    kind: logistic
+    inputs: [weather, fire_weather_codes, static, human, season, burn]
+    params: {C: 0.01}
+  boosting:
+    kind: boosting
+    inputs: [weather, fire_weather_codes, static, human, season, burn]
+    params: {max_depth: 6, learning_rate: 0.1, max_iter: 300}
+logistic:
+  solver: lbfgs
+  max_iter: 300
+  tol: 1.0e-5
+  scale_epsilon: 1.0e-6
+boosting:
+  random_state: 0
+  early_stopping: false
+fit_row_caps:
+  final_fit: null                    # no thinning
+  leave_year_out: 2000000
+  leave_year_out_thin_seed: 3
+  out_of_fold: null

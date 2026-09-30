@@ -14,3 +14,6 @@ States passing the check: UK, AP (main box); KA, TN, KL (southern strip) pass bu
 
 ## Sealed season
 Unavailable (see `docs/decisions/2026-10-01-sealed-season-unavailable.md`). 2025 is not used in its place.
+
+## Burn-free variants (added before any score was written)
+See `docs/decisions/2026-10-01-burn-free-arms-for-the-sealed-season.md`. Boosting and the network get burn-free variants; the sealed season is available for burn-free arms only if the 2026 January-July sources pass the coverage checks.

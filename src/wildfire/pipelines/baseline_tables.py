@@ -37,6 +37,16 @@ def metrics_table(rows: pd.DataFrame, corrected: dict, scores: dict) -> pd.DataF
     return pd.DataFrame([dict(arm=a, **ladder.arm_row(rows, scores[a], corrected[a], w)) for a in corrected])
 
 
+def by_year_table(rows: pd.DataFrame, corrected: dict, scores: dict) -> pd.DataFrame:
+    """Headline metrics of every arm in every validation year (seeds averaged later by the reader)."""
+    parts = []
+    for year, g in rows.groupby("year"):
+        ix = g.index.values
+        sub = g.reset_index(drop=True)
+        parts.append(metrics_table(sub, {a: v[ix] for a, v in corrected.items()}, {a: v[ix] for a, v in scores.items()}).assign(year=year))
+    return pd.concat(parts, ignore_index=True)
+
+
 def seed_summary(table: pd.DataFrame) -> pd.DataFrame:
     """Mean and standard deviation over the network seeds, per information level."""
     net = table[table.arm.str.startswith(NETWORK)].copy()
@@ -71,6 +81,7 @@ def run(log=print) -> None:
     rows, corrected, scores = load_pooled()
     table = metrics_table(rows, corrected, scores)
     provenance.stamp_df(table, out / "baseline_metrics.csv")
+    provenance.stamp_df(by_year_table(rows, corrected, scores), out / "baseline_metrics_by_year.csv")
     seed_summary(table).to_csv(out / "baseline_network_seeds.csv")
     bins = config.load("baseline")["reporting"]["reliability_bins"]
     rel = [ladder.reliability(rows.label.values, corrected[a], rows.weight.values, bins).assign(arm=a) for a in corrected if "#" not in a]

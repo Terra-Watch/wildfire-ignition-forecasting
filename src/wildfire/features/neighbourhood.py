@@ -21,7 +21,8 @@ SUM_VARIABLES = ("onsets_recent",)
 
 
 def settings() -> dict:
-    return config.load("baseline")["features"]["neighbourhood"]
+    """Declared settings (rings, onset window) together with the implementation settings from features.yaml."""
+    return {**config.load("baseline")["features"]["neighbourhood"], **config.load("features")["feature_sets"]["neighbourhood"]}
 
 
 def column_names() -> list[str]:
@@ -81,7 +82,7 @@ def vegetation_by_day(days: np.ndarray) -> np.ndarray:
 
 def recent_onset_counts(onsets: pd.DataFrame, ncell: int, days: np.ndarray) -> np.ndarray:
     """Onsets in the 28 days before each target day, per cell: (days, cells)."""
-    n_days = config.load("baseline")["features"]["neighbourhood"]["recent_onset_count_days"]
+    n_days = settings()["recent_onset_count_days"]
     first = int(onsets.day.min()) - 1
     grid = np.zeros((int(onsets.day.max()) - first + 2, ncell), np.int16)
     np.add.at(grid, (onsets.day.values - first, onsets.cell.values), 1)

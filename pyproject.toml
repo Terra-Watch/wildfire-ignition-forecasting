@@ -18,10 +18,11 @@ dependencies = [
   "pyproj==3.7.1",
   "pyarrow==25.0.1",
   "torch==2.14.1",
+  "matplotlib==3.10.9",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pre-commit>=3"]
+dev = ["pytest>=8", "pre-commit>=3", "pyflakes", "nbformat==5.11.1", "nbconvert==7.17.1", "nbclient==0.11.0", "ipykernel==7.3.0"]
 
 [project.scripts]
 wildfire = "wildfire.cli:main"

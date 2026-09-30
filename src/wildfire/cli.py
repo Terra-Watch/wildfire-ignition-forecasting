@@ -14,6 +14,7 @@ PIPELINES = {                     # command -> (module, function)
     "build-model-table": ("features", "build_model_table"),
     "build-weather-series": ("enriched", "build_series"),
     "build-enriched": ("enriched", "build_arrays"),
+    "build-neighbourhood": ("enriched", "build_neighbourhood"),
     "build-fresh-rows": ("fresh_states", "build_rows"),
     "build-fresh-dataset": ("fresh_states", "build_dataset"),
     "score-holdout": ("holdout", "run"),

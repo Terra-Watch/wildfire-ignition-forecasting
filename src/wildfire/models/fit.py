@@ -24,14 +24,20 @@ class Model:
     def __init__(self, kind: str, params: dict):
         self.kind, self.params = kind, params
 
-    def fit(self, x, y):
+    def fit(self, x, y, inplace: bool = False):
+        """Fit on (x, y). With inplace=True the logistic arm standardises `x` itself instead of a copy (memory)."""
         cfg = config.load("models")
         if self.kind == "logistic":
             from sklearn.linear_model import LogisticRegression
             lg = cfg["logistic"]
             self.mu = x.mean(0, dtype=np.float64).astype(np.float32)
             self.sd = (x.std(0, dtype=np.float64) + lg["scale_epsilon"]).astype(np.float32)
-            xs = (x - self.mu) / self.sd
+            if inplace:
+                x -= self.mu
+                x /= self.sd
+                xs = x
+            else:
+                xs = (x - self.mu) / self.sd
             self.m = LogisticRegression(C=self.params["C"], solver=lg["solver"], max_iter=lg["max_iter"], tol=lg["tol"]).fit(xs, y)
         else:
             from sklearn.ensemble import HistGradientBoostingClassifier

@@ -28,3 +28,12 @@ def test_boosting_is_deterministic():
     y = (x[:, 1] + rng.normal(size=3000) > 1).astype(int)
     p = {"max_depth": 4, "learning_rate": 0.1, "max_iter": 40}
     assert (Model("boosting", p).fit(x, y).predict(x) == Model("boosting", p).fit(x, y).predict(x)).all()
+
+
+def test_in_place_standardisation_gives_the_same_predictions():
+    rng = np.random.default_rng(5)
+    x = rng.normal(3.0, 2.0, size=(3000, 4)).astype(np.float32)
+    y = (x[:, 0] + rng.normal(size=3000) > 4).astype(int)
+    a = Model("logistic", {"C": 0.1}).fit(x.copy(), y)
+    b = Model("logistic", {"C": 0.1}).fit(x.copy(), y, inplace=True)
+    assert np.array_equal(a.predict(x), b.predict(x))

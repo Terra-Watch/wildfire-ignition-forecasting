@@ -11,7 +11,7 @@ from wildfire import config
 from wildfire.evaluation import metrics, prior_shift
 from wildfire.guards import provenance
 from wildfire.models.fit import Model
-from wildfire.models.network import Network
+from wildfire.models.network import Network, Standardiser
 from wildfire.pipelines import dataset, ladder_fit
 
 SPACES = {"boosting": "boosting_space", "network": "network_space"}
@@ -51,9 +51,10 @@ def network_trial(ds, fm: dict, params: dict, year: int) -> dict:
     stop = t.year.values[fm["fit_idx"]] == year - 1
     w = ladder_fit.training_weights(t, fm["fit_idx"])
     y = t.label.values[fm["fit_idx"]]
-    m = Network(params, seed=config.load("baseline")["tuning"]["seed"]).fit(
-        fm["x"][~stop], y[~stop], w[~stop], fm["x"][stop], y[stop], w[stop])
-    return score_trial(m.predict(fm["xv"]), t.label.values[fm["val_idx"]], m.fit_prevalence)
+    std = Standardiser(fm["x"][~stop])
+    x, xs, xv = (std.apply(a.copy()) for a in (fm["x"][~stop], fm["x"][stop], fm["xv"]))
+    m = Network(params, seed=config.load("baseline")["tuning"]["seed"]).fit(x, y[~stop], w[~stop], xs, y[stop], w[stop])
+    return score_trial(m.predict(xv), t.label.values[fm["val_idx"]], m.fit_prevalence)
 
 
 def choose(records: pd.DataFrame, kind: str) -> dict:

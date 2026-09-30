@@ -28,16 +28,27 @@ def weighted_log_loss(logits, y, w) -> torch.Tensor:
     return (loss * w).sum() / w.sum()
 
 
+class Standardiser:
+    """Column mean and standard deviation of the fit rows; applies them in place (memory)."""
+
+    def __init__(self, x: np.ndarray):
+        self.mu = x.mean(0, dtype=np.float64).astype(np.float32)
+        self.sd = (x.std(0, dtype=np.float64) + config.load("models")["logistic"]["scale_epsilon"]).astype(np.float32)
+
+    def apply(self, x: np.ndarray) -> np.ndarray:
+        x -= self.mu
+        x /= self.sd
+        return x
+
+
 class Network:
-    """Fit on (x, y, weights); early stopping on the log loss of a validation set taken from the training years."""
+    """Fit on standardised inputs with design weights; early stopping on a validation set from the training years."""
 
     def __init__(self, params: dict, seed: int):
         self.params, self.seed = params, seed
 
-    def _standardise(self, x):
-        return torch.tensor((x - self.mu) / self.sd, dtype=torch.float32)
-
-    def _epoch(self, net, opt, x, y, w, rng):
+    def _epoch(self, net, opt, data, rng):
+        x, y, w = data
         net.train()
         order = rng.permutation(len(y))
         bs = config.load("models")["network"]["batch_size"]
@@ -48,31 +59,28 @@ class Network:
             weighted_log_loss(net(xb).squeeze(1), yb, wb).backward()
             opt.step()
 
-    def _validation_loss(self, net, x, y, w) -> float:
+    def _logits(self, net, x) -> torch.Tensor:
         net.eval()
         with torch.no_grad():
-            logits = torch.cat([net(x[i:i + 65536].to(self.device)).squeeze(1).cpu() for i in range(0, len(x), 65536)])
-        return float(weighted_log_loss(logits, y, w))
+            return torch.cat([net(x[i:i + 65536].to(self.device)).squeeze(1).cpu() for i in range(0, len(x), 65536)])
 
     def fit(self, x, y, w, x_val, y_val, w_val):
+        """x, x_val: standardised float32 arrays (not copied). Keeps the epoch with the lowest validation loss."""
         cfg = config.load("models")["network"]
         torch.manual_seed(self.seed)
         rng = np.random.default_rng(self.seed)
         self.device = pick_device()
-        self.mu = x.mean(0, dtype=np.float64).astype(np.float32)
-        self.sd = (x.std(0, dtype=np.float64) + config.load("models")["logistic"]["scale_epsilon"]).astype(np.float32)
-        tx, ty, tw = self._standardise(x), torch.tensor(y, dtype=torch.float32), torch.tensor(w / w.mean(), dtype=torch.float32)
-        vx, vy, vw = self._standardise(x_val), torch.tensor(y_val, dtype=torch.float32), torch.tensor(w_val / w_val.mean(), dtype=torch.float32)
+        train = (torch.from_numpy(x), torch.tensor(y, dtype=torch.float32), torch.tensor(w / w.mean(), dtype=torch.float32))
+        val = (torch.from_numpy(x_val), torch.tensor(y_val, dtype=torch.float32), torch.tensor(w_val / w_val.mean(), dtype=torch.float32))
         p = self.params
         self.net = build_net(x.shape[1], p["width"], p["depth"], p["dropout"]).to(self.device)
         opt = torch.optim.AdamW(self.net.parameters(), lr=p["learning_rate"], weight_decay=p["weight_decay"])
         best, best_state, since = np.inf, None, 0
         for _ in range(cfg["max_epochs"]):
-            self._epoch(self.net, opt, tx, ty, tw, rng)
-            loss = self._validation_loss(self.net, vx, vy, vw)
+            self._epoch(self.net, opt, train, rng)
+            loss = float(weighted_log_loss(self._logits(self.net, val[0]), val[1], val[2]))
             if loss < best - 1e-6:
-                best, since = loss, 0
-                best_state = {k: v.detach().clone() for k, v in self.net.state_dict().items()}
+                best, since, best_state = loss, 0, {k: v.detach().clone() for k, v in self.net.state_dict().items()}
             else:
                 since += 1
                 if since >= cfg["patience"]:
@@ -83,8 +91,5 @@ class Network:
         return self
 
     def predict(self, x):
-        self.net.eval()
-        tx = self._standardise(x)
-        with torch.no_grad():
-            logits = torch.cat([self.net(tx[i:i + 65536].to(self.device)).squeeze(1).cpu() for i in range(0, len(tx), 65536)])
-        return torch.sigmoid(logits).numpy().astype(np.float64)
+        """Probabilities for standardised float32 inputs."""
+        return torch.sigmoid(self._logits(self.net, torch.from_numpy(x))).numpy().astype(np.float64)

@@ -9,7 +9,7 @@ from wildfire.evaluation import calibration, prior_shift
 from wildfire.labels import weights
 from wildfire.models import arms, diagnostics
 from wildfire.models.fit import Model
-from wildfire.models.network import Network
+from wildfire.models.network import Network, Standardiser
 from wildfire.pipelines import dataset
 
 TWO_LEVEL = "two_levels"
@@ -43,17 +43,26 @@ def training_weights(table: pd.DataFrame, idx: np.ndarray) -> np.ndarray:
     return prior_shift.design_weights(rows.label.values, weights.strata(rows), frame)
 
 
+def standardised_parts(ds, dv, train_idx, stop_idx, val_idx, cols, level, year) -> tuple:
+    """Training, early-stopping and validation matrices, standardised with the training rows' mean and deviation."""
+    x = dataset.matrix(ds, train_idx, cols, level, year)
+    std = Standardiser(x)
+    std.apply(x)
+    xs = std.apply(dataset.matrix(ds, stop_idx, cols, level, year))
+    xv = std.apply(dataset.matrix(dv, val_idx, cols, level, year))
+    return x, xs, xv
+
+
 def fit_network(ds, fit_idx, dv, val_idx, cols, level, year, params, log) -> tuple[dict, dict]:
     """One network per seed: fit on the years before the last fit year, stop early on the last fit year."""
     t = ds.table
     stop = t.year.values[fit_idx] == year - 1
     w = training_weights(t, fit_idx)
-    x = dataset.matrix(ds, fit_idx, cols, level, year)
-    xv = dataset.matrix(dv, val_idx, cols, level, year)
     y = t.label.values[fit_idx]
+    x, xs, xv = standardised_parts(ds, dv, fit_idx[~stop], fit_idx[stop], val_idx, cols, level, year)
     preds, prevalence = {}, {}
     for seed in range(config.load("models")["network"]["seeds"]):
-        m = Network(params, seed).fit(x[~stop], y[~stop], w[~stop], x[stop], y[stop], w[stop])
+        m = Network(params, seed).fit(x, y[~stop], w[~stop], xs, y[stop], w[stop])
         preds[f"#{seed}"], prevalence[f"#{seed}"] = m.predict(xv), m.fit_prevalence
         log("network", level, year, "seed", seed, round(m.best_validation_loss, 5))
     return preds, prevalence
@@ -62,7 +71,7 @@ def fit_network(ds, fit_idx, dv, val_idx, cols, level, year, params, log) -> tup
 def fit_standard(ds, fit_idx, dv, val_idx, cols, level, year, kind: str, params: dict) -> tuple[np.ndarray, float]:
     """Logistic or boosting on the fit rows; returns validation probabilities and the fit prevalence."""
     x = dataset.matrix(ds, fit_idx, cols, level, year)
-    m = Model(kind, params).fit(x, ds.table.label.values[fit_idx])
+    m = Model(kind, params).fit(x, ds.table.label.values[fit_idx], inplace=True)
     return m.predict(dataset.matrix(dv, val_idx, cols, level, year)), m.fit_prevalence
 
 

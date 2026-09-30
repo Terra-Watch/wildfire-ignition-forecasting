@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from typing import Sequence
 
-import numpy as np
 import pandas as pd
 
 from wildfire import config
-from wildfire.evaluation import bootstrap, prior_shift, verdict, views
+from wildfire.evaluation import bootstrap, verdict, views
 from wildfire.features.base import FeatureSet
 
 

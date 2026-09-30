@@ -13,7 +13,6 @@ from wildfire.pipelines.fit import arm_rows
 
 
 def run(log=print) -> dict:
-    from sklearn.metrics import roc_auc_score
     provenance.require_clean()
     harness.check_split("holdout_year")
     s = config.load("evaluation")["sanity"]
@@ -35,7 +34,6 @@ def run(log=print) -> dict:
     pb, _ = calibration.calibrate_climatology(clim_v[ok_b], table.label.values[ok_b], table.year.values[ok_b], clim_v[hb])
     yb = table.label.values[hb]
     ap_clim = metrics.average_precision(yb, clim_v[hb])
-    prev_b = float(yb.mean())
     in_b = ~np.isnan(clim_v[ho])
 
     def fit_score(ys):

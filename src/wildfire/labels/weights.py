@@ -9,7 +9,7 @@ import pandas as pd
 from wildfire import config
 from wildfire.evaluation import prior_shift
 from wildfire.features.tabular.gap_days import touches_flagged
-from wildfire.labels.detections import day_number, epoch
+from wildfire.labels.detections import epoch
 
 
 def cell_frame() -> pd.DataFrame:
@@ -76,3 +76,28 @@ def strata(rows: pd.DataFrame):
 def iso_clusters(rows: pd.DataFrame):
     scheme = config.load("evaluation")["clusters"]["scheme"]
     return prior_shift.cluster_labels(rows.year.values, rows.week.values, None, scheme)
+
+
+def rates_before(table: pd.DataFrame, year: int) -> dict:
+    """Per-state onset rate per eligible cell-day from the years before `year`."""
+    tr = table[table.year < year]
+    fr = frame_sizes(sorted(tr.year.unique()), gap_days=flagged_days(), lookback=gap_lookback())
+    return {st: float(tr[(tr.state == st) & (tr.label == 1)].shape[0] / sum(v for k, v in fr.items() if k.startswith(st + "|")))
+            for st in tr.state.unique()}
+
+
+def january_to_july_frame(year: int, masked_cells) -> dict:
+    """{state|year: eligible cell-days} for January-July of `year`, minus masked cells and days touching a gap day."""
+    cf = cell_frame()
+    season = season_months()
+    flagged, lookback = flagged_days(), gap_lookback()
+    e0 = epoch()
+    days = pd.date_range(f"{year}-01-01", f"{year}-07-31")
+    dn = np.array([(d - e0).days for d in days])
+    frame = {}
+    for st, g in cf.groupby("state"):
+        if st not in season:
+            continue
+        ok = np.isin(days.month, season[st]) & ~touches_flagged(dn, flagged, lookback)
+        frame[f"{st}|{year}"] = int((~g.cell.isin(set(masked_cells))).sum()) * int(ok.sum())
+    return frame

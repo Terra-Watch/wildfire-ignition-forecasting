@@ -8,7 +8,6 @@ import pandas as pd
 
 from wildfire import config
 from wildfire.evaluation import calibration, harness, prior_shift
-from wildfire.features.tabular.gap_days import touches_flagged
 from wildfire.guards import provenance
 from wildfire.labels import weights
 from wildfire.labels.detections import epoch
@@ -58,30 +57,13 @@ def run(log=print) -> dict:
     corr = {a: np.zeros(len(O)) for a in names}
     w = np.ones(len(O))
     masked = np.unique(table.cell.values[table.t2m.isna().values])
-    end = pd.Timestamp(config.load("features")["tabular"]["window_end"])
-    flagged = weights.flagged_days()
-    lookback = weights.gap_lookback()
-    season = weights.season_months()
-    cf = weights.cell_frame()
     for year, _ in forward_folds():
         m = O.year.values == year
-        tr = table[table.year < year]
-        fr = weights.frame_sizes(sorted(tr.year.unique()), gap_days=flagged, lookback=lookback)
-        rate = {st: float(tr[(tr.state == st) & (tr.label == 1)].shape[0] / sum(v for k, v in fr.items() if k.startswith(st + "|")))
-                for st in tr.state.unique()}
+        rate = weights.rates_before(table, year)
         pit = np.array([rate[s] for s in O.state.values[m]])
         for a in names:
             corr[a][m] = prior_shift.prior_shift_probs(probs[a][m], pit, pis[(year, a)]) if (year, a) in pis else np.nan
-        frame = {}
-        for st, g in cf.groupby("state"):
-            if st not in season:
-                continue
-            nc = int((~g.cell.isin(set(masked))).sum())
-            days = pd.date_range(f"{year}-01-01", f"{year}-07-31")
-            dn = np.array([(d_ - e0).days for d_ in days])
-            ok = np.isin(days.month, season[st]) & ~touches_flagged(dn, flagged, lookback)
-            frame[f"{st}|{year}"] = nc * int(ok.sum())
-        w[m] = prior_shift.design_weights(y[m], weights.strata(O[m]), frame)
+        w[m] = prior_shift.design_weights(y[m], weights.strata(O[m]), weights.january_to_july_frame(year, masked))
     before = harness.score_arms(O, scores, probs, ref, clusters)
     after = harness.score_arms(O, scores, corr, ref, clusters, weights=w)
     tb = harness.result_table(before, names, ref)

@@ -14,7 +14,7 @@ from wildfire.features import weather_windows
 from wildfire.features.base import TIER_SUMMARY, FeatureSet, register
 from wildfire.features.tabular import burn as burn_mod
 from wildfire.features.tabular import weather
-from wildfire.labels.detections import day_number, load_grid
+from wildfire.labels.detections import load_grid
 
 VARIABLES = ["tree_cover", "burn_count", "years_since_burn", "vegetation_index", "fire_weather_index", "onsets_recent"]
 SUM_VARIABLES = ("onsets_recent",)

@@ -12,7 +12,7 @@ from wildfire.features.tabular import burn as burn_mod
 from wildfire.features.tabular import climatology, masks, static, weather
 from wildfire.features.tabular.gap_days import touches_flagged
 from wildfire.guards import inputs
-from wildfire.labels.detections import day_number, epoch
+from wildfire.labels.detections import day_number
 
 _DTYPES = dict(cell="int32", day="int32", label="int8", year="int16", week="int8", kind="category",
                state="category", group="category", band="category", cluster="category", date="category")

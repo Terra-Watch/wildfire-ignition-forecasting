@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from wildfire.features import weather_windows as ww
 from wildfire.features.tabular import weather

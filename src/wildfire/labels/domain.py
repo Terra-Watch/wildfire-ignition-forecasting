@@ -1,7 +1,6 @@
 """Forest domain, roles and fire season per state."""
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from wildfire import config

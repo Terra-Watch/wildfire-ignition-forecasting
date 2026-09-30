@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from wildfire.features.tabular import gap_days, masks
-from wildfire.features.tabular.burn import burn_features
 
 MS = np.array([18262 + 31 * i for i in range(130)], np.int64)
 

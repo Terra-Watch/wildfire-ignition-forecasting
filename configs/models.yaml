@@ -36,3 +36,9 @@ fit_row_caps:
   leave_year_out: 2000000
   leave_year_out_thin_seed: 3
   out_of_fold: null
+network:
+  batch_size: 4096
+  max_epochs: 20
+  patience: 2
+  validation_share_years: 1          # the last training year is held inside the training years for early stopping
+  seeds: 10

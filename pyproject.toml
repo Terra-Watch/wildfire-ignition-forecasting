@@ -17,6 +17,7 @@ dependencies = [
   "netCDF4==1.7.4",
   "pyproj==3.7.1",
   "pyarrow==25.0.1",
+  "torch==2.14.1",
 ]
 
 [project.optional-dependencies]

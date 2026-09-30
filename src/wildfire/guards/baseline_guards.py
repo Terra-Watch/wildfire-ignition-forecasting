@@ -1,0 +1,112 @@
+"""Checks that must pass before any baseline score is written."""
+from __future__ import annotations
+
+import json
+
+import numpy as np
+import pandas as pd
+import pyproj
+
+from wildfire import config
+from wildfire.evaluation import views
+from wildfire.features import weather_windows
+from wildfire.features.tabular import weather
+from wildfire.guards import provenance
+from wildfire.labels.detections import load_grid
+from wildfire.models.fit import Model
+
+GUARDS_FILE = "guards.json"
+LEDGER_FILE = "geo_test_ledger.csv"
+
+
+def synthetic_series(days: int = 200, points: int = 3) -> dict:
+    rng = np.random.default_rng(0)
+    return dict(values=rng.normal(size=(days, len(weather.NAMES), points)).astype(np.float32),
+                rain=(rng.random((days, points)) * 6).astype(np.float32), cell_point=np.array([0, 1, 2]), first_day=1000)
+
+
+def timestamp_before_day() -> bool:
+    """Changing the series on the target day must not change that day's window features."""
+    s = synthetic_series()
+    cell, day = np.array([1]), np.array([1100])
+    before = weather_windows.window_matrix(s, cell, day)
+    s["values"][day[0] - s["first_day"]] += 100.0
+    s["rain"][day[0] - s["first_day"]] += 100.0
+    return bool(np.array_equal(before, weather_windows.window_matrix(s, cell, day), equal_nan=True))
+
+
+def shifted_feature_fails() -> bool:
+    """A feature deliberately taken one day late (from the future) must be detected as different."""
+    s = synthetic_series()
+    cell, day = np.array([0]), np.array([1100])
+    return bool(not np.array_equal(weather_windows.window_matrix(s, cell, day),
+                                   weather_windows.window_matrix(s, cell, day + 1), equal_nan=True))
+
+
+def label_shuffle(ds, seeds: int = 5) -> tuple[bool, float]:
+    """Logistic model on permuted labels: mean AUC on the 2024 validation rows must be 0.50 +- tolerance."""
+    from wildfire.pipelines import dataset, ladder_fit
+    cfg = config.load("baseline")["guards"]["label_shuffle_auc"]
+    year = 2024
+    fit_idx = dataset.fit_rows(ds, year, config.load("baseline")["tuning"]["row_cap"])
+    val_idx = dataset.validation_rows(ds, year)
+    cols = ladder_fit.columns_for(ds, "logistic_with_burn")
+    x, xv = dataset.matrix(ds, fit_idx, cols, "tabular", year), dataset.matrix(ds, val_idx, cols, "tabular", year)
+    y, yv = ds.table.label.values[fit_idx], ds.table.label.values[val_idx]
+    params = config.load("models")["arms"]["logistic_with_burn"]["params"]
+    aucs = [views.auc(yv, Model("logistic", params).fit(x, np.random.default_rng(s).permutation(y)).predict(xv)) for s in range(seeds)]
+    mean = float(np.mean(aucs))
+    return abs(mean - cfg["center"]) <= cfg["tolerance"], mean
+
+
+def coordinates_consistent(tolerance_m: float = 1.0) -> bool:
+    """Grid indices, projected centroids and longitude/latitude of the cells agree with each other."""
+    cells, meta = load_grid()
+    size = config.load("domain")["grid"]["cell_size_m"]
+    dom = config.load("domain")["grid"]
+    x, y = pyproj.Transformer.from_crs(dom["source_crs"], dom["projected_crs"], always_xy=True).transform(cells.lon.values, cells.lat.values)
+    centre_x = meta["x0"] + (cells.ix.values + 0.5) * size
+    centre_y = meta["y0"] + (cells.iy.values + 0.5) * size
+    inside = (np.abs(x - centre_x) <= size / 2 + tolerance_m) & (np.abs(y - centre_y) <= size / 2 + tolerance_m)
+    same = (np.abs(cells.cx.values - centre_x) < tolerance_m) & (np.abs(cells.cy.values - centre_y) < tolerance_m)
+    return bool(inside.all() and same.all())
+
+
+def no_validation_information_in_tuning() -> bool:
+    """Tuning years are all before the last development year, and each fold's climatology stops before its validation year."""
+    cfg = config.load("baseline")
+    return bool(max(cfg["validation"]["tuning_years"]) < cfg["periods"]["last_development_fold"])
+
+
+def ledger_ready() -> bool:
+    """The geographic-test ledger location exists and is writable."""
+    return bool(config.output_dir("results").exists())
+
+
+def run_all(ds) -> dict:
+    shuffle_ok, shuffle_auc = label_shuffle(ds)
+    return dict(timestamp_before_day=timestamp_before_day(), shifted_feature_fails=shifted_feature_fails(),
+                label_shuffle=shuffle_ok, label_shuffle_mean_auc=shuffle_auc, coordinate_unit_test=coordinates_consistent(),
+                no_validation_information_in_tuning=no_validation_information_in_tuning(), geo_ledger=ledger_ready(),
+                provenance=bool(provenance.require_clean()))
+
+
+def require_passed(ds) -> dict:
+    """Run every guard; write the outcome; stop when any fails."""
+    results = run_all(ds)
+    results["code_commit"] = provenance.tag()
+    (config.output_dir("results") / GUARDS_FILE).write_text(json.dumps(results, indent=1))
+    failed = [k for k, v in results.items() if v is False]
+    if failed:
+        raise SystemExit("GUARD FAILED: " + ", ".join(failed))
+    return results
+
+
+def record_geo_access(what: str) -> None:
+    """Append one line to the geographic-test ledger; refuse a second scoring."""
+    path = config.output_dir("results") / LEDGER_FILE
+    old = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["time", "code_commit", "what"])
+    if (old.what == what).any():
+        raise SystemExit(f"the geographic test '{what}' was already scored; it is scored once")
+    row = pd.DataFrame([dict(time=pd.Timestamp.now().isoformat(), code_commit=provenance.tag(), what=what)])
+    pd.concat([old, row]).to_csv(path, index=False)

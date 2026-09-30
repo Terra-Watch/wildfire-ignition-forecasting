@@ -70,7 +70,7 @@ def paired_week_blocked_bootstrap(y, cluster, arms: dict, ref: str, nboot: int |
                                    brier=metrics.brier(y, p, w=wv)))
 
     def interval(v, pt):
-        return dict(point=float(pt), lo=float(np.quantile(v, cfg["alpha"] / 2)), hi=float(np.quantile(v, 1 - cfg["alpha"] / 2)),
+        return dict(point=float(pt), se=float(np.std(v)), lo=float(np.quantile(v, cfg["alpha"] / 2)), hi=float(np.quantile(v, 1 - cfg["alpha"] / 2)),
                     lo99=float(np.quantile(v, cfg["alpha_verdict"] / 2)), hi99=float(np.quantile(v, 1 - cfg["alpha_verdict"] / 2)))
 
     out = {}

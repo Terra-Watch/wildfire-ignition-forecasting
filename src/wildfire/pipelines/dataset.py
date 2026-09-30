@@ -95,3 +95,8 @@ def matrix(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, year: i
 def enriched_names() -> list[str]:
     from wildfire.features import neighbourhood
     return weather_windows.window_names() + [f"{v}_anomaly" for v in weather.NAMES] + neighbourhood.column_names()
+
+
+def feature_groups_static(ds: Dataset) -> list[str]:
+    """Columns of the static group (terrain and land cover)."""
+    return arms.feature_groups(ds.table)["static"]

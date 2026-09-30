@@ -7,7 +7,7 @@ setup:
 	$(PYTHON) -m pip install -e ".[dev]"
 
 test: check-names
-	$(PYTHON) -m pytest -q
+	@set -a; [ -f .env ] && . ./.env; set +a; $(PYTHON) -m pytest -q
 
 check-names:
 	$(PYTHON) scripts/check_names.py --all

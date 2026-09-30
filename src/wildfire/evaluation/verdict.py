@@ -25,3 +25,27 @@ def verdict_paired_auc(o: dict, thr: float | None = None, floor: float | None = 
     if o["ci_hi"] < thr:
         return "FAIL"
     return "INCONCLUSIVE"
+
+
+def minimum_detectable_effect(se: float) -> float:
+    """(99% two-sided quantile + 80% power quantile) x the bootstrap standard error of the difference."""
+    return float(sum(config.load("baseline")["decision_rule"]["mde_z"]) * se)
+
+
+def baseline_verdict(delta_ap: dict, worst_state_delta: float) -> tuple[str, float]:
+    """Verdict of the pre-declared decision rule for one contrast, and its minimum detectable effect.
+
+    delta_ap: point, se, lo99, hi99 of the AP difference (arm minus reference). INCONCLUSIVE if the effect that could be
+    detected is larger than the threshold. PASS: point >= threshold, 99% lower bound > 0, no state worse than the floor.
+    FAIL: the 99% upper bound is below the threshold.
+    """
+    gain = config.load("evaluation")["verdict"]["min_ap_gain"]
+    floor = config.load("baseline")["decision_rule"]["no_state_worse_than"]
+    mde = minimum_detectable_effect(delta_ap["se"])
+    if mde > gain:
+        return "INCONCLUSIVE", mde
+    if delta_ap["point"] >= gain and delta_ap["lo99"] > 0 and worst_state_delta >= floor:
+        return "PASS", mde
+    if delta_ap["hi99"] < gain:
+        return "FAIL", mde
+    return "INCONCLUSIVE", mde

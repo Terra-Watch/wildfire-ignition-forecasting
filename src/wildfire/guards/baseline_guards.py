@@ -43,11 +43,12 @@ def shifted_feature_fails() -> bool:
                                    weather_windows.window_matrix(s, cell, day + 1), equal_nan=True))
 
 
-def label_shuffle(ds, seeds: int = 5) -> tuple[bool, float]:
-    """Logistic model on permuted labels: mean AUC on the 2024 validation rows must be 0.50 +- tolerance."""
+def label_shuffle(ds) -> tuple[bool, float]:
+    """Logistic model on permuted labels: mean AUC on the validation rows of the configured year must be 0.50 +- tolerance."""
     from wildfire.pipelines import dataset, ladder_fit
     cfg = config.load("baseline")["guards"]["label_shuffle_auc"]
-    year = 2024
+    setup = config.load("guards")["label_shuffle"]
+    year, seeds = setup["validation_year"], setup["seeds"]
     fit_idx = dataset.fit_rows(ds, year, config.load("baseline")["tuning"]["row_cap"])
     val_idx = dataset.validation_rows(ds, year)
     cols = ladder_fit.columns_for(ds, "logistic_with_burn")
@@ -91,15 +92,29 @@ def run_all(ds) -> dict:
                 provenance=bool(provenance.require_clean()))
 
 
-def require_passed(ds) -> dict:
-    """Run every guard; write the outcome; stop when any fails."""
+def write_record(ds) -> dict:
+    """Run every guard and write the outcome with the code version it applies to; stop when any fails."""
     results = run_all(ds)
+    results["code_version"] = provenance.code_version()
     results["code_commit"] = provenance.tag()
     (config.output_dir("results") / GUARDS_FILE).write_text(json.dumps(results, indent=1))
     failed = [k for k, v in results.items() if v is False]
     if failed:
         raise SystemExit("GUARD FAILED: " + ", ".join(failed))
     return results
+
+
+def require_record() -> dict:
+    """No score file may be written unless a guard record exists, passed, and belongs to the current code version."""
+    path = config.output_dir("results") / GUARDS_FILE
+    if not path.exists():
+        raise SystemExit("no guard record: run `wildfire run-guards` before anything is scored")
+    record = json.loads(path.read_text())
+    if any(v is False for v in record.values()):
+        raise SystemExit("the guard record contains a failed guard")
+    if record.get("code_version") != provenance.code_version():
+        raise SystemExit("the guard record belongs to other code: run `wildfire run-guards` again")
+    return record
 
 
 def record_geo_access(what: str) -> None:

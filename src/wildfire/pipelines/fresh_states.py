@@ -39,7 +39,7 @@ def build_dataset(log=print) -> None:
     cd = pd.read_csv(labels / "cell_days.csv")
     table = build_features(labels / "fresh_rows.csv", feats / "day_coverage.csv", cd[cd.onset][["cell", "day"]], log=log)
     features.build_model_table(table, log, group=GROUP, name=TABLE)
-    enriched.build_arrays(log, TABLE, PREFIX)
+    enriched.build_arrays(log, TABLE, PREFIX, roles=None)        # fresh rows may use neighbours from every cell
 
 
 def validation_keys(dv: dataset.Dataset, idx: np.ndarray) -> pd.DataFrame:
@@ -55,7 +55,7 @@ def score_once(log=print) -> None:
     provenance.require_clean()
     ds = dataset.load_dataset()
     dv = dataset.load_dataset(TABLE, PREFIX)
-    baseline_guards.require_passed(ds)
+    baseline_guards.require_record()
     dataset.clear_cache()
     for state in sorted(dv.table.state.unique()):
         baseline_guards.record_geo_access(state)

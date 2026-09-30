@@ -62,8 +62,8 @@ def burn_by_day(days: np.ndarray, ncell: int) -> tuple[np.ndarray, np.ndarray]:
         last = np.searchsorted(dates, hi, "left") - 1
         ref = dates[np.clip(last, 0, len(dates) - 1)] if len(dates) else np.zeros(len(days), np.int64)
         ref = np.where(last >= 0, ref, cfg["archive_start_day"])
-        years[:, c] = np.minimum((days - ref) / 365.25, cfg["years_since_cap"])
-        count[:, c] = np.where(obs[inverse[c]] >= cfg["min_observed_share"] - 1e-9, np.log1p(n), np.nan)
+        years[:, c] = np.minimum((days - ref) / config.load("features")["tabular"]["constants"]["days_per_year"], cfg["years_since_cap"])
+        count[:, c] = np.where(obs[inverse[c]] >= cfg["min_observed_share"] - config.load("features")["tabular"]["constants"]["tolerance"], np.log1p(n), np.nan)
     return count, years
 
 
@@ -99,8 +99,14 @@ def fire_weather_by_day(series: dict, days: np.ndarray) -> np.ndarray:
     return fwi[:, np.asarray(series["cell_point"])]
 
 
-def _ring_columns(layers: dict, cells: pd.DataFrame, shape: tuple, tree: dict, rows: np.ndarray) -> np.ndarray:
-    """The ring summaries of one target day at the given study cells: (len(rows), columns)."""
+def available_cells(cells: pd.DataFrame, roles: list[str] | None) -> np.ndarray:
+    """Which cells may act as neighbours: all of them (roles None) or only cells with one of the given grid roles."""
+    return np.ones(len(cells), bool) if roles is None else cells.role.isin(roles).values
+
+
+def _ring_columns(layers: dict, cells: pd.DataFrame, shape: tuple, tree: dict, rows: np.ndarray, avail: np.ndarray) -> np.ndarray:
+    """The ring summaries of one target day at the given study cells: (len(rows), columns).
+    Only cells marked in `avail` contribute as neighbours."""
     out = np.empty((len(rows), len(column_names())), np.float32)
     ix, iy = cells.ix.values[rows], cells.iy.values[rows]
     j = 0
@@ -109,23 +115,26 @@ def _ring_columns(layers: dict, cells: pd.DataFrame, shape: tuple, tree: dict, r
             if v == "tree_cover":
                 raster = tree[ring]
             else:
-                raster = ring_stat(to_raster(layers[v], cells, shape), radius, total=v in SUM_VARIABLES)
+                raster = ring_stat(to_raster(layers[v][avail], cells[avail], shape), radius, total=v in SUM_VARIABLES)
             out[:, j] = raster[ix, iy]
             j += 1
     return out
 
 
-def _tree_rings(cells: pd.DataFrame, shape: tuple) -> dict:
+def _tree_rings(cells: pd.DataFrame, shape: tuple, avail: np.ndarray) -> dict:
     tree = pd.read_csv(config.data_file("land_cover"), usecols=["wc_tree"]).wc_tree.values
-    raster = to_raster(tree, cells, shape)
+    raster = to_raster(tree[avail], cells[avail], shape)
     return {ring: ring_stat(raster, radius) for ring, radius in settings()["rings"].items()}
 
 
-def neighbourhood_matrix(cell: np.ndarray, day: np.ndarray, series: dict, onsets: pd.DataFrame) -> np.ndarray:
-    """Neighbourhood features for (cell, target day) pairs: (rows, columns) float32."""
+def neighbourhood_matrix(cell: np.ndarray, day: np.ndarray, series: dict, onsets: pd.DataFrame,
+                         roles: list[str] | None = None) -> np.ndarray:
+    """Neighbourhood features for (cell, target day) pairs: (rows, columns) float32.
+    `roles`: grid roles allowed as neighbours (None = every cell)."""
     cells, meta = load_grid()
     shape = (meta["nx"], meta["ny"])
-    tree = _tree_rings(cells, shape)
+    avail = available_cells(cells, roles)
+    tree = _tree_rings(cells, shape, avail)
     out = np.full((len(cell), len(column_names())), np.nan, np.float32)
     unique = np.unique(day)
     step = settings()["day_chunk"]
@@ -138,7 +147,7 @@ def neighbourhood_matrix(cell: np.ndarray, day: np.ndarray, series: dict, onsets
         for k, d in enumerate(days):
             rows = np.flatnonzero(day == d)
             layers = {v: a[k] for v, a in base.items()}
-            out[rows] = _ring_columns(layers, cells, shape, tree, cell[rows])
+            out[rows] = _ring_columns(layers, cells, shape, tree, cell[rows], avail)
     return out
 
 
@@ -150,10 +159,10 @@ class Neighbourhood(FeatureSet):
     def columns(self) -> list[str]:
         return column_names()
 
-    def build(self, keys):
+    def build(self, keys, roles=None):
         """Ring summaries for (cell, day) keys, from the stored weather series and the onsets table."""
         series = weather_windows.load_series(config.output_dir("features") / "daily_weather")
         onsets = pd.read_csv(config.output_dir("labels") / "cell_days.csv")
         onsets = onsets[onsets.onset][["cell", "day"]]
-        m = neighbourhood_matrix(keys.cell.values, keys.day.values, series, onsets)
+        m = neighbourhood_matrix(keys.cell.values, keys.day.values, series, onsets, roles)
         return pd.DataFrame(m, columns=column_names(), index=keys.index)

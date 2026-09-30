@@ -41,22 +41,25 @@ def build_windows(log=print, table_name: str = "model_table", prefix: str = "") 
     log("windows", shape, "runtime_s", round(time.time() - t0))
 
 
-def build_neighbourhood(log=print, table_name: str = "model_table", prefix: str = "") -> None:
-    """Neighbourhood features for every row of a model table."""
+def build_neighbourhood(log=print, table_name: str = "model_table", prefix: str = "", roles: list[str] | None = "fit") -> None:
+    """Neighbourhood features for every row of a model table. `roles` = grid roles allowed as neighbours; the default
+    "fit" uses the configured fit roles (fit-table rows see only fit cells), None lets every cell count."""
+    if roles == "fit":
+        roles = config.load("features")["feature_sets"]["neighbourhood"]["fit_neighbour_roles"]
     t0 = time.time()
     feats = config.output_dir("features")
     table, _ = load_model_table(table_name)
     series = weather_windows.load_series(feats / SERIES_FOLDER)
     cd = pd.read_csv(config.output_dir("labels") / "cell_days.csv")
-    matrix = neighbourhood.neighbourhood_matrix(table.cell.values, table.day.values, series, cd[cd.onset][["cell", "day"]])
+    matrix = neighbourhood.neighbourhood_matrix(table.cell.values, table.day.values, series, cd[cd.onset][["cell", "day"]], roles)
     np.save(feats / (prefix + NEIGHBOURHOOD_FILE), matrix)
     log("neighbourhood", matrix.shape, "runtime_s", round(time.time() - t0))
 
 
-def build_arrays(log=print, table_name: str = "model_table", prefix: str = "") -> None:
+def build_arrays(log=print, table_name: str = "model_table", prefix: str = "", roles: list[str] | None = "fit") -> None:
     """Both enriched blocks for a model table."""
     build_windows(log, table_name, prefix)
-    build_neighbourhood(log, table_name, prefix)
+    build_neighbourhood(log, table_name, prefix, roles)
 
 
 def load_arrays(prefix: str = "") -> dict:

@@ -30,3 +30,28 @@ def test_geo_ledger_allows_one_scoring_only(tmp_path, monkeypatch):
         g.record_geo_access("unit_test_state")
     g.record_geo_access("another_state")
     assert len(pd.read_csv(tmp_path / "results" / g.LEDGER_FILE)) == 2
+
+
+def test_no_score_without_a_passing_guard_record_for_this_code(tmp_path, monkeypatch):
+    import json
+    from wildfire.guards import provenance
+    monkeypatch.setenv("ARTIFACTS_ROOT", str(tmp_path))
+    (tmp_path / "results").mkdir()
+    path = tmp_path / "results" / g.GUARDS_FILE
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # no record
+    path.write_text(json.dumps({"timestamp_before_day": True, "label_shuffle": False, "code_version": provenance.code_version()}))
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # a guard failed
+    path.write_text(json.dumps({"timestamp_before_day": True, "code_version": "0" * 40}))
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # record from other code
+    path.write_text(json.dumps({"timestamp_before_day": True, "code_version": provenance.code_version()}))
+    assert g.require_record()["timestamp_before_day"] is True
+
+
+def test_every_scoring_entry_point_requires_the_guard_record():
+    from wildfire import config
+    root = config.REPO_ROOT / "src" / "wildfire" / "pipelines"
+    for name in ("tuning", "rolling_origin", "baseline_tables", "fresh_states"):
+        assert "require_record()" in (root / f"{name}.py").read_text(), name

@@ -31,6 +31,11 @@ def require_clean() -> str:
     return s["commit"]
 
 
+def code_version() -> str:
+    """Last commit that touched code or configuration (documents do not change it)."""
+    return _git("log", "-1", "--format=%H", "--", *CODE_PATHS)
+
+
 def spec_tag() -> str:
     from wildfire.guards import spec
     return spec.spec_commit()

@@ -34,8 +34,9 @@ def feature_names(dataset_columns: dict) -> list[str]:
     return sorted({c for a, v in dataset_columns.items() if a != clim for c in v})
 
 
-def complete_rows(table: pd.DataFrame, columns: dict, arrays: dict, chunk: int = 500_000) -> np.ndarray:
+def complete_rows(table: pd.DataFrame, columns: dict, arrays: dict) -> np.ndarray:
     """Rows where every tabular input and every enriched feature is present."""
+    chunk = config.load("models")["chunks"]["complete_rows"]
     names = feature_names(columns)
     ok = table[names].notna().all(axis=1).values.copy()
     for start in range(0, len(table), chunk):
@@ -108,8 +109,9 @@ def feature_groups_static(ds: Dataset) -> list[str]:
     return arms.feature_groups(ds.table)["static"]
 
 
-def matrix_file(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, year: int, path, chunk: int = 200_000) -> np.ndarray:
+def matrix_file(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, year: int, path, chunk: int | None = None) -> np.ndarray:
     """Write the input matrix to a file in chunks and return it memory-mapped (large validation matrices stay off memory)."""
+    chunk = chunk or config.load("models")["chunks"]["matrix_file"]
     width = len(columns) + (len(enriched_names()) if level == "enriched" else 0)
     out = np.lib.format.open_memmap(path, mode="w+", dtype=np.float32, shape=(len(idx), width))
     for start in range(0, len(idx), chunk):
@@ -118,8 +120,9 @@ def matrix_file(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, ye
     return np.load(path, mmap_mode="r")
 
 
-def predict_chunks(predict, x: np.ndarray, chunk: int = 200_000, transform=None) -> np.ndarray:
+def predict_chunks(predict, x: np.ndarray, chunk: int | None = None, transform=None) -> np.ndarray:
     """Apply `predict` to row chunks of a (memory-mapped) matrix; `transform` (optional) prepares each chunk."""
+    chunk = chunk or config.load("models")["chunks"]["predict"]
     parts = []
     for start in range(0, len(x), chunk):
         block = np.array(x[start:start + chunk], dtype=np.float32)

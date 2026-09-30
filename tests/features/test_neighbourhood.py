@@ -1,5 +1,8 @@
+import os
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from wildfire.features import neighbourhood as nb
 
@@ -36,3 +39,31 @@ def test_recent_onset_counts_never_include_the_target_day():
 def test_column_names_follow_the_settings():
     names = nb.column_names()
     assert len(names) == 12 and names[0] == "ring_8_tree_cover" and names[-1] == "ring_24_onsets_recent"
+
+
+def test_masked_neighbours_cannot_feed_a_row():
+    """A non-fit cell next to a fit cell carries an extreme value; it must not reach the fit row's ring summary."""
+    cells = pd.DataFrame(dict(ix=[0, 1, 2], iy=[0, 0, 0], role=["train", "train", "reserve"]))
+    values = np.array([1.0, 3.0, 1e6])
+    avail = nb.available_cells(cells, ["train"])
+    masked = nb.ring_stat(nb.to_raster(values[avail], cells[avail], (3, 1)), 1)
+    open_ = nb.ring_stat(nb.to_raster(values, cells, (3, 1)), 1)
+    assert masked[1, 0] == 1.0 and masked[0, 0] == 3.0          # only fit cells contribute
+    assert open_[1, 0] > 1e5                                     # without the mask the extreme cell leaks in
+    assert nb.available_cells(cells, None).all()
+
+
+@pytest.mark.skipif(not os.environ.get("DATA_ROOT"), reason="needs DATA_ROOT")
+def test_no_non_fit_cell_feeds_a_fit_row_on_the_real_grid():
+    from wildfire import config
+    from wildfire.labels.detections import load_grid
+    cells, meta = load_grid()
+    roles = config.load("features")["feature_sets"]["neighbourhood"]["fit_neighbour_roles"]
+    avail = nb.available_cells(cells, roles)
+    marker = (~cells.role.isin(roles)).values.astype(float)       # 1 on every cell that must not contribute
+    shape = (meta["nx"], meta["ny"])
+    for radius in (1, 2):
+        ring = nb.ring_stat(nb.to_raster(marker[avail], cells[avail], shape), radius, total=True)
+        fit = cells.role.isin(roles).values
+        assert np.nansum(ring[cells.ix.values[fit], cells.iy.values[fit]]) == 0.0
+    assert roles == ["train"] and set(cells.role[avail]) == {"train"}

@@ -6,7 +6,7 @@ import pandas as pd
 
 from wildfire import config
 from wildfire.evaluation import ladder
-from wildfire.guards import provenance
+from wildfire.guards import baseline_guards, provenance
 from wildfire.pipelines import rolling_origin
 
 NETWORK = "tabular_network"
@@ -77,6 +77,7 @@ def contrast_table(rows: pd.DataFrame, corrected: dict, scores: dict) -> pd.Data
 def run(log=print) -> None:
     """Write every baseline table to the results folder."""
     provenance.require_clean()
+    baseline_guards.require_record()
     out = config.output_dir("results")
     rows, corrected, scores = load_pooled()
     table = metrics_table(rows, corrected, scores)

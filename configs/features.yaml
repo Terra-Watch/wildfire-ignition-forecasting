@@ -8,11 +8,14 @@ tiers:
     - imagery_summary
 feature_sets:
   tabular: {enabled: true}
-  weather_windows: {enabled: true}
+  weather_windows:
+    enabled: true
+    settling_days: 365               # stored series starts this long before the first target day (rain counter settles)
   neighbourhood:
     enabled: true
     vegetation_min_composite_coverage: 0.8   # composites observing less of the grid are treated as missing
     day_chunk: 100                            # target days processed at a time (memory)
+    fit_neighbour_roles: [train]              # rows of the fit table see only cells of these grid roles as neighbours
   imagery_summary: {enabled: false}                    # placeholder
 
 tabular:
@@ -30,6 +33,12 @@ tabular:
   climatology_column: climatology_cell
   table_columns: [cell, day, year, week, state, label]   # carried with the inputs
   window_end: "2025-07-31"
+  constants:
+    days_per_year: 365.25
+    kelvin_offset: 273.15
+    ms_to_kmh: 3.6
+    metres_to_mm: 1000.0
+    tolerance: 1.0e-9
   weather:
     hours_utc: [0, 6, 7, 9]         # hours read from each day: 00 (accumulation reset), 06 and 07 (noon mean), 09 (afternoon)
     grid_step_deg: 0.1

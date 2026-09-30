@@ -9,7 +9,7 @@ import pandas as pd
 
 from wildfire import config
 from wildfire.evaluation import metrics, prior_shift
-from wildfire.guards import provenance
+from wildfire.guards import baseline_guards, provenance
 from wildfire.models.fit import Model
 from wildfire.models.network import Network, Standardiser
 from wildfire.pipelines import dataset, ladder_fit
@@ -82,6 +82,7 @@ def run(log=print) -> dict:
     Every finished trial is appended to a file at once; a restart skips the trials already in it.
     """
     provenance.require_clean()
+    baseline_guards.require_record()
     cfg = config.load("baseline")
     out = config.output_dir("results")
     path = out / TRIALS_FILE

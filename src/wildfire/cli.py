@@ -21,6 +21,7 @@ PIPELINES = {                     # command -> (module, function)
     "leave-year-out": ("leave_year_out", "run"),
     "out-of-fold": ("out_of_fold", "run"),
     "sanity-checks": ("sanity", "run"),
+    "run-guards": ("guards_run", "run"),
     "tune": ("tuning", "run"),
     "rolling-origin": ("rolling_origin", "run"),
     "baseline-tables": ("baseline_tables", "run"),

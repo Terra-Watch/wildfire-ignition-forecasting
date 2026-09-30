@@ -25,9 +25,9 @@ def run(log=print) -> None:
     """Fit and predict every validation year that has not been done yet (the run can be resumed)."""
     from wildfire.guards import baseline_guards
     provenance.require_clean()
+    baseline_guards.require_record()
     tuned = tuning.load_tuned()
     ds = dataset.load_dataset()
-    baseline_guards.require_passed(ds)
     dataset.clear_cache()
     for year in config.load("baseline")["validation"]["validation_years"]:
         pred, prev = prediction_paths(year)

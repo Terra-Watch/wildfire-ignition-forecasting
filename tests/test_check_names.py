@@ -32,3 +32,13 @@ def test_builtin_numeric_function_is_allowed_in_code():
     call = "ro" + "und"
     assert not check_names.bad_tokens(f"x = {call}(1.5)", is_code=True)
     assert check_names.bad_tokens(f"{call}_3 = 1", is_code=True)
+
+
+def test_real_version_labels_are_flagged_and_lookalikes_allowed():
+    labels = ["v" + "1", "v" + "2", "pha" + "se", "rou" + "nd", "pi" + "lot", "au" + "dit", "experi" + "ment"]
+    for word in labels:
+        assert check_names.bad_tokens(f"name_{word}_x", is_code=True), word
+        assert check_names.bad_tokens(f"x = '{word}'", is_code=True), word
+    call = "ro" + "und"
+    assert not check_names.bad_tokens(f"y = {call}(2.5, 1)", is_code=True)
+    assert not check_names.bad_tokens("wind = ds['v10'] + ds['u10']", is_code=True)

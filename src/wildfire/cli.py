@@ -12,6 +12,8 @@ PIPELINES = {
     "build-labels": "labels",
     "build-features": "features",
     "build-model-table": "model_table",
+    "build-weather-series": "enriched",
+    "build-enriched": "enriched",
     "score-holdout": "holdout",
     "leave-year-out": "leave_year_out",
     "out-of-fold": "out_of_fold",
@@ -27,6 +29,9 @@ def _run_pipeline(name: str) -> None:
     elif name == "build-model-table":
         from wildfire.pipelines import features
         features.build_model_table()
+    elif name in ("build-weather-series", "build-enriched"):
+        from wildfire.pipelines import enriched
+        (enriched.build_series if name == "build-weather-series" else enriched.build_arrays)()
     else:
         importlib.import_module(f"wildfire.pipelines.{PIPELINES[name]}").run()
 

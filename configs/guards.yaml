@@ -1,0 +1,4 @@
+# Settings of the pre-scoring guards that are not part of the specification files.
+label_shuffle:
+  validation_year: 2024
+  seeds: 5

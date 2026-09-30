@@ -4,6 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from wildfire import config
 from wildfire.features import neighbourhood, weather_windows
 from wildfire.features.tabular import weather
 from wildfire.models import arms
@@ -21,9 +22,10 @@ def group_table() -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["group", "columns", "examples"])
 
 
-def missing_table(sample: int = 300_000) -> pd.DataFrame:
+def missing_table() -> pd.DataFrame:
     """Share of missing values in each feature block, on a random sample of modelling rows."""
     ds = dataset.load_dataset()
+    sample = config.load("reporting")["missing_table_sample"]
     idx = np.sort(np.random.default_rng(0).choice(len(ds.table), sample, replace=False))
     tab = ds.table[dataset.feature_names(ds.tabular_columns)].iloc[idx]
     return pd.DataFrame(dict(block=["tabular", "weather windows", "neighbourhood"],
@@ -34,7 +36,7 @@ def missing_table(sample: int = 300_000) -> pd.DataFrame:
 def plot_window_example():
     """The fire-weather index in the 70 days before one onset, with the 7- and 30-day means the windows use."""
     ds = dataset.load_dataset()
-    row = ds.table[ds.table.label == 1].iloc[1000]
+    row = ds.table[ds.table.label == 1].iloc[config.load("reporting")["feature_example_row"]]
     s = ds.arrays["series"]
     p = int(s["cell_point"][int(row.cell)])
     k = weather.NAMES.index("fwi")
@@ -56,9 +58,10 @@ def plot_feature_by_label(column: str = "fwi"):
     """Distribution of one input for onsets and for negatives."""
     ds = dataset.load_dataset()
     t = ds.table
+    hist = config.load("reporting")["histogram"]
     fig, ax = new_figure()
     for lab, name, c in ((0, "negatives", COLOURS["neutral"]), (1, "onsets", COLOURS["secondary"])):
-        ax.hist(t[column][t.label == lab].dropna().sample(100_000, random_state=0), bins=60, density=True, alpha=0.6, color=c, label=name)
+        ax.hist(t[column][t.label == lab].dropna().sample(hist["sample"], random_state=0), bins=hist["bins"], density=True, alpha=0.6, color=c, label=name)
     ax.set_xlabel(column)
     ax.set_ylabel("Density")
     ax.set_title(f"{column} for onsets and negatives")

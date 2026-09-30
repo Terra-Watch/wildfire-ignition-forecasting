@@ -62,7 +62,8 @@ class Network:
     def _logits(self, net, x) -> torch.Tensor:
         net.eval()
         with torch.no_grad():
-            return torch.cat([net(x[i:i + 65536].to(self.device)).squeeze(1).cpu() for i in range(0, len(x), 65536)])
+            step = config.load("models")["network"]["predict_chunk_rows"]
+            return torch.cat([net(x[i:i + step].to(self.device)).squeeze(1).cpu() for i in range(0, len(x), step)])
 
     def fit(self, x, y, w, x_val, y_val, w_val):
         """x, x_val: standardised float32 arrays (not copied). Keeps the epoch with the lowest validation loss."""
@@ -79,7 +80,7 @@ class Network:
         for _ in range(cfg["max_epochs"]):
             self._epoch(self.net, opt, train, rng)
             loss = float(weighted_log_loss(self._logits(self.net, val[0]), val[1], val[2]))
-            if loss < best - 1e-6:
+            if loss < best - cfg["min_improvement"]:
                 best, since, best_state = loss, 0, {k: v.detach().clone() for k, v in self.net.state_dict().items()}
             else:
                 since += 1

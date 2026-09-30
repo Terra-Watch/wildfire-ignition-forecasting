@@ -89,8 +89,9 @@ def build_features(rows_path, day_coverage_path, climatology_onsets: pd.DataFram
     masks.assert_same_nan_rows(rows, weather.NAMES)
     log("weather done", round(time.time() - t0), "masked rows", masked, report)
     dts = pd.to_datetime(rows.date)
-    rows["sin_doy"] = np.sin(2 * np.pi * dts.dt.dayofyear / 365.25)
-    rows["cos_doy"] = np.cos(2 * np.pi * dts.dt.dayofyear / 365.25)
+    year_days = cfg["constants"]["days_per_year"]
+    rows["sin_doy"] = np.sin(2 * np.pi * dts.dt.dayofyear / year_days)
+    rows["cos_doy"] = np.cos(2 * np.pi * dts.dt.dayofyear / year_days)
     static.attach_static(rows, ncell)
     _burn_features(rows, cells, cfg["burn"], log)
     log("burn done", round(time.time() - t0))

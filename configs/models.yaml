@@ -40,5 +40,11 @@ network:
   batch_size: 4096
   max_epochs: 20
   patience: 2
+  min_improvement: 1.0e-6
+  predict_chunk_rows: 65536
   validation_share_years: 1          # the last training year is held inside the training years for early stopping
   seeds: 10
+chunks:                              # rows handled at a time (memory only; no effect on results)
+  complete_rows: 500000
+  matrix_file: 200000
+  predict: 200000

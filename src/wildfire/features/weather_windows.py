@@ -28,7 +28,7 @@ def settings() -> dict:
 
 def series_first_day() -> int:
     """First stored day: a year before the first target day, so the rain counter is settled."""
-    return day_number(config.load("domain")["study_window"]["start"]) - 365
+    return day_number(config.load("domain")["study_window"]["start"]) - config.load("features")["feature_sets"]["weather_windows"]["settling_days"]
 
 
 def build_series(cells: pd.DataFrame) -> dict:

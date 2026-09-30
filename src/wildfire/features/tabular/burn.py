@@ -5,6 +5,8 @@ import datetime as dt
 
 import numpy as np
 
+from wildfire import config
+
 
 def month_end_days(month_start) -> np.ndarray:
     """Exclusive end day of each month, from the array of month-start days."""
@@ -55,6 +57,8 @@ def burn_features(day, o9, o1, cov_nb, cov_c, month_start, month_end, *, min_fra
     bf_log_n10_nbhd is NaN unless the window was observed at least min_frac. bf_years_since is the time since the last
     observed burn, capped (a lower bound when censored); never NaN when censor is true.
     """
+    consts = config.load("features")["tabular"]["constants"]
+    year_days, tol = consts["days_per_year"], consts["tolerance"]
     day = np.asarray(day, np.int64)
     lo = day - lookback
     hi = day - lag
@@ -63,10 +67,9 @@ def burn_features(day, o9, o1, cov_nb, cov_c, month_start, month_end, *, min_fra
     last = np.searchsorted(o1, hi, "left") - 1
     has = (last >= 0) & (len(o1) > 0)
     ref = np.where(has, o1[np.clip(last, 0, max(len(o1) - 1, 0))] if len(o1) else 0, archive_start)
-    ys = np.minimum((day - ref) / 365.25, cap)
+    ys = np.minimum((day - ref) / year_days, cap)
     ys_obs = window_coverage(cov_c, month_start, month_end,
-                             np.maximum(ref, np.floor(day - cap * 365.25).astype(np.int64)), hi)
-    tol = 1e-9
+                             np.maximum(ref, np.floor(day - cap * year_days).astype(np.int64)), hi)
     return dict(
         bf_log_n10_nbhd=np.where(obs >= min_frac - tol, np.log1p(n), np.nan),
         burn_obs_frac=obs,

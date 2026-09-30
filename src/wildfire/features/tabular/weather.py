@@ -113,13 +113,15 @@ class CodeState:
     def update(self, v: dict, idx: list, date: pd.Timestamp):
         """Advance one day. Returns (fields (len(NAMES), nlat, nlon) float32, daily rain total in mm)."""
         w = self.w
+        units = config.load("features")["tabular"]["constants"]
+        kelvin, kmh, to_mm = units["kelvin_offset"], units["ms_to_kmh"], units["metres_to_mm"]
         i0, i6, i7, i9 = idx
         noon = lambda name: (v[name][i6] + v[name][i7]) / 2
-        t, td = noon("t2m") - 273.15, noon("d2m") - 273.15
-        ws = np.hypot(noon("u10"), noon("v10")) * 3.6
+        t, td = noon("t2m") - kelvin, noon("d2m") - kelvin
+        ws = np.hypot(noon("u10"), noon("v10")) * kmh
         rh = np.clip(100 * _saturation_vapour_pressure(td) / _saturation_vapour_pressure(t), *w["humidity_bounds"])
-        tp00 = np.nan_to_num(v["tp"][i0]) * 1000.0
-        tp0630 = (np.nan_to_num(v["tp"][i6]) + np.nan_to_num(v["tp"][i7])) / 2 * 1000.0
+        tp00 = np.nan_to_num(v["tp"][i0]) * to_mm
+        tp0630 = (np.nan_to_num(v["tp"][i6]) + np.nan_to_num(v["tp"][i7])) / 2 * to_mm
         rain24 = np.maximum(tp0630 + tp00 - self.prev_rain_0630, 0.0)
         self.prev_rain_0630 = tp0630
         self.rain_hist.append(tp00)
@@ -131,7 +133,7 @@ class CodeState:
         s1, s2 = noon("swvl1"), noon("swvl2")
         fields = np.stack([t, np.maximum(_saturation_vapour_pressure(t) - _saturation_vapour_pressure(td), 0), ws, rh, s1, s2,
                            np.sum(self.rain_hist, axis=0), self.dry_spell, self.ffmc, self.dmc, self.dc, isi, bui,
-                           fwi.fwi(isi, bui), v["t2m"][i9] - 273.15, s1 - self.clim[wk, 0], s2 - self.clim[wk, 1]], 0)
+                           fwi.fwi(isi, bui), v["t2m"][i9] - kelvin, s1 - self.clim[wk, 0], s2 - self.clim[wk, 1]], 0)
         return fields.astype(np.float32), tp00
 
 

@@ -1,0 +1,4 @@
+# Presentation settings for tables and plots in the notebooks.
+feature_example_row: 1000            # which onset's window is drawn
+missing_table_sample: 300000
+histogram: {sample: 100000, bins: 60}

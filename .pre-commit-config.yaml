@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-names
+        name: forbidden label words
+        entry: python3 scripts/check_names.py
+        language: system
+        pass_filenames: true

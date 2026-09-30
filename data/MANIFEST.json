@@ -1,0 +1,120 @@
+{
+  "data_root_env": "DATA_ROOT",
+  "datasets": {
+    "admin_boundaries": {
+      "bytes": 94488589,
+      "complete": true,
+      "coverage": null,
+      "description": "Administrative boundaries (levels 1 and 2).",
+      "file_count": 2,
+      "paths": [
+        "raw/geoBoundaries_IND_ADM*.geojson"
+      ],
+      "sha256": "393aa075fcfde0eabc42d69fba28964ec6e795a6c36dcc7b7ac263990fcc3090"
+    },
+    "burned_area": {
+      "bytes": 5023817,
+      "complete": "partial",
+      "coverage": null,
+      "description": "Per-cell burned-area months and cache.",
+      "file_count": 2978,
+      "paths": [
+        "processed/burn_cells.npz*",
+        "processed/burn_cache/*"
+      ],
+      "sha256": "2843731f7c2d783202e6c9f132e404a8864875aa32e6acf85694376cb93e2d07"
+    },
+    "derived_tables": {
+      "bytes": 14028073030,
+      "complete": true,
+      "coverage": null,
+      "description": "Rebuildable tables, features and predictions. Not authoritative.",
+      "file_count": 21,
+      "paths": [
+        "processed/*.pkl",
+        "processed/rows.csv",
+        "processed/*.parquet",
+        "processed/cellday_detections.csv",
+        "processed/firms_day_coverage.csv"
+      ],
+      "sha256": "4c8ca9fe0a7b375bbb0e7638581f6cd32cc99e53acc7faa68b4cc8e379ba7852"
+    },
+    "fire_detections": {
+      "bytes": 740149815,
+      "complete": true,
+      "coverage": {
+        "end": "2025-12-31",
+        "start": "2018-04-01"
+      },
+      "description": "Satellite active-fire detections (VIIRS and MODIS), daily chunks.",
+      "file_count": 3183,
+      "paths": [
+        "raw/firms/*",
+        "raw/firms_ext/*"
+      ],
+      "sha256": "25033f2527be049ba39bebdbab498fb8b89608f1e9936551f095f34715fe3d1b"
+    },
+    "grid": {
+      "bytes": 5050353,
+      "complete": true,
+      "coverage": null,
+      "description": "Analysis grid and its metadata.",
+      "file_count": 2,
+      "paths": [
+        "processed/grid.csv",
+        "processed/grid_meta.json"
+      ],
+      "sha256": "47c1565139a5536ed200afacf9f2a11f87a48f21d131b3bb7e1fbb11b39e1244"
+    },
+    "night_lights": {
+      "bytes": 5123438529,
+      "complete": true,
+      "coverage": {
+        "end": "2024",
+        "start": "2018"
+      },
+      "description": "Annual night-time lights tiles (VNP46A4).",
+      "file_count": 42,
+      "paths": [
+        "raw/viirs_nl/*"
+      ],
+      "sha256": "aa5b444765fa702c0f0285ad8ce01337e7499725903c5fd387c88fd9623f5dff"
+    },
+    "static_layers": {
+      "bytes": 44695007,
+      "complete": true,
+      "coverage": null,
+      "description": "Per-cell static layers (terrain, land cover, human pressure, roads, night lights).",
+      "file_count": 5,
+      "paths": [
+        "processed/static_*.csv"
+      ],
+      "sha256": "4169b78789459cb0f98312de50fa43390c37ea8f86ea229b134ff77f4eaa4162"
+    },
+    "vegetation_index": {
+      "bytes": 120874490,
+      "complete": true,
+      "coverage": null,
+      "description": "Per-cell vegetation index composites (16-day) and a backup copy.",
+      "file_count": 2,
+      "paths": [
+        "processed/ndvi_cells.npz*"
+      ],
+      "sha256": "5c9e09e62d71a3b2bf60e007e61c240005c80c236b1179beb752b9d3363cfd10"
+    },
+    "weather_hourly": {
+      "bytes": 9034622504,
+      "complete": "partial",
+      "coverage": {
+        "end": "2025-12",
+        "start": "2017-01"
+      },
+      "description": "Hourly land reanalysis (ERA5-Land), monthly files. primary and extra_a groups complete; extra_b partial and abandoned.",
+      "file_count": 272,
+      "paths": [
+        "raw/era5/*"
+      ],
+      "sha256": "eb66aba2303fa6bba5f825efb7ab6219411264c3363e73590937931b832fbef6"
+    }
+  }
+}

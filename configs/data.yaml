@@ -1,0 +1,53 @@
+# Where data lives and what each dataset is. Nothing is copied into this repository.
+# DATA_ROOT comes from the environment (see .env.example); it must contain
+# `raw/` and `processed/`.
+data_root: ${DATA_ROOT}
+artifacts_root: ${ARTIFACTS_ROOT:-./artifacts}
+
+# Dataset definitions. `paths` are globs relative to data_root.
+# `data/MANIFEST.json` records size, file count and content hash for each.
+datasets:
+  fire_detections:
+    description: Satellite active-fire detections (VIIRS and MODIS), daily chunks.
+    paths: [raw/firms/*, raw/firms_ext/*]
+    coverage: {start: "2018-04-01", end: "2025-12-31"}
+    complete: true
+  weather_hourly:
+    description: Hourly land reanalysis (ERA5-Land), monthly files. primary and extra_a groups complete; extra_b partial and abandoned.
+    paths: [raw/era5/*]
+    coverage: {start: "2017-01", end: "2025-12"}
+    complete: partial
+  night_lights:
+    description: Annual night-time lights tiles (VNP46A4).
+    paths: [raw/viirs_nl/*]
+    coverage: {start: "2018", end: "2024"}
+    complete: true
+  admin_boundaries:
+    description: Administrative boundaries (levels 1 and 2).
+    paths: [raw/geoBoundaries_IND_ADM*.geojson]
+    complete: true
+  grid:
+    description: Analysis grid and its metadata.
+    paths: [processed/grid.csv, processed/grid_meta.json]
+    complete: true
+  static_layers:
+    description: Per-cell static layers (terrain, land cover, human pressure, roads, night lights).
+    paths: [processed/static_*.csv]
+    complete: true
+  vegetation_index:
+    description: Per-cell vegetation index composites (16-day) and a backup copy.
+    paths: [processed/ndvi_cells.npz*]
+    complete: true        # catalogue gaps documented in docs/data
+  burned_area:
+    description: Per-cell burned-area months and cache.
+    paths: [processed/burn_cells.npz*, processed/burn_cache/*]
+    complete: partial     # 8 months absent upstream
+  derived_tables:
+    description: Rebuildable tables, features and predictions. Not authoritative.
+    paths:
+      - processed/*.pkl
+      - processed/rows.csv
+      - processed/*.parquet
+      - processed/cellday_detections.csv
+      - processed/firms_day_coverage.csv
+    complete: true

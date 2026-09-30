@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wildfire"
+version = "0.0.0"
+description = "Next-day wildfire ignition risk over Indian forest landscapes."
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pre-commit>=3"]
+
+[project.scripts]
+wildfire = "wildfire.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

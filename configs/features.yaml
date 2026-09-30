@@ -1,0 +1,13 @@
+# Feature sets, in two tiers, all scored by the same evaluation harness.
+tiers:
+  summary:               # cheap, run first
+    - tabular
+    - weather_windows
+    - neighbourhood
+  imagery:               # expensive, only if the summary tier leaves a gap
+    - imagery_summary
+feature_sets:
+  tabular: {enabled: true}
+  weather_windows: {enabled: true, window_days: []}    # to be decided
+  neighbourhood: {enabled: true, radii_cells: []}      # to be decided
+  imagery_summary: {enabled: false}                    # placeholder

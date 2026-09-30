@@ -1,0 +1,5 @@
+# One harness scores every feature set and model identically.
+metrics: []
+splits:
+  seed: null
+  held_out_access: forbidden_until_final

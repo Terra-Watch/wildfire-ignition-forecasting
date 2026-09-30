@@ -1,0 +1,11 @@
+# Study domain. Every constant about where and when lives here.
+bounding_box:            # degrees: north, west, south, east (weather download area)
+  north: 32
+  west: 72
+  south: 8
+  east: 90
+target:
+  description: next-day fire ignition at a grid cell
+  horizon_days: null     # unset until decided
+grid:
+  cell_size_m: null      # unset until decided

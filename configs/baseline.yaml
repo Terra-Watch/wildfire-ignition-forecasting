@@ -1,0 +1,90 @@
+# Baseline specification, declared before any scoring. Changing this file after scoring starts is refused by the
+# spec guard (see docs/baseline_spec.md). Constants shared with other configs are not repeated here.
+question: probability that a new fire starts in a forest cell (5 km) on day D+1, from data observed up to day D
+periods:
+  fit_years: [2019, 2024]
+  last_development_fold: 2025          # already scored in earlier work: it is NOT untouched
+  sealed_test: {start: "2026-01-01", end: "2026-07-31", scores_allowed: 1}
+  fresh_geographic_test:
+    states_always: [UK]
+    states_if_fire_data_complete: [AP, KA, TN, KL]
+    scores_allowed: 1
+    ledger: geo_test_ledger.csv        # under artifacts results; one line per access
+  reserve_cells: descriptive_only
+validation:
+  scheme: rolling_origin_by_year       # train on earlier years, validate on the next year
+  validation_years: [2021, 2022, 2023, 2024, 2025]
+  tuning_years: [2021, 2022, 2023, 2024]   # 2025 never drives a choice
+  validation_months: [1, 2, 3, 4, 5, 6, 7]   # rows used to validate each year (the 2025 data stops at the end of July)
+  fit_row_cap: 2000000                 # training rows per fit (all onsets kept); same rows for every arm and level
+  fit_row_cap_seed: 1
+prior_shift: {sample_rate: 0.0476, true_rate: 0.0147}
+reporting:
+  both_views_everywhere: [auc_spatial_within_day, auc_temporal_within_cell]
+  metrics: [average_precision, log_loss, brier, top_k_capture, lift]
+  top_k_share: [0.01, 0.05, 0.10]
+  reliability_bins: 10
+arms:
+  ladder: [climatology_cell, landcover_season, fwi_season, logistic_weather_static, logistic_with_burn, boosting, tabular_network]
+  two_levels: [logistic_weather_static, logistic_with_burn, boosting, tabular_network]   # run at both information levels
+  information_levels:
+    tabular: [tabular]
+    enriched: [tabular, weather_windows, neighbourhood]
+  diagnostics: [coords_only, cell_id_only, static_only]   # measure the "which cell" shortcut
+features:
+  weather_windows:
+    variables: weather_and_fire_weather_codes       # the 11 weather variables and the 6 fire-weather codes
+    window_days: [3, 7, 14, 30, 60]
+    statistics: [mean, max]
+    code_change_days: 7
+    days_since_rain_mm: 2.0
+    days_since_rain_cap: 60
+    cumulative_precipitation_days: [7, 30, 60]
+    anomaly_reference: day_of_year_climatology_from_training_years_of_the_fold
+  neighbourhood:
+    rings: {ring_8: 1, ring_24: 2}                  # Chebyshev radius in cells; edge cells use available neighbours
+    means_of: [tree_cover, burn_history, vegetation_index, fire_weather_index]
+    recent_onset_count_days: 28                     # counted over days before D (never includes D+1)
+  imagery_summary: {declared: true, built: false}   # same code and protocol once imagery exists
+network:
+  architecture: {width: 256, depth: 3, dropout: 0.1}
+  optimizer: adamw
+  loss: binary_cross_entropy_with_design_weights
+  early_stopping: validation_log_loss_inside_training_years
+  seeds: 10
+tuning:
+  trials: 12
+  method: random_search
+  selection: [validation_log_loss, average_precision_tie_break]
+  boosting_space:
+    max_depth: [4, 6, 8]
+    learning_rate: [0.05, 0.1]
+    max_iter: [200, 300, 500]
+    l2_regularization: [0, 1]
+    min_samples_leaf: [20, 100]
+  network_space:
+    width: [128, 256, 512]
+    depth: [2, 3, 4]
+    dropout: [0.0, 0.1, 0.2]
+    learning_rate: [0.001, 0.0003]
+    weight_decay: [0.0001, 0.01]
+  seed: 0
+  row_cap: 600000                     # training rows per tuning fit
+decision_rule:
+  no_state_worse_than: -0.03            # paired metric, per state
+  fail_if_ci_upper_below: min_ap_gain   # evaluation.yaml verdict.min_ap_gain
+  power_gate: inconclusive_if_mde_above_min_ap_gain
+  mde_z: [2.575829, 0.841621]          # 99% two-sided quantile + 80% power; MDE = (sum) x bootstrap SE of the AP difference
+contrasts:
+  - {name: enriched_boosting_vs_tabular_boosting, arm: boosting@enriched, reference: boosting@tabular}
+  - {name: enriched_boosting_vs_enriched_logistic, arm: boosting@enriched, reference: logistic_with_burn@enriched}
+  - {name: tabular_network_vs_enriched_boosting, arm: tabular_network@enriched, reference: boosting@enriched}
+  - {name: each_arm_vs_climatology, arm: every_other_arm, reference: climatology_cell}
+guards:
+  label_shuffle_auc: {center: 0.5, tolerance: 0.02}
+  required: [timestamp_before_day, shifted_feature_fails, label_shuffle, coordinate_unit_test, identity_gate,
+             no_validation_information_in_tuning_or_climatology, provenance, power_gate, geo_ledger]
+frozen_baseline:
+  tag: baseline-final
+  records: [code_hash, config_snapshot, data_manifest, artifact_manifest]
+spec_files: [configs/baseline.yaml, docs/baseline_spec.md]

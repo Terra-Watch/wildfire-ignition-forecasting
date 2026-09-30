@@ -21,6 +21,7 @@ outputs:                 # relative to artifacts_root
   features: features
   models: models
   results: results
+  cache: cache            # temporary matrices, safe to delete
 
 # Dataset definitions. `paths` are globs relative to data_root.
 # `data/MANIFEST.json` records size, file count and content hash for each.

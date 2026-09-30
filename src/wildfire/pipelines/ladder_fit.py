@@ -1,6 +1,8 @@
 """Fit every arm of the ladder for one validation year and predict its validation rows."""
 from __future__ import annotations
 
+import hashlib
+
 import numpy as np
 import pandas as pd
 
@@ -43,14 +45,11 @@ def training_weights(table: pd.DataFrame, idx: np.ndarray) -> np.ndarray:
     return prior_shift.design_weights(rows.label.values, weights.strata(rows), frame)
 
 
-def standardised_parts(ds, dv, train_idx, stop_idx, val_idx, cols, level, year) -> tuple:
-    """Training, early-stopping and validation matrices, standardised with the training rows' mean and deviation."""
-    x = dataset.matrix(ds, train_idx, cols, level, year)
-    std = Standardiser(x)
-    std.apply(x)
-    xs = std.apply(dataset.matrix(ds, stop_idx, cols, level, year))
-    xv = std.apply(dataset.matrix(dv, val_idx, cols, level, year))
-    return x, xs, xv
+def validation_file(dv, val_idx, cols, level, year) -> np.ndarray:
+    """The validation matrix of one input set, written once and memory-mapped (shared by every arm that reads it)."""
+    name = f"validation_{year}_{level}_{len(val_idx)}_{hashlib.md5(','.join(cols).encode()).hexdigest()[:8]}.npy"
+    path = config.output_dir("cache") / name
+    return np.load(path, mmap_mode="r") if path.exists() else dataset.matrix_file(dv, val_idx, cols, level, year, path)
 
 
 def fit_network(ds, fit_idx, dv, val_idx, cols, level, year, params, log) -> tuple[dict, dict]:
@@ -59,11 +58,16 @@ def fit_network(ds, fit_idx, dv, val_idx, cols, level, year, params, log) -> tup
     stop = t.year.values[fit_idx] == year - 1
     w = training_weights(t, fit_idx)
     y = t.label.values[fit_idx]
-    x, xs, xv = standardised_parts(ds, dv, fit_idx[~stop], fit_idx[stop], val_idx, cols, level, year)
+    x = dataset.matrix(ds, fit_idx[~stop], cols, level, year)
+    std = Standardiser(x)
+    std.apply(x)
+    xs = std.apply(dataset.matrix(ds, fit_idx[stop], cols, level, year))
+    xv = validation_file(dv, val_idx, cols, level, year)
     preds, prevalence = {}, {}
     for seed in range(config.load("models")["network"]["seeds"]):
         m = Network(params, seed).fit(x, y[~stop], w[~stop], xs, y[stop], w[stop])
-        preds[f"#{seed}"], prevalence[f"#{seed}"] = m.predict(xv), m.fit_prevalence
+        preds[f"#{seed}"] = dataset.predict_chunks(m.predict, xv, transform=std.apply)
+        prevalence[f"#{seed}"] = m.fit_prevalence
         log("network", level, year, "seed", seed, round(m.best_validation_loss, 5))
     return preds, prevalence
 
@@ -72,7 +76,8 @@ def fit_standard(ds, fit_idx, dv, val_idx, cols, level, year, kind: str, params:
     """Logistic or boosting on the fit rows; returns validation probabilities and the fit prevalence."""
     x = dataset.matrix(ds, fit_idx, cols, level, year)
     m = Model(kind, params).fit(x, ds.table.label.values[fit_idx], inplace=True)
-    return m.predict(dataset.matrix(dv, val_idx, cols, level, year)), m.fit_prevalence
+    del x
+    return dataset.predict_chunks(m.predict, validation_file(dv, val_idx, cols, level, year)), m.fit_prevalence
 
 
 def climatology_arm(ds, year, dv, val_idx) -> tuple[np.ndarray, np.ndarray, float]:
@@ -97,8 +102,8 @@ def diagnostic_arms(ds, fit_idx, dv, val_idx, boosting_params) -> dict:
     rate = diagnostics.cell_rates(t.cell.values[fit_idx], y, dv.table.cell.values[val_idx])
     out["cell_id_only"] = (rate, float(y.mean()))
     static = dataset.feature_groups_static(ds)
-    m = Model("boosting", boosting_params).fit(t[static].values[fit_idx].astype(np.float32), y)
-    out["static_only"] = (m.predict(dv.table[static].values[val_idx].astype(np.float32)), m.fit_prevalence)
+    m = Model("boosting", boosting_params).fit(dataset.take_columns(t, fit_idx, static), y)
+    out["static_only"] = (m.predict(dataset.take_columns(dv.table, val_idx, static)), m.fit_prevalence)
     return out
 
 

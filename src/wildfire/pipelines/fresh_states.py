@@ -56,6 +56,7 @@ def score_once(log=print) -> None:
     ds = dataset.load_dataset()
     dv = dataset.load_dataset(TABLE, PREFIX)
     baseline_guards.require_passed(ds)
+    dataset.clear_cache()
     for state in sorted(dv.table.state.unique()):
         baseline_guards.record_geo_access(state)
     last_year = config.load("baseline")["periods"]["last_development_fold"]
@@ -66,4 +67,5 @@ def score_once(log=print) -> None:
     folder = config.output_dir("results")
     out.to_parquet(folder / "fresh_predictions.parquet")
     pd.Series(prevalence).to_json(folder / "fresh_fit_prevalence.json")
+    dataset.clear_cache()
     log("fresh predictions", out.shape)

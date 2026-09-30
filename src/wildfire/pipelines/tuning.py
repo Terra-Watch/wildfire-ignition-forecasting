@@ -37,13 +37,13 @@ def fold_matrices(ds: dataset.Dataset, year: int, cap: int) -> dict:
     fit_idx, val_idx = dataset.fit_rows(ds, year, cap), dataset.validation_rows(ds, year)
     cols = ladder_fit.columns_for(ds, "boosting")
     return dict(fit_idx=fit_idx, val_idx=val_idx, x=dataset.matrix(ds, fit_idx, cols, LEVEL, year),
-                xv=dataset.matrix(ds, val_idx, cols, LEVEL, year))
+                xv=ladder_fit.validation_file(ds, val_idx, cols, LEVEL, year))
 
 
 def boosting_trial(ds, fm: dict, params: dict) -> dict:
     y = ds.table.label.values[fm["fit_idx"]]
     m = Model("boosting", params).fit(fm["x"], y)
-    return score_trial(m.predict(fm["xv"]), ds.table.label.values[fm["val_idx"]], m.fit_prevalence)
+    return score_trial(dataset.predict_chunks(m.predict, fm["xv"]), ds.table.label.values[fm["val_idx"]], m.fit_prevalence)
 
 
 def network_trial(ds, fm: dict, params: dict, year: int) -> dict:
@@ -52,9 +52,10 @@ def network_trial(ds, fm: dict, params: dict, year: int) -> dict:
     w = ladder_fit.training_weights(t, fm["fit_idx"])
     y = t.label.values[fm["fit_idx"]]
     std = Standardiser(fm["x"][~stop])
-    x, xs, xv = (std.apply(a.copy()) for a in (fm["x"][~stop], fm["x"][stop], fm["xv"]))
+    x, xs = std.apply(fm["x"][~stop]), std.apply(fm["x"][stop])
     m = Network(params, seed=config.load("baseline")["tuning"]["seed"]).fit(x, y[~stop], w[~stop], xs, y[stop], w[stop])
-    return score_trial(m.predict(xv), t.label.values[fm["val_idx"]], m.fit_prevalence)
+    p = dataset.predict_chunks(m.predict, fm["xv"], transform=std.apply)
+    return score_trial(p, t.label.values[fm["val_idx"]], m.fit_prevalence)
 
 
 def choose(records: pd.DataFrame, kind: str) -> dict:
@@ -69,6 +70,7 @@ def run(log=print) -> dict:
     provenance.require_clean()
     cfg = config.load("baseline")
     ds = dataset.load_dataset()
+    dataset.clear_cache()
     trials = {k: sample_trials(cfg["tuning"][space], cfg["tuning"]["trials"], cfg["tuning"]["seed"]) for k, space in SPACES.items()}
     records = []
     for year in cfg["validation"]["tuning_years"]:
@@ -83,6 +85,7 @@ def run(log=print) -> dict:
     provenance.stamp_df(table, out / "tuning_trials.csv")
     tuned = {k: choose(table, k) for k in SPACES}
     (out / TUNED_FILE).write_text(json.dumps(tuned, indent=1))
+    dataset.clear_cache()
     return tuned
 
 

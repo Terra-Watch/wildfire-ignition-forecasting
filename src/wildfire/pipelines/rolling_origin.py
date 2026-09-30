@@ -28,6 +28,7 @@ def run(log=print) -> None:
     tuned = tuning.load_tuned()
     ds = dataset.load_dataset()
     baseline_guards.require_passed(ds)
+    dataset.clear_cache()
     for year in config.load("baseline")["validation"]["validation_years"]:
         pred, prev = prediction_paths(year)
         if pred.exists():
@@ -35,4 +36,5 @@ def run(log=print) -> None:
         out, prevalence = ladder_fit.run_fold(ds, year, tuned, log)
         out.to_parquet(pred)
         prev.write_text(json.dumps(prevalence))
+        dataset.clear_cache()
         log("saved", year, out.shape)

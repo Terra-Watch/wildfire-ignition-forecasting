@@ -91,3 +91,14 @@ def test_diagnostic_arms_use_only_place_and_static_inputs(monkeypatch):
     out = ladder_fit.diagnostic_arms(ds, fit, ds, val, {"max_depth": 3, "learning_rate": 0.1, "max_iter": 20})
     assert set(out) == {"coords_only", "cell_id_only", "static_only"}
     assert all(len(p) == len(val) for p, _ in out.values())
+
+
+def test_take_columns_and_chunked_prediction_match_direct_computation(tmp_path):
+    ds = tiny_dataset()
+    idx = np.array([5, 7, 100, 2000])
+    assert np.array_equal(dataset.take_columns(ds.table, idx, ["x2", "x1"]), ds.table[["x2", "x1"]].values[idx].astype(np.float32))
+    val = dataset.validation_rows(ds, 2022)
+    mm = dataset.matrix_file(ds, val, ["x1", "x2"], "enriched", 2022, tmp_path / "v.npy", chunk=37)
+    assert np.array_equal(np.asarray(mm), dataset.matrix(ds, val, ["x1", "x2"], "enriched", 2022))
+    doubled = dataset.predict_chunks(lambda b: b[:, 0] * 2, mm, chunk=50)
+    assert np.array_equal(doubled, np.asarray(mm)[:, 0] * 2)

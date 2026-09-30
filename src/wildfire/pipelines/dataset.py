@@ -82,10 +82,15 @@ def input_columns(ds: Dataset, arm: str) -> list[str]:
     return ds.tabular_columns[arm]
 
 
+def take_columns(table: pd.DataFrame, idx: np.ndarray, columns: list[str]) -> np.ndarray:
+    """Rows `idx` of the named columns as float32, without copying whole columns into one big array."""
+    return np.column_stack([table[c].values[idx] for c in columns]).astype(np.float32)
+
+
 def matrix(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, year: int) -> np.ndarray:
     """Input matrix (rows, columns) float32: the tabular columns, plus the enriched blocks at the enriched level.
     `year` is the validation year of the fold (it fixes the anomaly climatology)."""
-    parts = [ds.table[columns].values[idx].astype(np.float32)]
+    parts = [take_columns(ds.table, idx, columns)]
     if level == "enriched":
         t = ds.table
         anom = weather_windows.anomalies(ds.arrays["series"], anomaly_climatology(ds, year), t.cell.values[idx], t.day.values[idx])
@@ -101,3 +106,28 @@ def enriched_names() -> list[str]:
 def feature_groups_static(ds: Dataset) -> list[str]:
     """Columns of the static group (terrain and land cover)."""
     return arms.feature_groups(ds.table)["static"]
+
+
+def matrix_file(ds: Dataset, idx: np.ndarray, columns: list[str], level: str, year: int, path, chunk: int = 200_000) -> np.ndarray:
+    """Write the input matrix to a file in chunks and return it memory-mapped (large validation matrices stay off memory)."""
+    width = len(columns) + (len(enriched_names()) if level == "enriched" else 0)
+    out = np.lib.format.open_memmap(path, mode="w+", dtype=np.float32, shape=(len(idx), width))
+    for start in range(0, len(idx), chunk):
+        out[start:start + chunk] = matrix(ds, idx[start:start + chunk], columns, level, year)
+    out.flush()
+    return np.load(path, mmap_mode="r")
+
+
+def predict_chunks(predict, x: np.ndarray, chunk: int = 200_000, transform=None) -> np.ndarray:
+    """Apply `predict` to row chunks of a (memory-mapped) matrix; `transform` (optional) prepares each chunk."""
+    parts = []
+    for start in range(0, len(x), chunk):
+        block = np.array(x[start:start + chunk], dtype=np.float32)
+        parts.append(predict(transform(block) if transform else block))
+    return np.concatenate(parts)
+
+
+def clear_cache() -> None:
+    """Delete the temporary validation matrices."""
+    for f in config.output_dir("cache").glob("*.npy"):
+        f.unlink()

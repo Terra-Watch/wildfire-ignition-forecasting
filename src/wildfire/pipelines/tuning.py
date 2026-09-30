@@ -16,6 +16,7 @@ from wildfire.pipelines import dataset, ladder_fit
 
 SPACES = {"boosting": "boosting_space", "network": "network_space"}
 TUNED_FILE = "tuned.json"
+TRIALS_FILE = "tuning_trials.jsonl"
 LEVEL = "enriched"
 
 
@@ -65,27 +66,47 @@ def choose(records: pd.DataFrame, kind: str) -> dict:
     return json.loads(records[(records.kind == kind) & (records.trial == best.trial)].params.iloc[0])
 
 
+def load_done(path) -> list[dict]:
+    """Trial records already written (one JSON object per line)."""
+    return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+
+def append_record(path, record: dict) -> None:
+    with path.open("a") as f:
+        f.write(json.dumps(record) + "\n")
+
+
 def run(log=print) -> dict:
-    """Run every trial on every tuning fold, record all trials, and write the chosen settings."""
+    """Run every trial on every tuning fold, record all trials, and write the chosen settings.
+
+    Every finished trial is appended to a file at once; a restart skips the trials already in it.
+    """
     provenance.require_clean()
     cfg = config.load("baseline")
+    out = config.output_dir("results")
+    path = out / TRIALS_FILE
+    records = load_done(path)
+    done = {(r["kind"], r["trial"], r["year"]): r for r in records}
+    trials = {k: sample_trials(cfg["tuning"][space], cfg["tuning"]["trials"], cfg["tuning"]["seed"]) for k, space in SPACES.items()}
     ds = dataset.load_dataset()
     dataset.clear_cache()
-    trials = {k: sample_trials(cfg["tuning"][space], cfg["tuning"]["trials"], cfg["tuning"]["seed"]) for k, space in SPACES.items()}
-    records = []
     for year in cfg["validation"]["tuning_years"]:
+        todo = [(k, i) for k, pl in trials.items() for i in range(len(pl)) if (k, i, year) not in done]
+        if not todo:
+            continue
         fm = fold_matrices(ds, year, cfg["tuning"]["row_cap"])
-        for kind, plist in trials.items():
-            for i, params in enumerate(plist):
-                r = boosting_trial(ds, fm, params) if kind == "boosting" else network_trial(ds, fm, params, year)
-                records.append(dict(kind=kind, trial=i, params=json.dumps(params), year=year, **r))
-                log(kind, "trial", i, year, round(r["log_loss"], 5), round(r["ap"], 4))
-    out = config.output_dir("results")
+        for kind, i in todo:
+            params = trials[kind][i]
+            r = boosting_trial(ds, fm, params) if kind == "boosting" else network_trial(ds, fm, params, year)
+            rec = dict(kind=kind, trial=i, params=json.dumps(params), year=year, **r)
+            append_record(path, rec)
+            records.append(rec)
+            log(kind, "trial", i, year, round(r["log_loss"], 5), round(r["ap"], 4))
+        dataset.clear_cache()
     table = pd.DataFrame(records)
     provenance.stamp_df(table, out / "tuning_trials.csv")
     tuned = {k: choose(table, k) for k in SPACES}
     (out / TUNED_FILE).write_text(json.dumps(tuned, indent=1))
-    dataset.clear_cache()
     return tuned
 
 

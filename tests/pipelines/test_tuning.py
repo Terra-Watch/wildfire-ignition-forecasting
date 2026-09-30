@@ -29,3 +29,12 @@ def test_search_budget_and_years_come_from_the_spec():
     assert cfg["tuning"]["trials"] == 12 and cfg["validation"]["tuning_years"] == [2021, 2022, 2023, 2024]
     assert len(tuning.sample_trials(cfg["tuning"]["boosting_space"], 12, 0)) == 12
     assert len(tuning.sample_trials(cfg["tuning"]["network_space"], 12, 0)) == 12
+
+
+def test_finished_trials_are_persisted_and_read_back(tmp_path):
+    path = tmp_path / "trials.jsonl"
+    assert tuning.load_done(path) == []
+    tuning.append_record(path, dict(kind="boosting", trial=0, year=2021, log_loss=0.3))
+    tuning.append_record(path, dict(kind="network", trial=1, year=2022, log_loss=0.4))
+    done = tuning.load_done(path)
+    assert [(r["kind"], r["trial"], r["year"]) for r in done] == [("boosting", 0, 2021), ("network", 1, 2022)]

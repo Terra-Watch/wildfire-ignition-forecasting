@@ -80,3 +80,22 @@ def versus_climatology() -> pd.DataFrame:
     c = _results("baseline_contrasts.csv")
     v = c[c.contrast.str.endswith("_vs_climatology") & ~c.arm.str.contains("#")]
     return v[["arm", "delta_ap", "ap_lo99", "ap_hi99", "mde", "verdict"]].round(4).reset_index(drop=True)
+
+
+def key_findings() -> pd.DataFrame:
+    """Plain sentences built from the saved tables (nothing typed in by hand)."""
+    m = metrics().set_index("arm")
+    fitted = m.drop(index=[a for a in DIAGNOSTICS if a in m.index])
+    spatial, temporal = fitted.auc_spatial_within_day.idxmax(), fitted.auc_temporal_within_cell.idxmax()
+    c = contrast_table()
+    counts = c.verdict.value_counts().to_dict()
+    sentences = [
+        f"Best within-day spatial AUC: {spatial} ({fitted.loc[spatial, 'auc_spatial_within_day']:.3f}).",
+        f"Best within-cell temporal AUC: {temporal} ({fitted.loc[temporal, 'auc_temporal_within_cell']:.3f}).",
+        f"The climatology scores {m.loc['climatology_cell', 'auc_spatial_within_day']:.3f} spatial and {m.loc['climatology_cell', 'auc_temporal_within_cell']:.3f} temporal.",
+        "Pre-declared contrasts (a)-(c): " + ", ".join(f"{v} {k}" for k, v in counts.items()) + ".",
+    ]
+    if "cell_id_only" in m.index:
+        sentences.append(f"The cell's own onset rate alone gives spatial AUC {m.loc['cell_id_only', 'auc_spatial_within_day']:.3f} "
+                         f"against {m.loc[spatial, 'auc_spatial_within_day']:.3f} for {spatial}.")
+    return pd.DataFrame(dict(finding=sentences))

@@ -64,3 +64,15 @@ def sealed_status() -> pd.DataFrame:
         ("arms needing burn inputs", "all arms that include them (logistic_with_burn, boosting, network and their enriched versions)"),
         ("other 2026 sources", "not pulled, because the test cannot be completed without burn")],
         columns=["item", "status"])
+
+
+def key_findings() -> pd.DataFrame:
+    """Plain sentences comparing fit-state validation with the fresh states."""
+    t = transfer_table().set_index("arm")
+    arm = "boosting@enriched"
+    fresh = [c for c in t.columns if c.startswith("auc_spatial_within_day_")]
+    sentences = [f"{arm}: within-day spatial AUC {t.loc[arm, 'fit_states_auc_spatial_within_day']:.3f} in the fit states, "
+                 + ", ".join(f"{c.rsplit('_', 1)[1]} {t.loc[arm, c]:.3f}" for c in fresh) + " in the fresh states.",
+                 "climatology_cell spatial AUC in the fresh states: "
+                 + ", ".join(f"{c.rsplit('_', 1)[1]} {t.loc['climatology_cell', c]:.3f}" for c in fresh) + "."]
+    return pd.DataFrame(dict(finding=sentences))

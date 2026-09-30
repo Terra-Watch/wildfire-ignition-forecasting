@@ -81,7 +81,7 @@ def build_features(rows_path, day_coverage_path, climatology_onsets: pd.DataFram
     day = rows.day.values.astype(np.int64)
     rows["firms_cov_flag"] = touches_flagged(day, flagged, cfg["gap_days"]["lookback_days"])
 
-    feat, report = weather.weather_features(lat, lon, day, log=log)
+    feat, report = weather.weather_features(lat, lon, day)
     for k, nm in enumerate(weather.NAMES):
         rows[nm] = feat[:, k]
     del feat

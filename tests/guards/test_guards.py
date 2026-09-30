@@ -91,3 +91,18 @@ class TestInputGuard:
             monkeypatch.setenv("DATA_ROOT", str(d))
             with pytest.raises(SystemExit):
                 inputs.assert_consistent_inputs()
+
+
+def test_spec_stamp_is_written_once_and_a_change_is_refused(tmp_path):
+    from wildfire.guards import spec
+    stamp = tmp_path / "spec_stamp.json"
+    spec.check_stamp(stamp, "a" * 40)
+    spec.check_stamp(stamp, "a" * 40)
+    with pytest.raises(SystemExit):
+        spec.check_stamp(stamp, "b" * 40)
+
+
+def test_spec_files_are_committed_and_named_in_the_spec():
+    from wildfire.guards import spec
+    assert spec.spec_files() == ["configs/baseline.yaml", "docs/baseline_spec.md"]
+    assert len(spec.spec_commit()) == 40

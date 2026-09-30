@@ -20,6 +20,7 @@ from wildfire.labels.detections import epoch
 
 NAMES = ["t2m", "vpd", "ws", "rh", "sw1", "sw2", "rain7", "dsr", "ffmc", "dmc", "dc", "isi", "bui", "fwi",
          "tmax09", "sw1_anom", "sw2_anom"]
+PRIMARY_VARIABLES = ("t2m", "d2m", "u10", "v10", "tp", "swvl1", "swvl2")
 
 
 def _saturation_vapour_pressure(t):
@@ -32,6 +33,7 @@ def _weather_path(group: str, year: int, month: int):
 
 
 def _load_month(group, year, month, names):
+    """(times, {variable: array}) of one monthly file, or (None, None) when the file is missing."""
     p = _weather_path(group, year, month)
     if not p.exists():
         return None, None
@@ -46,97 +48,128 @@ def _hour_indices(tv, d, hours):
     return [int(np.where(tv == d + pd.Timedelta(hours=h))[0][0]) for h in hours]
 
 
-def weather_features(lat: np.ndarray, lon: np.ndarray, day: np.ndarray, log=print) -> tuple[np.ndarray, dict]:
-    """Features (rows, len(NAMES)) float32 for cell-days at (lat, lon) on `day`; also returns a report dict."""
+def grid_layout() -> dict:
+    """Size and origin of the weather grid, and the latitude bands used by the code recursion."""
     w = config.load("features")["tabular"]["weather"]
-    hours = w["hours_utc"]
-    e0 = epoch()
-    day = np.asarray(day, np.int64)
     sample = xr.open_dataset(_weather_path("primary", 2019, 1))
-    nlat, nlon = sample.sizes["latitude"], sample.sizes["longitude"]
     latg = sample.latitude.values
-    lat0, lon0 = float(latg[0]), float(sample.longitude.values[0])
+    layout = dict(nlat=sample.sizes["latitude"], nlon=sample.sizes["longitude"], latg=latg,
+                  lat0=float(latg[0]), lon0=float(sample.longitude.values[0]))
     sample.close()
-    step = w["grid_step_deg"]
-    li = np.clip(np.round((lat0 - lat) / step).astype(int), 0, nlat - 1)
-    lj = np.clip(np.round((lon - lon0) / step).astype(int), 0, nlon - 1)
     bands = [np.where((latg > lo) & (latg <= hi))[0] for lo, hi in w["lat_bands"]]
-    bands = [b for b in bands if len(b)]
-    band_lat = [float(latg[b].mean()) for b in bands]
-    start = (pd.Timestamp(w["first_day"]) - e0).days
-    x = day - 1
-    assert x.min() >= start + w["first_row_margin_days"]
-    byday = {int(k): np.where(x == k)[0] for k in np.unique(x)}
-    feat = np.full((len(day), len(NAMES)), np.nan, np.float32)
-    cap = w["iso_week_cap"]
+    layout["bands"] = [b for b in bands if len(b)]
+    layout["band_lat"] = [float(latg[b].mean()) for b in layout["bands"]]
+    return layout
 
-    # soil-moisture climatology (training years only)
-    cs = np.zeros((cap + 1, 2, nlat, nlon))
+
+def grid_indices(lat, lon, layout):
+    """Weather-grid row and column of each (lat, lon)."""
+    step = config.load("features")["tabular"]["weather"]["grid_step_deg"]
+    li = np.clip(np.round((layout["lat0"] - lat) / step).astype(int), 0, layout["nlat"] - 1)
+    lj = np.clip(np.round((lon - layout["lon0"]) / step).astype(int), 0, layout["nlon"] - 1)
+    return li, lj
+
+
+def soil_climatology(layout: dict) -> np.ndarray:
+    """Same-ISO-week mean of noon soil moisture (layers 1 and 2) over the climatology years."""
+    w = config.load("features")["tabular"]["weather"]
+    cap = w["iso_week_cap"]
+    cs = np.zeros((cap + 1, 2, layout["nlat"], layout["nlon"]))
     cc = np.zeros(cap + 1)
     y0, y1 = w["soil_climatology_years"]
     for y in range(y0, y1 + 1):
         for m in range(1, 13):
             tv, v = _load_month("primary", y, m, ("swvl1", "swvl2"))
             if tv is None:
-                log("missing primary file", y, m)
                 continue
             for d in pd.date_range(f"{y}-{m:02d}-01", periods=pd.Period(f"{y}-{m:02d}").days_in_month):
-                _, i6, i7, _ = _hour_indices(tv, d, hours)
+                _, i6, i7, _ = _hour_indices(tv, d, w["hours_utc"])
                 wk = min(int(d.isocalendar()[1]), cap)
                 cs[wk, 0] += (v["swvl1"][i6] + v["swvl1"][i7]) / 2
                 cs[wk, 1] += (v["swvl2"][i6] + v["swvl2"][i7]) / 2
                 cc[wk] += 1
-    clim = cs / np.maximum(cc, 1)[:, None, None, None]
+    return cs / np.maximum(cc, 1)[:, None, None, None]
 
-    ffm = np.full((nlat, nlon), w["initial_codes"]["ffmc"])
-    dm = np.full((nlat, nlon), w["initial_codes"]["dmc"])
-    dcc = np.full((nlat, nlon), w["initial_codes"]["dc"])
-    hist = collections.deque(maxlen=w["rain_window_days"])
-    dsr = np.zeros((nlat, nlon))
-    prev06 = np.zeros((nlat, nlon))
-    lo_rh, hi_rh = w["humidity_bounds"]
-    last_needed = max(byday)
-    latest_source, cutoff = [], []
-    missing = []
-    for y in range(pd.Timestamp(w["first_day"]).year, int((e0 + pd.Timedelta(days=last_needed)).year) + 1):
+
+class CodeState:
+    """Running state of the fire-weather recursion and the rain counters on the weather grid."""
+
+    def __init__(self, layout: dict, clim: np.ndarray):
+        self.w = config.load("features")["tabular"]["weather"]
+        shape = (layout["nlat"], layout["nlon"])
+        init = self.w["initial_codes"]
+        self.layout, self.clim = layout, clim
+        self.ffmc, self.dmc, self.dc = (np.full(shape, init[k]) for k in ("ffmc", "dmc", "dc"))
+        self.rain_hist = collections.deque(maxlen=self.w["rain_window_days"])
+        self.dry_spell = np.zeros(shape)
+        self.prev_rain_0630 = np.zeros(shape)
+
+    def _update_codes(self, t, rh, ws, rain24, month):
+        for b, lm in zip(self.layout["bands"], self.layout["band_lat"]):
+            self.ffmc[b] = fwi.ffmc(self.ffmc[b], t[b], rh[b], ws[b], rain24[b])
+            self.dmc[b] = fwi.dmc(self.dmc[b], t[b], rh[b], rain24[b], lm, month)
+            self.dc[b] = fwi.dc(self.dc[b], t[b], rh[b], rain24[b], lm, month)
+
+    def update(self, v: dict, idx: list, date: pd.Timestamp):
+        """Advance one day. Returns (fields (len(NAMES), nlat, nlon) float32, daily rain total in mm)."""
+        w = self.w
+        i0, i6, i7, i9 = idx
+        noon = lambda name: (v[name][i6] + v[name][i7]) / 2
+        t, td = noon("t2m") - 273.15, noon("d2m") - 273.15
+        ws = np.hypot(noon("u10"), noon("v10")) * 3.6
+        rh = np.clip(100 * _saturation_vapour_pressure(td) / _saturation_vapour_pressure(t), *w["humidity_bounds"])
+        tp00 = np.nan_to_num(v["tp"][i0]) * 1000.0
+        tp0630 = (np.nan_to_num(v["tp"][i6]) + np.nan_to_num(v["tp"][i7])) / 2 * 1000.0
+        rain24 = np.maximum(tp0630 + tp00 - self.prev_rain_0630, 0.0)
+        self.prev_rain_0630 = tp0630
+        self.rain_hist.append(tp00)
+        self.dry_spell = np.where(tp00 > w["rain_threshold_mm"], 0.0, np.minimum(self.dry_spell + 1, w["dry_spell_cap_days"]))
+        self._update_codes(t, rh, ws, rain24, date.month)
+        isi = fwi.isi(self.ffmc, ws)
+        bui = fwi.bui(self.dmc, self.dc)
+        wk = min(int(date.isocalendar()[1]), w["iso_week_cap"])
+        s1, s2 = noon("swvl1"), noon("swvl2")
+        fields = np.stack([t, np.maximum(_saturation_vapour_pressure(t) - _saturation_vapour_pressure(td), 0), ws, rh, s1, s2,
+                           np.sum(self.rain_hist, axis=0), self.dry_spell, self.ffmc, self.dmc, self.dc, isi, bui,
+                           fwi.fwi(isi, bui), v["t2m"][i9] - 273.15, s1 - self.clim[wk, 0], s2 - self.clim[wk, 1]], 0)
+        return fields.astype(np.float32), tp00
+
+
+def daily_fields(layout: dict, last_day: int):
+    """Yield (day number, date, fields, daily rain total) for every day from the first day through last_day.
+    Months with no primary file are skipped (the recursion state is not advanced)."""
+    w = config.load("features")["tabular"]["weather"]
+    state = CodeState(layout, soil_climatology(layout))
+    e0 = epoch()
+    for y in range(pd.Timestamp(w["first_day"]).year, (e0 + pd.Timedelta(days=last_day)).year + 1):
         for m in range(1, 13):
-            tv, v = _load_month("primary", y, m, ("t2m", "d2m", "u10", "v10", "tp", "swvl1", "swvl2"))
+            tv, v = _load_month("primary", y, m, PRIMARY_VARIABLES)
             if tv is None:
-                missing.append(f"{y}-{m:02d}")
                 continue
             for d in pd.date_range(f"{y}-{m:02d}-01", periods=pd.Period(f"{y}-{m:02d}").days_in_month):
                 dn = (d - e0).days
-                if dn > last_needed:
-                    break
-                i0, i6, i7, i9 = _hour_indices(tv, d, hours)
-                t = (v["t2m"][i6] + v["t2m"][i7]) / 2 - 273.15
-                td = (v["d2m"][i6] + v["d2m"][i7]) / 2 - 273.15
-                ws = np.hypot((v["u10"][i6] + v["u10"][i7]) / 2, (v["v10"][i6] + v["v10"][i7]) / 2) * 3.6
-                rh = np.clip(100 * _saturation_vapour_pressure(td) / _saturation_vapour_pressure(t), lo_rh, hi_rh)
-                tp00 = np.nan_to_num(v["tp"][i0]) * 1000.0
-                tp0630 = (np.nan_to_num(v["tp"][i6]) + np.nan_to_num(v["tp"][i7])) / 2 * 1000.0
-                rain24 = np.maximum(tp0630 + tp00 - prev06, 0.0)
-                prev06 = tp0630
-                hist.append(tp00)
-                dsr = np.where(tp00 > w["rain_threshold_mm"], 0.0, np.minimum(dsr + 1, w["dry_spell_cap_days"]))
-                rain7 = np.sum(hist, axis=0)
-                for b, lm in zip(bands, band_lat):
-                    ffm[b] = fwi.ffmc(ffm[b], t[b], rh[b], ws[b], rain24[b])
-                    dm[b] = fwi.dmc(dm[b], t[b], rh[b], rain24[b], lm, d.month)
-                    dcc[b] = fwi.dc(dcc[b], t[b], rh[b], rain24[b], lm, d.month)
-                ii = fwi.isi(ffm, ws)
-                bu = fwi.bui(dm, dcc)
-                fw = fwi.fwi(ii, bu)
-                if dn in byday:
-                    wk = min(int(d.isocalendar()[1]), cap)
-                    s1 = (v["swvl1"][i6] + v["swvl1"][i7]) / 2
-                    s2 = (v["swvl2"][i6] + v["swvl2"][i7]) / 2
-                    g = np.stack([t, np.maximum(_saturation_vapour_pressure(t) - _saturation_vapour_pressure(td), 0), ws, rh,
-                                  s1, s2, rain7, dsr, ffm, dm, dcc, ii, bu, fw, v["t2m"][i9] - 273.15,
-                                  s1 - clim[wk, 0], s2 - clim[wk, 1]], 0).astype(np.float32)
-                    ix = byday[dn]
-                    feat[ix] = g[:, li[ix], lj[ix]].T
-                    latest_source.append(d + pd.Timedelta(hours=hours[-1]))
-                    cutoff.append(e0 + pd.Timedelta(days=int(dn + 1)))
-    assert_before_cutoff(latest_source, cutoff)
-    return feat, dict(missing_months=missing, day_groups=len(latest_source), all_strictly_before=True)
+                if dn > last_day:
+                    return
+                fields, rain = state.update(v, _hour_indices(tv, d, w["hours_utc"]), d)
+                yield dn, d, fields, rain
+
+
+def weather_features(lat: np.ndarray, lon: np.ndarray, day: np.ndarray) -> tuple[np.ndarray, dict]:
+    """Features (rows, len(NAMES)) float32 for cell-days at (lat, lon) on `day`; also returns a report dict."""
+    w = config.load("features")["tabular"]["weather"]
+    day = np.asarray(day, np.int64)
+    layout = grid_layout()
+    li, lj = grid_indices(lat, lon, layout)
+    x = day - 1
+    assert x.min() >= (pd.Timestamp(w["first_day"]) - epoch()).days + w["first_row_margin_days"]
+    byday = {int(k): np.where(x == k)[0] for k in np.unique(x)}
+    feat = np.full((len(day), len(NAMES)), np.nan, np.float32)
+    source_time, cutoff = [], []
+    for dn, d, fields, _ in daily_fields(layout, max(byday)):
+        if dn in byday:
+            ix = byday[dn]
+            feat[ix] = fields[:, li[ix], lj[ix]].T
+            source_time.append(d + pd.Timedelta(hours=w["hours_utc"][-1]))
+            cutoff.append(epoch() + pd.Timedelta(days=int(dn + 1)))
+    assert_before_cutoff(source_time, cutoff)
+    return feat, dict(day_groups=len(source_time), all_strictly_before=True)

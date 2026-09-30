@@ -22,11 +22,18 @@ def code_state() -> dict:
 
 
 def require_clean() -> str:
-    """Return the commit hash; raise when code has uncommitted changes."""
+    """Return the commit hash; raise when code has uncommitted changes or the specification differs from its stamp."""
+    from wildfire.guards import spec
     s = code_state()
     if s["dirty"]:
         raise SystemExit("uncommitted code changes: " + ", ".join(s["dirty_files"][:10]) + " -- commit first so results carry a real hash")
+    spec.require_spec()
     return s["commit"]
+
+
+def spec_tag() -> str:
+    from wildfire.guards import spec
+    return spec.spec_commit()
 
 
 def tag() -> str:
@@ -36,13 +43,14 @@ def tag() -> str:
 
 def stamp_df(df, path, **to_csv_kw):
     d = df.copy()
+    d.insert(0, "spec_commit", spec_tag())
     d.insert(0, "code_commit", tag())
     d.to_csv(path, index=to_csv_kw.pop("index", False), **to_csv_kw)
     return d
 
 
 def stamp_text(path, text: str) -> None:
-    Path(path).write_text(f"code_commit: {tag()}\nwritten: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n" + text)
+    Path(path).write_text(f"code_commit: {tag()}\nspec_commit: {spec_tag()}\nwritten: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n" + text)
 
 
 def sha256(path) -> str:

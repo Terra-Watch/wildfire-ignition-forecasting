@@ -1,0 +1,3 @@
+# Loss of data/raw/optical_eo
+Decision: record the loss. The folder (23 GB of HLS scene chips, event-local tiles, negative-sample chips, two GeoTIFFs and probably a second, newer folder of negative-sample chips that was on the do-not-delete list) was deleted on 2026-10-01 under the instruction that anything in wild-fire/data could be deleted, before a file list was kept and before the plan's do-not-delete list was re-read. It is not in any bundle or tar. The baseline does not use imagery. The scene lists (negative-sample manifests in the old data folder and in git) still exist, so the chips can be fetched again if needed.
+Why: honesty about what is gone; see ~/wildfire-research/outputs/deleted_files.txt for the reconstruction.

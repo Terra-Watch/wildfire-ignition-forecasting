@@ -1,0 +1,3 @@
+# Synthetic contrast test
+Decision: the test that runs one contrast on synthetic data keeps its weakened assertion: it checks the gain, the interval and the per-state difference, and that the verdict is PASS when the minimum detectable effect is within the threshold and INCONCLUSIVE when it is not. The PASS and FAIL branches of the rule are tested separately, with fixed numbers, in test_verdict_rule_branches.
+Why: a synthetic set small enough for a unit test cannot reach a minimum detectable effect of 0.010 (that needs over a million rows), so the power gate correctly makes every verdict INCONCLUSIVE there; asserting PASS would test the data size, not the rule.

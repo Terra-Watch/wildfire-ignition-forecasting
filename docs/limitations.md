@@ -20,6 +20,9 @@ The results in `baseline_results.md` and the decision records in `docs/decisions
 | Tuning | Twelve random-search trials per model, selected on 2021-2024; 2025 never drove a choice. A larger search could change the settings. |
 | Row caps | Each fit uses at most 2,000,000 rows (all onsets kept); tuning uses at most 600,000. |
 | Anomaly inputs | Two of the 42 inputs use a soil-moisture climate from 2017-2023, which includes validation years 2021-2023. |
+| Night-lights rank | The frozen night-lights input is a percentile rank over all grid cells, including the UK, AP, reserve and buffer cells. It uses no labels and is part of the reproduced inputs. |
+| Neighbours | Fit rows use only fit cells as neighbours. Fresh-state rows may use neighbours from every cell, including fit-state cells next to the border. |
+| Lost imagery | The raw imagery folder was deleted and is not in any archive; the baseline does not use imagery (see the decision record). |
 | Weather resolution | About 9 km, so several 5 km cells share one weather cell. |
 | Imagery | Not built; no imagery is in the data. |
 | Statistical power | About 150 weekly clusters over five validation years; a contrast whose minimum detectable effect exceeds 0.010 is INCONCLUSIVE by rule. |

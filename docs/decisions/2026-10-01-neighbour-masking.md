@@ -1,0 +1,3 @@
+# Neighbour masking in the neighbourhood block
+Decision: for rows of the fit table, only cells with the grid role `train` count as neighbours (tree cover, burn history, vegetation index, fire-weather index and the onset counts of the previous 28 days). Cells of other roles (UK, AP, reserve, buffer) never feed a fit row. For rows of the fresh-state table, neighbours may come from every cell. A test checks the real grid.
+Why: stricter reading of "never used to fit": 291 fit cells had an AP or UK cell among their 8 nearest neighbours and 528 among their 24. The enriched arrays were rebuilt and the tuning that had started was discarded and restarted. Edge cells use the fit neighbours that exist.

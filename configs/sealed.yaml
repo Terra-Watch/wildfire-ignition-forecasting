@@ -1,0 +1,38 @@
+# Sources and settings for the sealed season (2026 January-July). Specification files are not changed;
+# see docs/decisions/2026-10-01-burn-free-arms-for-the-sealed-season.md.
+period: {start: "2026-01-01", end: "2026-07-31"}
+folders:                              # under DATA_ROOT
+  firms: sealed/firms
+  weather: sealed/era5
+  vegetation: sealed/ndvi
+firms:
+  api: https://firms.modaps.eosdis.nasa.gov/api/area/csv
+  products: [VIIRS_SNPP_SP, VIIRS_NOAA20_SP]
+  boxes: {main: "72,15,88.5,32", south: "72,8,90,15"}     # west,south,east,north
+  chunk_days: 5
+  retry_wait_seconds: 60
+  max_attempts: 6
+weather:
+  dataset: reanalysis-era5-land
+  variables: [2m_temperature, 2m_dewpoint_temperature, 10m_u_component_of_wind, 10m_v_component_of_wind,
+              total_precipitation, volumetric_soil_water_layer_1, volumetric_soil_water_layer_2]
+  short_names: [t2m, d2m, u10, v10, tp, swvl1, swvl2]
+  hours: ["00:00", "06:00", "07:00", "09:00"]
+  area: [32, 72, 8, 90]               # north, west, south, east
+  file_name: "era5land_primary_{year}-{month:02d}.nc"
+  ranges: {t2m: [200, 340], d2m: [200, 330], swvl1: [0, 1], swvl2: [0, 1]}   # physical bounds checked
+vegetation:
+  api_number: 1                       # interface number used in the two addresses below
+  stac: https://planetarycomputer.microsoft.com/api/stac/v{api}/search
+  sign: https://planetarycomputer.microsoft.com/api/sas/v{api}/sign
+  collection: modis-13Q1-061
+  asset: 250m_16_days_NDVI
+  decimate: 8
+  composite_days: 15
+  valid_range: [-3000, 10000]
+  scale: 10000.0
+  min_composite_coverage: 0.8
+  output: ndvi_cells_2026.npz
+coverage:
+  south_zero_day_share_max: 0.10      # share of days with no detections allowed in the southern strip
+  daily_count_ratio_range: [0.5, 2.0] # median daily detections vs the same months of the previous year

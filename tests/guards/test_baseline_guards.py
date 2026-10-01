@@ -71,3 +71,13 @@ def test_every_scoring_entry_point_requires_the_guard_record():
     root = config.REPO_ROOT / "src" / "wildfire" / "pipelines"
     for name in ("tuning", "rolling_origin", "baseline_tables", "fresh_states"):
         assert "require_record()" in (root / f"{name}.py").read_text(), name
+
+
+def test_power_gate_holds_back_a_verdict_when_the_detectable_effect_is_too_large(monkeypatch):
+    from wildfire.evaluation import verdict
+    assert g.power_gate()
+    clear_gain = dict(point=0.05, se=0.0102, lo99=0.04, hi99=0.06)         # mde = (2.575829 + 0.841621) x 0.0102 = 0.0349
+    assert verdict.baseline_verdict(clear_gain, 0.0)[0] == "INCONCLUSIVE"
+    assert verdict.baseline_verdict(dict(clear_gain, se=0.002), 0.0)[0] == "PASS"
+    monkeypatch.setattr(verdict, "minimum_detectable_effect", lambda se: 0.0)       # a gate that never holds anything back must be caught
+    assert not g.power_gate()

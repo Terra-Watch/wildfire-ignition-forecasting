@@ -1,0 +1,7 @@
+# Secondary, post hoc ablations of enriched boosting (docs/decisions/2026-10-01-ablations.md). Not part of the baseline.
+reference: boosting@enriched
+blocks: [windows, anomalies, neighbourhood]       # enriched blocks in column order, after the tabular inputs
+ablations:
+  A_no_soil_anomaly: {drop: [sw1_anom, sw2_anom], blocks: [windows, anomalies, neighbourhood]}
+  B_windows_only: {drop: [], blocks: [windows, anomalies]}
+  B_neighbourhood_only: {drop: [], blocks: [neighbourhood]}

@@ -9,7 +9,7 @@ import pandas as pd
 import pyproj
 
 from wildfire import config
-from wildfire.evaluation import views
+from wildfire.evaluation import verdict, views
 from wildfire.features import weather_windows
 from wildfire.features.tabular import weather
 from wildfire.guards import provenance
@@ -82,6 +82,21 @@ def no_validation_information_in_tuning() -> bool:
     return bool(max(cfg["validation"]["tuning_years"]) < cfg["periods"]["last_development_fold"])
 
 
+def power_gate() -> bool:
+    """The decision rule must hold back a verdict when the effect it could detect is larger than the threshold (spec section 7,
+    `decision_rule.power_gate`): a contrast with a clear 3x-threshold gain is INCONCLUSIVE when its minimum detectable effect is
+    twice the threshold and PASS when it is half the threshold, and the minimum detectable effect is (sum of `mde_z`) x the standard error."""
+    gain = config.load("evaluation")["verdict"]["min_ap_gain"]
+    z = sum(config.load("baseline")["decision_rule"]["mde_z"])
+
+    def strong(se: float) -> dict:
+        return dict(point=3 * gain, se=se, lo99=2 * gain, hi99=4 * gain)
+
+    wide, mde_wide = verdict.baseline_verdict(strong(2 * gain / z), 0.0)
+    narrow, mde_narrow = verdict.baseline_verdict(strong(0.5 * gain / z), 0.0)
+    return bool(wide == "INCONCLUSIVE" and narrow == "PASS" and abs(mde_wide - 2 * gain) < 1e-12 and abs(mde_narrow - 0.5 * gain) < 1e-12)
+
+
 def ledger_ready() -> bool:
     """The geographic-test ledger location exists and is writable."""
     return bool(config.output_dir("results").exists())
@@ -91,7 +106,7 @@ def run_all(ds) -> dict:
     shuffle_ok, shuffle_auc = label_shuffle(ds)
     return dict(timestamp_before_day=timestamp_before_day(), shifted_feature_fails=shifted_feature_fails(),
                 label_shuffle=shuffle_ok, label_shuffle_mean_auc=shuffle_auc, coordinate_unit_test=coordinates_consistent(),
-                no_validation_information_in_tuning=no_validation_information_in_tuning(), geo_ledger=ledger_ready(),
+                no_validation_information_in_tuning=no_validation_information_in_tuning(), power_gate=power_gate(), geo_ledger=ledger_ready(),
                 provenance=bool(provenance.require_clean()))
 
 

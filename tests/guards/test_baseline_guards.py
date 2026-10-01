@@ -36,7 +36,9 @@ def test_no_score_without_a_passing_guard_record_for_this_code(tmp_path, monkeyp
     import json
     from wildfire.guards import provenance
     monkeypatch.setenv("ARTIFACTS_ROOT", str(tmp_path))
+    monkeypatch.setattr(provenance, "code_state", lambda: dict(commit="x", dirty=False, dirty_files=[]))
     (tmp_path / "results").mkdir()
+    (tmp_path / "features").mkdir()
     path = tmp_path / "results" / g.GUARDS_FILE
     with pytest.raises(SystemExit):
         g.require_record()                                             # no record
@@ -47,7 +49,21 @@ def test_no_score_without_a_passing_guard_record_for_this_code(tmp_path, monkeyp
     with pytest.raises(SystemExit):
         g.require_record()                                             # record from other code
     path.write_text(json.dumps({"timestamp_before_day": True, "code_version": provenance.code_version()}))
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # no array fingerprints
+    (tmp_path / "features" / "a.npy").write_bytes(b"one")
+    st = (tmp_path / "features" / "a.npy").stat()
+    arrays = {"a.npy": dict(size=st.st_size, mtime_ns=st.st_mtime_ns, sha256=g._sha256(tmp_path / "features" / "a.npy"))}
+    record = {"timestamp_before_day": True, "code_version": provenance.code_version(), "arrays": arrays}
+    path.write_text(json.dumps(record))
     assert g.require_record()["timestamp_before_day"] is True
+    (tmp_path / "features" / "a.npy").write_bytes(b"two")             # same size, rebuilt: hash differs
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # array changed after the guards
+    monkeypatch.setattr(provenance, "code_state", lambda: dict(commit="x", dirty=True, dirty_files=["src/a.py"]))
+    path.write_text(json.dumps({**record, "arrays": {}}))
+    with pytest.raises(SystemExit):
+        g.require_record()                                             # dirty tree
 
 
 def test_every_scoring_entry_point_requires_the_guard_record():

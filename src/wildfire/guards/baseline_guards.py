@@ -1,6 +1,7 @@
 """Checks that must pass before any baseline score is written."""
 from __future__ import annotations
 
+import hashlib
 import json
 
 import numpy as np
@@ -16,6 +17,8 @@ from wildfire.labels.detections import load_grid
 from wildfire.models.fit import Model
 
 GUARDS_FILE = "guards.json"
+GUARDED_ARRAYS = ["neighbourhood.npy", "model_table.pkl", "windows.npy"]   # in the features folder
+FULL_HASH_LIMIT = 2 * 1024 ** 3     # arrays up to this size are re-hashed on every check; larger ones by size and mtime
 LEDGER_FILE = "geo_test_ledger.csv"
 
 
@@ -92,11 +95,46 @@ def run_all(ds) -> dict:
                 provenance=bool(provenance.require_clean()))
 
 
+def _sha256(path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 24), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def array_fingerprints() -> dict:
+    """Size, mtime and sha256 of the guarded arrays (the hash of a very large file is taken at record time only)."""
+    folder = config.output_dir("features")
+    out = {}
+    for name in GUARDED_ARRAYS:
+        st = (folder / name).stat()
+        out[name] = dict(size=st.st_size, mtime_ns=st.st_mtime_ns, sha256=_sha256(folder / name))
+    return out
+
+
+def _arrays_match(recorded: dict) -> list[str]:
+    folder = config.output_dir("features")
+    bad = []
+    for name, r in recorded.items():
+        path = folder / name
+        if not path.exists():
+            bad.append(name)
+            continue
+        st = path.stat()
+        if st.st_size != r["size"] or st.st_mtime_ns != r["mtime_ns"]:
+            bad.append(name)
+        elif st.st_size <= FULL_HASH_LIMIT and _sha256(path) != r["sha256"]:
+            bad.append(name)
+    return bad
+
+
 def write_record(ds) -> dict:
     """Run every guard and write the outcome with the code version it applies to; stop when any fails."""
     results = run_all(ds)
     results["code_version"] = provenance.code_version()
     results["code_commit"] = provenance.tag()
+    results["arrays"] = array_fingerprints()
     (config.output_dir("results") / GUARDS_FILE).write_text(json.dumps(results, indent=1))
     failed = [k for k, v in results.items() if v is False]
     if failed:
@@ -105,7 +143,8 @@ def write_record(ds) -> dict:
 
 
 def require_record() -> dict:
-    """No score file may be written unless a guard record exists, passed, and belongs to the current code version."""
+    """No score file may be written unless a guard record exists, passed every guard, belongs to the current (clean) code
+    version, and its recorded arrays are the arrays on disk."""
     path = config.output_dir("results") / GUARDS_FILE
     if not path.exists():
         raise SystemExit("no guard record: run `wildfire run-guards` before anything is scored")
@@ -114,6 +153,13 @@ def require_record() -> dict:
         raise SystemExit("the guard record contains a failed guard")
     if record.get("code_version") != provenance.code_version():
         raise SystemExit("the guard record belongs to other code: run `wildfire run-guards` again")
+    if provenance.code_state()["dirty"]:
+        raise SystemExit("uncommitted code changes: commit, then run `wildfire run-guards` again")
+    if "arrays" not in record:
+        raise SystemExit("the guard record has no array fingerprints: run `wildfire run-guards` again")
+    bad = _arrays_match(record["arrays"])
+    if bad:
+        raise SystemExit("arrays changed since the guards ran: " + ", ".join(bad) + "; run `wildfire run-guards` again")
     return record
 
 

@@ -43,11 +43,13 @@ contrasts = pd.read_csv(R / "baseline_contrasts.csv")
 fresh = transfer.fresh_metrics()
 
 
-def fresh_by_seed() -> pd.DataFrame:
-    """Every prediction column of the fresh test scored separately (network seeds not averaged)."""
+def fresh_by_seed(max_month: int | None = None) -> pd.DataFrame:
+    """Every prediction column of the fresh test scored separately (network seeds not averaged); optionally only rows of months up to max_month."""
     from wildfire.evaluation import ladder
     from wildfire.pipelines import baseline_tables
     rows = pd.read_parquet(R / "fresh_predictions.parquet")
+    if max_month is not None:
+        rows = rows[pd.to_datetime(rows.day, unit="D").dt.month.values <= max_month]
     prev = json.loads((R / "fresh_fit_prevalence.json").read_text())
     out = []
     for state, g in rows.groupby("state"):
@@ -60,15 +62,17 @@ def fresh_by_seed() -> pd.DataFrame:
 
 
 seed_rows = fresh_by_seed()
+seed_rows_jj = fresh_by_seed(7)
 FRESH_ORDER = ["climatology_cell", "landcover_season", "fwi_season", "logistic_weather_static@tabular", "logistic_weather_static@enriched",
                "logistic_with_burn@tabular", "logistic_with_burn@enriched", "boosting@tabular", "boosting@enriched",
                "tabular_network@tabular", "tabular_network@enriched", "coords_only", "cell_id_only", "static_only"]
 
 
-def fresh_all_arms() -> pd.DataFrame:
+def fresh_all_arms(src=None, states=("UK", "AP")) -> pd.DataFrame:
+    src = seed_rows if src is None else src
     out = []
-    for state in ("UK", "AP"):
-        d = seed_rows[seed_rows.state == state].copy()
+    for state in states:
+        d = src[src.state == state].copy()
         d["arm"] = strip_seed(d.arm_full)
         prevalence = float(d.onsets.iloc[0] / d.rows.iloc[0])
         for arm in FRESH_ORDER:
@@ -78,13 +82,42 @@ def fresh_all_arms() -> pd.DataFrame:
             def fmt(col, lift=False):
                 v = g[col] / prevalence if lift else g[col]
                 return f"{v.iloc[0]:.4f}" if n == 1 else f"{v.mean():.4f} ± {v.std():.4f} [{v.min():.4f}-{v.max():.4f}]"
-            out.append({"state": state, "arm": arm, "seeds": n, "AP": fmt("ap"), "lift (AP / prevalence)": fmt("ap", True),
+            out.append({"state": state, "rows": int(d.rows.iloc[0]), "onsets": int(d.onsets.iloc[0]), "prevalence": round(prevalence, 4), "arm": arm, "seeds": n, "AP": fmt("ap"), "lift (AP / prevalence)": fmt("ap", True),
                         "AUC pooled": fmt("auc_pooled"), "AUC spatial": fmt("auc_spatial_within_day"), "AUC temporal": fmt("auc_temporal_within_cell"),
                         "log loss": fmt("log_loss")})
     return pd.DataFrame(out)
 
 
 fresh_table = fresh_all_arms()
+fresh_table_uk_all = fresh_all_arms(states=("UK",))
+fresh_table_uk_jj = fresh_all_arms(seed_rows_jj, states=("UK",))
+_f = pd.read_parquet(R / "fresh_predictions.parquet", columns=["state", "day", "label"])
+_f["month"] = pd.to_datetime(_f.day, unit="D").dt.month
+_m = _f.groupby(["month", "state"]).label.agg(rows="size", onsets="sum").unstack("state")
+month_table = pd.DataFrame({"month": _m.index})
+for st in ("UK", "AP"):
+    month_table[f"{st} rows"] = _m[("rows", st)].values.astype(int)
+    month_table[f"{st} onsets"] = _m[("onsets", st)].values.astype(int)
+    month_table[f"{st} onset share of rows"] = (_m[("onsets", st)] / _m[("rows", st)]).values
+tot = pd.DataFrame([{"month": "total", **{c: month_table[c].sum() for c in month_table.columns if "share" not in c and c != "month"}}])
+for st in ("UK", "AP"):
+    tot[f"{st} onset share of rows"] = tot[f"{st} onsets"] / tot[f"{st} rows"]
+month_table = pd.concat([month_table.astype({"month": str}), tot.astype({"month": str})], ignore_index=True)
+for c in month_table.columns:
+    if (c.endswith("rows") and "share" not in c) or c.endswith("onsets"):
+        month_table[c] = month_table[c].astype(int)
+seed_detail = []
+for st in ("UK", "AP"):
+    for lvl in ("tabular", "enriched"):
+        g = seed_rows[(seed_rows.state == st) & seed_rows.arm_full.str.startswith(f"tabular_network@{lvl}#")].copy()
+        g["seed"] = g.arm_full.str.extract(r"#(\d+)")[0].astype(int)
+        g = g.sort_values("seed")
+        row = {"state": st, "level": lvl}
+        for col, name in (("ap", "AP"), ("auc_pooled", "AUC pooled"), ("auc_spatial_within_day", "AUC spatial"), ("auc_temporal_within_cell", "AUC temporal"), ("log_loss", "log loss")):
+            row[f"{name} min"], row[f"{name} max"], row[f"{name} mean"], row[f"{name} SD"] = g[col].min(), g[col].max(), g[col].mean(), g[col].std()
+        row["AP by seed 0-9"] = ", ".join(f"{v:.4f}" for v in g.ap)
+        seed_detail.append(row)
+seed_detail = pd.DataFrame(seed_detail)
 prev_state = {st: float(seed_rows[seed_rows.state == st].onsets.iloc[0] / seed_rows[seed_rows.state == st].rows.iloc[0]) for st in ("UK", "AP")}
 abl_m, abl_c = pd.read_csv(R / "ablation_metrics.csv"), pd.read_csv(R / "ablation_contrasts.csv")
 gain = pd.read_csv(R / "post_hoc_onsets_recent_gain.csv")
@@ -182,11 +215,30 @@ Within-cell temporal AUC:
 {md(yr['auc_temporal_within_cell'])}
 
 ## 5. Fresh states (UK and AP), scored once
-Every arm fitted on all years before 2026 (2,000,000-row cap) and scored on the fresh rows: AP {int(fr[fr.state == 'AP'].rows.iloc[0]):,} rows ({int(fr[fr.state == 'AP'].onsets.iloc[0]):,} onsets, sampled prevalence {prev_state['AP']:.4f}), UK {int(fr[fr.state == 'UK'].rows.iloc[0]):,} rows ({int(fr[fr.state == 'UK'].onsets.iloc[0]):,} onsets, sampled prevalence {prev_state['UK']:.4f}), years 2020-2025, every month of the fire season through 2025-07-31 (not restricted to January-July: deviation o). Unit design weights and the configured population rate 0.0147 are used, so log loss is less comparable than AP and the AUC views. Lift is AP divided by the state's sampled prevalence. No state-level contrast tests were declared for the fresh states; no verdicts are given.
+Every arm fitted on all years before 2026 (2,000,000-row cap) and scored on the fresh rows: AP {int(fr[fr.state == 'AP'].rows.iloc[0]):,} rows ({int(fr[fr.state == 'AP'].onsets.iloc[0]):,} onsets), UK {int(fr[fr.state == 'UK'].rows.iloc[0]):,} rows ({int(fr[fr.state == 'UK'].onsets.iloc[0]):,} onsets), years 2020-2025, every fire-season month through 2025-07-31.
 
-Networks are shown as mean ± SD over the 10 seeds with the per-seed range [min-max]; every other arm has one fit. The figures AP 0.1144 (AP) and 0.1238 (UK), quoted in earlier discussion, are the AP of **`tabular_network@enriched`** (mean over 10 seeds); the tabular-level network has AP {seed_rows[(seed_rows.state == 'AP') & seed_rows.arm_full.str.startswith('tabular_network@tabular')].ap.mean():.4f} (AP) and {seed_rows[(seed_rows.state == 'UK') & seed_rows.arm_full.str.startswith('tabular_network@tabular')].ap.mean():.4f} (UK).
+**What the specification declares for the fresh test rows.** `docs/baseline_spec.md` section 2: "fresh geographic test: UK always; AP, KA, TN, KL only if their fire data passes the completeness check | once, every access recorded in a ledger". `configs/baseline.yaml` `fresh_geographic_test`: `states_always: [UK]`, `states_if_fire_data_complete: [AP, KA, TN, KL]`, `scores_allowed: 1`, `ledger: geo_test_ledger.csv`. Neither names a month or row set. The January-to-July rule is declared for validation years: "Every validation year uses the rows of January to July (the 2025 data stops at the end of July)" (spec, "Compute limits declared in advance"; `validation_months: [1, 2, 3, 4, 5, 6, 7]`, commented "rows used to validate each year"). So the all-months scoring below is not a deviation from a declared fresh-test row set; it differs from the validation-year rule and from the earlier reference run (deviation o). Because the spec fixes no months for the fresh test, the table scored as run (all months) is given first and the January-July table, which applies the validation-year rule by analogy and was computed after the results were known, is labelled a post hoc sensitivity.
 
+Unit design weights and the configured population rate 0.0147 are used, so log loss is less comparable than AP and the AUC views. Lift is AP divided by the state's sampled prevalence. No state-level contrast tests were declared for the fresh states; no verdicts are given. Networks are mean ± SD over the 10 seeds with the per-seed range [min-max]; every other arm has one fit. The figures AP 0.1144 (AP) and 0.1238 (UK), quoted in earlier discussion, are the AP of **`tabular_network@enriched`** (mean over 10 seeds); the tabular-level network has AP {seed_rows[(seed_rows.state == 'AP') & seed_rows.arm_full.str.startswith('tabular_network@tabular')].ap.mean():.4f} (AP) and {seed_rows[(seed_rows.state == 'UK') & seed_rows.arm_full.str.startswith('tabular_network@tabular')].ap.mean():.4f} (UK).
+
+### 5a. UK and AP, all scored months (as scored)
 {md(fresh_table)}
+
+### 5b. UK, all scored months (as scored): the UK rows of 5a repeated beside 5c
+{md(fresh_table_uk_all.drop(columns=[]))}
+
+### 5c. UK, January to July only: SENSITIVITY (POST HOC)
+Rows of months 1-7 of the saved UK predictions, scored with the same metric code; nothing was refitted or re-scored. Fitted models are those of the fresh scoring.
+
+{md(fresh_table_uk_jj)}
+
+### 5d. Onset counts per month, pooled 2020-2025 (scored rows)
+{md(month_table, 4)}
+
+In months where the share is 1.0 every scored row is an onset: the matched non-fire days are drawn only inside the state's fire season, while onsets can fall in any month. The scored rows of those months therefore carry positives only (UK: months 7 to 11, {int(month_table[month_table.month.isin(['7','8','9','10','11'])]['UK onsets'].sum()):,} rows; AP: months 6 to 11, {int(month_table[month_table.month.isin(['6','7','8','9','10','11'])]['AP onsets'].sum()):,} rows). This affects the sampled prevalence, the pooled AUC and AP of the as-scored tables, and it is part of the difference between 5a and 5c.
+
+### 5e. Per-seed range of the network, UK and AP
+{md(seed_detail, 4)}
 
 All arms and the diagnostic arms are in `artifacts/results/fresh_predictions.parquet`. The sealed season (2026 January-July) is unavailable and was not scored (deviation e). Comparison with the earlier Uttarakhand reference result: `docs/decisions/2026-10-01-reference-reconciliation.md`.
 
@@ -212,7 +264,7 @@ Old values are those the Word document states, taken from earlier reference runs
 | Reproduction checks | 133, 0 failures | 133 pass, 0 fail (written 2026-10-01 02:50; scope: labels, features, earlier holdout, leave-year-out 2024, out-of-fold, determinism; not rolling-origin, enriched, network or fresh scoring) | `wildfire-research/studies/reproduction/REPRODUCTION.md` |
 | Peak memory | about 7 GB (was about 10 GB) | still an estimate, not a measured peak: about 7 GB for the 2M-row enriched logistic fit (float64 matrix 3.7 GB plus a 2.7 GB dataset); the old path was about 10 GB. The change is bit-identical (deviation j) | `STATUS.md` |
 
-The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only; and the 2025 boosting AP agrees to four decimals although the predictions differ.
+The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only (the specification declares no month rule for the fresh test, only for validation years); and the 2025 boosting AP agrees to four decimals although the predictions differ.
 
 ## 7. Full deviation list
 {dev}

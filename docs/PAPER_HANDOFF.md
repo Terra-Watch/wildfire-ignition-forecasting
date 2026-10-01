@@ -1,13 +1,13 @@
 # Paper handoff: baseline results
 
-Generated 2026-10-01 21:31 IST from the saved tables by `docs/methodology/make_paper_handoff.py`. Numbers below are read from files under `artifacts/results/`; the paper and the Word document were not touched.
+Generated 2026-10-01 21:39 IST from the saved tables by `docs/methodology/make_paper_handoff.py`. Numbers below are read from files under `artifacts/results/`; the paper and the Word document were not touched.
 
 ## 0. Provenance
 - Frozen baseline: local tag `baseline-final` on commit `5d7d83f` (not pushed); records in `artifacts/baseline_final/` (code hash, config snapshot, data manifest, artifact manifest).
 - Code that produced each result (the `code_commit` stamped in the files): baseline tables `d55a8ca`, ablation tables `0f3ac9e`, sanity checks `d55a8ca`, fresh scoring `5d7d83f`. Rolling-origin folds 2023-2025 were fitted by `d55a8ca`, folds 2021 and 2022 by the earlier code `5af5654` (deviation j). Specification commit `99c867c`.
 - Guard record (`guards.json`, code `9da492c`), every guard true: timestamp_before_day, shifted_feature_fails, identity_gate, label_shuffle, coordinate_unit_test, no_validation_information_in_tuning, power_gate, geo_ledger, provenance; label-shuffle mean AUC 0.5012.
 - Data and artifact records: `wildfire verify-data` (21:2x on 2026-10-01) compared `data/MANIFEST.json` with the data folders and found no differences (exit code 0, no output). The frozen artifact manifest (`artifacts/baseline_final/artifact_manifest.json`) compared with the folders now: labels and features unchanged; results changed from 39 to 44 files, the five files added after the freeze (the fresh predictions, the fresh fit prevalences, the ledger and the two strata CSVs). The data manifest record itself was copied from the committed manifest.
-- Tests at this commit: 169 passed in 12.18s. Sanity checks (`sanity.csv`): global label shuffle mean AP 0.0502 against prevalence 0.0522, cell x week shuffle max AP 0.0933 against climatology 0.1167, permuted holdout labels 0.0522: all passed.
+- Tests at this commit: 169 passed in 12.42s. Sanity checks (`sanity.csv`): global label shuffle mean AP 0.0502 against prevalence 0.0522, cell x week shuffle max AP 0.0933 against climatology 0.1167, permuted holdout labels 0.0522: all passed.
 - Fresh geographic test scored once: ledger entries AP, UK at 2026-10-01T20:38:14 (commit `5d7d83f`).
 
 ## 1. All 43 contrasts are INCONCLUSIVE
@@ -135,40 +135,108 @@ Within-cell temporal AUC:
 | tabular_network@enriched | 0.7623 | 0.7807 | 0.7726 | 0.7911 | 0.8172 |
 
 ## 5. Fresh states (UK and AP), scored once
-Every arm fitted on all years before 2026 (2,000,000-row cap) and scored on the fresh rows: AP 782,694 rows (37,676 onsets, sampled prevalence 0.0481), UK 590,870 rows (27,511 onsets, sampled prevalence 0.0466), years 2020-2025, every month of the fire season through 2025-07-31 (not restricted to January-July: deviation o). Unit design weights and the configured population rate 0.0147 are used, so log loss is less comparable than AP and the AUC views. Lift is AP divided by the state's sampled prevalence. No state-level contrast tests were declared for the fresh states; no verdicts are given.
+Every arm fitted on all years before 2026 (2,000,000-row cap) and scored on the fresh rows: AP 782,694 rows (37,676 onsets), UK 590,870 rows (27,511 onsets), years 2020-2025, every fire-season month through 2025-07-31.
 
-Networks are shown as mean ± SD over the 10 seeds with the per-seed range [min-max]; every other arm has one fit. The figures AP 0.1144 (AP) and 0.1238 (UK), quoted in earlier discussion, are the AP of **`tabular_network@enriched`** (mean over 10 seeds); the tabular-level network has AP 0.2074 (AP) and 0.0813 (UK).
+**What the specification declares for the fresh test rows.** `docs/baseline_spec.md` section 2: "fresh geographic test: UK always; AP, KA, TN, KL only if their fire data passes the completeness check | once, every access recorded in a ledger". `configs/baseline.yaml` `fresh_geographic_test`: `states_always: [UK]`, `states_if_fire_data_complete: [AP, KA, TN, KL]`, `scores_allowed: 1`, `ledger: geo_test_ledger.csv`. Neither names a month or row set. The January-to-July rule is declared for validation years: "Every validation year uses the rows of January to July (the 2025 data stops at the end of July)" (spec, "Compute limits declared in advance"; `validation_months: [1, 2, 3, 4, 5, 6, 7]`, commented "rows used to validate each year"). So the all-months scoring below is not a deviation from a declared fresh-test row set; it differs from the validation-year rule and from the earlier reference run (deviation o). Because the spec fixes no months for the fresh test, the table scored as run (all months) is given first and the January-July table, which applies the validation-year rule by analogy and was computed after the results were known, is labelled a post hoc sensitivity.
 
-| state | arm | seeds | AP | lift (AP / prevalence) | AUC pooled | AUC spatial | AUC temporal | log loss |
-|---|---|---|---|---|---|---|---|---|
-| UK | climatology_cell | 1 | 0.0564 | 1.2110 | 0.5642 | 0.5917 | 0.5194 | 0.2120 |
-| UK | landcover_season | 1 | 0.0540 | 1.1594 | 0.5538 | 0.4540 | 0.5796 | 0.2133 |
-| UK | fwi_season | 1 | 0.0869 | 1.8672 | 0.6197 | 0.5445 | 0.6196 | 0.2236 |
-| UK | logistic_weather_static@tabular | 1 | 0.1008 | 2.1642 | 0.6734 | 0.5803 | 0.6587 | 0.2187 |
-| UK | logistic_weather_static@enriched | 1 | 0.1267 | 2.7221 | 0.7110 | 0.6583 | 0.6797 | 0.2134 |
-| UK | logistic_with_burn@tabular | 1 | 0.1077 | 2.3134 | 0.6805 | 0.5932 | 0.6568 | 0.2032 |
-| UK | logistic_with_burn@enriched | 1 | 0.1265 | 2.7170 | 0.7110 | 0.6592 | 0.6789 | 0.2145 |
-| UK | boosting@tabular | 1 | 0.1075 | 2.3083 | 0.6642 | 0.6316 | 0.6477 | 0.2208 |
-| UK | boosting@enriched | 1 | 0.0979 | 2.1032 | 0.7185 | 0.6562 | 0.7211 | 0.2025 |
-| UK | tabular_network@tabular | 10 | 0.0813 ± 0.0038 [0.0738-0.0874] | 1.7469 ± 0.0823 [1.5858-1.8773] | 0.6376 ± 0.0077 [0.6270-0.6544] | 0.6141 ± 0.0040 [0.6082-0.6206] | 0.6161 ± 0.0091 [0.6057-0.6356] | 0.2861 ± 0.0128 [0.2717-0.3175] |
-| UK | tabular_network@enriched | 10 | 0.1238 ± 0.0078 [0.1036-0.1313] | 2.6579 ± 0.1669 [2.2258-2.8201] | 0.7308 ± 0.0160 [0.6972-0.7508] | 0.6912 ± 0.0075 [0.6745-0.7012] | 0.7066 ± 0.0260 [0.6534-0.7472] | 0.2313 ± 0.0077 [0.2166-0.2415] |
-| UK | coords_only | 1 | 0.0458 | 0.9840 | 0.4972 | 0.5160 | 0.5000 | 0.2362 |
-| UK | cell_id_only | 1 | 0.0466 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2106 |
-| UK | static_only | 1 | 0.0509 | 1.0926 | 0.5404 | 0.5128 | 0.5000 | 0.2073 |
-| AP | climatology_cell | 1 | 0.0887 | 1.8423 | 0.6417 | 0.6139 | 0.5693 | 0.2083 |
-| AP | landcover_season | 1 | 0.0772 | 1.6039 | 0.6503 | 0.5276 | 0.6119 | 0.2154 |
-| AP | fwi_season | 1 | 0.0961 | 1.9970 | 0.6674 | 0.5549 | 0.6453 | 0.2156 |
-| AP | logistic_weather_static@tabular | 1 | 0.1050 | 2.1815 | 0.7055 | 0.5701 | 0.6747 | 0.2051 |
-| AP | logistic_weather_static@enriched | 1 | 0.1456 | 3.0246 | 0.7565 | 0.6521 | 0.7206 | 0.1972 |
-| AP | logistic_with_burn@tabular | 1 | 0.1061 | 2.2037 | 0.7071 | 0.5879 | 0.6738 | 0.2064 |
-| AP | logistic_with_burn@enriched | 1 | 0.1453 | 3.0187 | 0.7567 | 0.6527 | 0.7202 | 0.1972 |
-| AP | boosting@tabular | 1 | 0.2494 | 5.1808 | 0.7742 | 0.6558 | 0.7355 | 0.1921 |
-| AP | boosting@enriched | 1 | 0.2945 | 6.1186 | 0.8147 | 0.7188 | 0.7600 | 0.1815 |
-| AP | tabular_network@tabular | 10 | 0.2074 ± 0.0092 [0.1925-0.2195] | 4.3084 ± 0.1916 [3.9993-4.5601] | 0.7527 ± 0.0055 [0.7445-0.7606] | 0.6403 ± 0.0042 [0.6338-0.6457] | 0.7319 ± 0.0021 [0.7285-0.7357] | 0.1946 ± 0.0019 [0.1918-0.1976] |
-| AP | tabular_network@enriched | 10 | 0.1144 ± 0.0071 [0.1061-0.1304] | 2.3765 ± 0.1478 [2.2034-2.7094] | 0.7507 ± 0.0069 [0.7427-0.7643] | 0.6675 ± 0.0042 [0.6631-0.6757] | 0.7101 ± 0.0055 [0.7017-0.7219] | 0.2558 ± 0.0182 [0.2325-0.2842] |
-| AP | coords_only | 1 | 0.0496 | 1.0309 | 0.5021 | 0.5120 | 0.5000 | 0.2242 |
-| AP | cell_id_only | 1 | 0.0481 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2172 |
-| AP | static_only | 1 | 0.0602 | 1.2515 | 0.5802 | 0.5548 | 0.5000 | 0.2204 |
+Unit design weights and the configured population rate 0.0147 are used, so log loss is less comparable than AP and the AUC views. Lift is AP divided by the state's sampled prevalence. No state-level contrast tests were declared for the fresh states; no verdicts are given. Networks are mean ± SD over the 10 seeds with the per-seed range [min-max]; every other arm has one fit. The figures AP 0.1144 (AP) and 0.1238 (UK), quoted in earlier discussion, are the AP of **`tabular_network@enriched`** (mean over 10 seeds); the tabular-level network has AP 0.2074 (AP) and 0.0813 (UK).
+
+### 5a. UK and AP, all scored months (as scored)
+| state | rows | onsets | prevalence | arm | seeds | AP | lift (AP / prevalence) | AUC pooled | AUC spatial | AUC temporal | log loss |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| UK | 590870 | 27511 | 0.0466 | climatology_cell | 1 | 0.0564 | 1.2110 | 0.5642 | 0.5917 | 0.5194 | 0.2120 |
+| UK | 590870 | 27511 | 0.0466 | landcover_season | 1 | 0.0540 | 1.1594 | 0.5538 | 0.4540 | 0.5796 | 0.2133 |
+| UK | 590870 | 27511 | 0.0466 | fwi_season | 1 | 0.0869 | 1.8672 | 0.6197 | 0.5445 | 0.6196 | 0.2236 |
+| UK | 590870 | 27511 | 0.0466 | logistic_weather_static@tabular | 1 | 0.1008 | 2.1642 | 0.6734 | 0.5803 | 0.6587 | 0.2187 |
+| UK | 590870 | 27511 | 0.0466 | logistic_weather_static@enriched | 1 | 0.1267 | 2.7221 | 0.7110 | 0.6583 | 0.6797 | 0.2134 |
+| UK | 590870 | 27511 | 0.0466 | logistic_with_burn@tabular | 1 | 0.1077 | 2.3134 | 0.6805 | 0.5932 | 0.6568 | 0.2032 |
+| UK | 590870 | 27511 | 0.0466 | logistic_with_burn@enriched | 1 | 0.1265 | 2.7170 | 0.7110 | 0.6592 | 0.6789 | 0.2145 |
+| UK | 590870 | 27511 | 0.0466 | boosting@tabular | 1 | 0.1075 | 2.3083 | 0.6642 | 0.6316 | 0.6477 | 0.2208 |
+| UK | 590870 | 27511 | 0.0466 | boosting@enriched | 1 | 0.0979 | 2.1032 | 0.7185 | 0.6562 | 0.7211 | 0.2025 |
+| UK | 590870 | 27511 | 0.0466 | tabular_network@tabular | 10 | 0.0813 ± 0.0038 [0.0738-0.0874] | 1.7469 ± 0.0823 [1.5858-1.8773] | 0.6376 ± 0.0077 [0.6270-0.6544] | 0.6141 ± 0.0040 [0.6082-0.6206] | 0.6161 ± 0.0091 [0.6057-0.6356] | 0.2861 ± 0.0128 [0.2717-0.3175] |
+| UK | 590870 | 27511 | 0.0466 | tabular_network@enriched | 10 | 0.1238 ± 0.0078 [0.1036-0.1313] | 2.6579 ± 0.1669 [2.2258-2.8201] | 0.7308 ± 0.0160 [0.6972-0.7508] | 0.6912 ± 0.0075 [0.6745-0.7012] | 0.7066 ± 0.0260 [0.6534-0.7472] | 0.2313 ± 0.0077 [0.2166-0.2415] |
+| UK | 590870 | 27511 | 0.0466 | coords_only | 1 | 0.0458 | 0.9840 | 0.4972 | 0.5160 | 0.5000 | 0.2362 |
+| UK | 590870 | 27511 | 0.0466 | cell_id_only | 1 | 0.0466 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2106 |
+| UK | 590870 | 27511 | 0.0466 | static_only | 1 | 0.0509 | 1.0926 | 0.5404 | 0.5128 | 0.5000 | 0.2073 |
+| AP | 782694 | 37676 | 0.0481 | climatology_cell | 1 | 0.0887 | 1.8423 | 0.6417 | 0.6139 | 0.5693 | 0.2083 |
+| AP | 782694 | 37676 | 0.0481 | landcover_season | 1 | 0.0772 | 1.6039 | 0.6503 | 0.5276 | 0.6119 | 0.2154 |
+| AP | 782694 | 37676 | 0.0481 | fwi_season | 1 | 0.0961 | 1.9970 | 0.6674 | 0.5549 | 0.6453 | 0.2156 |
+| AP | 782694 | 37676 | 0.0481 | logistic_weather_static@tabular | 1 | 0.1050 | 2.1815 | 0.7055 | 0.5701 | 0.6747 | 0.2051 |
+| AP | 782694 | 37676 | 0.0481 | logistic_weather_static@enriched | 1 | 0.1456 | 3.0246 | 0.7565 | 0.6521 | 0.7206 | 0.1972 |
+| AP | 782694 | 37676 | 0.0481 | logistic_with_burn@tabular | 1 | 0.1061 | 2.2037 | 0.7071 | 0.5879 | 0.6738 | 0.2064 |
+| AP | 782694 | 37676 | 0.0481 | logistic_with_burn@enriched | 1 | 0.1453 | 3.0187 | 0.7567 | 0.6527 | 0.7202 | 0.1972 |
+| AP | 782694 | 37676 | 0.0481 | boosting@tabular | 1 | 0.2494 | 5.1808 | 0.7742 | 0.6558 | 0.7355 | 0.1921 |
+| AP | 782694 | 37676 | 0.0481 | boosting@enriched | 1 | 0.2945 | 6.1186 | 0.8147 | 0.7188 | 0.7600 | 0.1815 |
+| AP | 782694 | 37676 | 0.0481 | tabular_network@tabular | 10 | 0.2074 ± 0.0092 [0.1925-0.2195] | 4.3084 ± 0.1916 [3.9993-4.5601] | 0.7527 ± 0.0055 [0.7445-0.7606] | 0.6403 ± 0.0042 [0.6338-0.6457] | 0.7319 ± 0.0021 [0.7285-0.7357] | 0.1946 ± 0.0019 [0.1918-0.1976] |
+| AP | 782694 | 37676 | 0.0481 | tabular_network@enriched | 10 | 0.1144 ± 0.0071 [0.1061-0.1304] | 2.3765 ± 0.1478 [2.2034-2.7094] | 0.7507 ± 0.0069 [0.7427-0.7643] | 0.6675 ± 0.0042 [0.6631-0.6757] | 0.7101 ± 0.0055 [0.7017-0.7219] | 0.2558 ± 0.0182 [0.2325-0.2842] |
+| AP | 782694 | 37676 | 0.0481 | coords_only | 1 | 0.0496 | 1.0309 | 0.5021 | 0.5120 | 0.5000 | 0.2242 |
+| AP | 782694 | 37676 | 0.0481 | cell_id_only | 1 | 0.0481 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2172 |
+| AP | 782694 | 37676 | 0.0481 | static_only | 1 | 0.0602 | 1.2515 | 0.5802 | 0.5548 | 0.5000 | 0.2204 |
+
+### 5b. UK, all scored months (as scored): the UK rows of 5a repeated beside 5c
+| state | rows | onsets | prevalence | arm | seeds | AP | lift (AP / prevalence) | AUC pooled | AUC spatial | AUC temporal | log loss |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| UK | 590870 | 27511 | 0.0466 | climatology_cell | 1 | 0.0564 | 1.2110 | 0.5642 | 0.5917 | 0.5194 | 0.2120 |
+| UK | 590870 | 27511 | 0.0466 | landcover_season | 1 | 0.0540 | 1.1594 | 0.5538 | 0.4540 | 0.5796 | 0.2133 |
+| UK | 590870 | 27511 | 0.0466 | fwi_season | 1 | 0.0869 | 1.8672 | 0.6197 | 0.5445 | 0.6196 | 0.2236 |
+| UK | 590870 | 27511 | 0.0466 | logistic_weather_static@tabular | 1 | 0.1008 | 2.1642 | 0.6734 | 0.5803 | 0.6587 | 0.2187 |
+| UK | 590870 | 27511 | 0.0466 | logistic_weather_static@enriched | 1 | 0.1267 | 2.7221 | 0.7110 | 0.6583 | 0.6797 | 0.2134 |
+| UK | 590870 | 27511 | 0.0466 | logistic_with_burn@tabular | 1 | 0.1077 | 2.3134 | 0.6805 | 0.5932 | 0.6568 | 0.2032 |
+| UK | 590870 | 27511 | 0.0466 | logistic_with_burn@enriched | 1 | 0.1265 | 2.7170 | 0.7110 | 0.6592 | 0.6789 | 0.2145 |
+| UK | 590870 | 27511 | 0.0466 | boosting@tabular | 1 | 0.1075 | 2.3083 | 0.6642 | 0.6316 | 0.6477 | 0.2208 |
+| UK | 590870 | 27511 | 0.0466 | boosting@enriched | 1 | 0.0979 | 2.1032 | 0.7185 | 0.6562 | 0.7211 | 0.2025 |
+| UK | 590870 | 27511 | 0.0466 | tabular_network@tabular | 10 | 0.0813 ± 0.0038 [0.0738-0.0874] | 1.7469 ± 0.0823 [1.5858-1.8773] | 0.6376 ± 0.0077 [0.6270-0.6544] | 0.6141 ± 0.0040 [0.6082-0.6206] | 0.6161 ± 0.0091 [0.6057-0.6356] | 0.2861 ± 0.0128 [0.2717-0.3175] |
+| UK | 590870 | 27511 | 0.0466 | tabular_network@enriched | 10 | 0.1238 ± 0.0078 [0.1036-0.1313] | 2.6579 ± 0.1669 [2.2258-2.8201] | 0.7308 ± 0.0160 [0.6972-0.7508] | 0.6912 ± 0.0075 [0.6745-0.7012] | 0.7066 ± 0.0260 [0.6534-0.7472] | 0.2313 ± 0.0077 [0.2166-0.2415] |
+| UK | 590870 | 27511 | 0.0466 | coords_only | 1 | 0.0458 | 0.9840 | 0.4972 | 0.5160 | 0.5000 | 0.2362 |
+| UK | 590870 | 27511 | 0.0466 | cell_id_only | 1 | 0.0466 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2106 |
+| UK | 590870 | 27511 | 0.0466 | static_only | 1 | 0.0509 | 1.0926 | 0.5404 | 0.5128 | 0.5000 | 0.2073 |
+
+### 5c. UK, January to July only: SENSITIVITY (POST HOC)
+Rows of months 1-7 of the saved UK predictions, scored with the same metric code; nothing was refitted or re-scored. Fitted models are those of the fresh scoring.
+
+| state | rows | onsets | prevalence | arm | seeds | AP | lift (AP / prevalence) | AUC pooled | AUC spatial | AUC temporal | log loss |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| UK | 508703 | 22970 | 0.0452 | climatology_cell | 1 | 0.0539 | 1.1934 | 0.5659 | 0.5872 | 0.5169 | 0.2057 |
+| UK | 508703 | 22970 | 0.0452 | landcover_season | 1 | 0.0558 | 1.2360 | 0.5992 | 0.4530 | 0.6191 | 0.1979 |
+| UK | 508703 | 22970 | 0.0452 | fwi_season | 1 | 0.0947 | 2.0972 | 0.6789 | 0.5427 | 0.6597 | 0.2102 |
+| UK | 508703 | 22970 | 0.0452 | logistic_weather_static@tabular | 1 | 0.1080 | 2.3926 | 0.7079 | 0.5929 | 0.6743 | 0.2014 |
+| UK | 508703 | 22970 | 0.0452 | logistic_weather_static@enriched | 1 | 0.1285 | 2.8463 | 0.7159 | 0.6613 | 0.6639 | 0.2020 |
+| UK | 508703 | 22970 | 0.0452 | logistic_with_burn@tabular | 1 | 0.1160 | 2.5691 | 0.7154 | 0.6096 | 0.6738 | 0.1866 |
+| UK | 508703 | 22970 | 0.0452 | logistic_with_burn@enriched | 1 | 0.1282 | 2.8399 | 0.7159 | 0.6622 | 0.6633 | 0.2030 |
+| UK | 508703 | 22970 | 0.0452 | boosting@tabular | 1 | 0.0801 | 1.7736 | 0.6574 | 0.6285 | 0.6250 | 0.2144 |
+| UK | 508703 | 22970 | 0.0452 | boosting@enriched | 1 | 0.0814 | 1.8017 | 0.7078 | 0.6381 | 0.7199 | 0.2029 |
+| UK | 508703 | 22970 | 0.0452 | tabular_network@tabular | 10 | 0.0689 ± 0.0034 [0.0635-0.0759] | 1.5259 ± 0.0752 [1.4066-1.6813] | 0.6366 ± 0.0091 [0.6255-0.6579] | 0.6214 ± 0.0036 [0.6161-0.6270] | 0.5937 ± 0.0107 [0.5798-0.6180] | 0.2740 ± 0.0126 [0.2608-0.3051] |
+| UK | 508703 | 22970 | 0.0452 | tabular_network@enriched | 10 | 0.1072 ± 0.0048 [0.0959-0.1116] | 2.3750 ± 0.1072 [2.1246-2.4711] | 0.7303 ± 0.0135 [0.7001-0.7456] | 0.6929 ± 0.0061 [0.6783-0.6999] | 0.6964 ± 0.0235 [0.6456-0.7267] | 0.2222 ± 0.0069 [0.2086-0.2300] |
+| UK | 508703 | 22970 | 0.0452 | coords_only | 1 | 0.0435 | 0.9644 | 0.4881 | 0.5037 | 0.5000 | 0.2297 |
+| UK | 508703 | 22970 | 0.0452 | cell_id_only | 1 | 0.0452 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2047 |
+| UK | 508703 | 22970 | 0.0452 | static_only | 1 | 0.0505 | 1.1187 | 0.5507 | 0.5225 | 0.5000 | 0.2010 |
+
+### 5d. Onset counts per month, pooled 2020-2025 (scored rows)
+| month | UK rows | UK onsets | UK onset share of rows | AP rows | AP onsets | AP onset share of rows |
+|---|---|---|---|---|---|---|
+| 1 | 90093 | 3002 | 0.0333 | 137849 | 2160 | 0.0157 |
+| 2 | 82266 | 3513 | 0.0427 | 125647 | 5045 | 0.0402 |
+| 3 | 88131 | 4619 | 0.0524 | 133508 | 11812 | 0.0885 |
+| 4 | 80236 | 7358 | 0.0917 | 128937 | 9870 | 0.0765 |
+| 5 | 86649 | 2589 | 0.0299 | 134751 | 4334 | 0.0322 |
+| 6 | 81309 | 1870 | 0.0230 | 1213 | 1213 | 1.0000 |
+| 7 | 19 | 19 | 1.0000 | 201 | 201 | 1.0000 |
+| 8 | 8 | 8 | 1.0000 | 271 | 271 | 1.0000 |
+| 9 | 18 | 18 | 1.0000 | 261 | 261 | 1.0000 |
+| 10 | 672 | 672 | 1.0000 | 527 | 527 | 1.0000 |
+| 11 | 1250 | 1250 | 1.0000 | 607 | 607 | 1.0000 |
+| 12 | 80219 | 2593 | 0.0323 | 118922 | 1375 | 0.0116 |
+| total | 590870 | 27511 | 0.0466 | 782694 | 37676 | 0.0481 |
+
+In months where the share is 1.0 every scored row is an onset: the matched non-fire days are drawn only inside the state's fire season, while onsets can fall in any month. The scored rows of those months therefore carry positives only (UK: months 7 to 11, 1,967 rows; AP: months 6 to 11, 3,080 rows). This affects the sampled prevalence, the pooled AUC and AP of the as-scored tables, and it is part of the difference between 5a and 5c.
+
+### 5e. Per-seed range of the network, UK and AP
+| state | level | AP min | AP max | AP mean | AP SD | AUC pooled min | AUC pooled max | AUC pooled mean | AUC pooled SD | AUC spatial min | AUC spatial max | AUC spatial mean | AUC spatial SD | AUC temporal min | AUC temporal max | AUC temporal mean | AUC temporal SD | log loss min | log loss max | log loss mean | log loss SD | AP by seed 0-9 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| UK | tabular | 0.0738 | 0.0874 | 0.0813 | 0.0038 | 0.6270 | 0.6544 | 0.6376 | 0.0077 | 0.6082 | 0.6206 | 0.6141 | 0.0040 | 0.6057 | 0.6356 | 0.6161 | 0.0091 | 0.2717 | 0.3175 | 0.2861 | 0.0128 | 0.0738, 0.0799, 0.0771, 0.0831, 0.0874, 0.0830, 0.0843, 0.0832, 0.0807, 0.0808 |
+| UK | enriched | 0.1036 | 0.1313 | 0.1238 | 0.0078 | 0.6972 | 0.7508 | 0.7308 | 0.0160 | 0.6745 | 0.7012 | 0.6912 | 0.0075 | 0.6534 | 0.7472 | 0.7066 | 0.0260 | 0.2166 | 0.2415 | 0.2313 | 0.0077 | 0.1259, 0.1232, 0.1036, 0.1264, 0.1313, 0.1252, 0.1202, 0.1299, 0.1279, 0.1239 |
+| AP | tabular | 0.1925 | 0.2195 | 0.2074 | 0.0092 | 0.7445 | 0.7606 | 0.7527 | 0.0055 | 0.6338 | 0.6457 | 0.6403 | 0.0042 | 0.7285 | 0.7357 | 0.7319 | 0.0021 | 0.1918 | 0.1976 | 0.1946 | 0.0019 | 0.2070, 0.2015, 0.2105, 0.2173, 0.2131, 0.2195, 0.1989, 0.1981, 0.2154, 0.1925 |
+| AP | enriched | 0.1061 | 0.1304 | 0.1144 | 0.0071 | 0.7427 | 0.7643 | 0.7507 | 0.0069 | 0.6631 | 0.6757 | 0.6675 | 0.0042 | 0.7017 | 0.7219 | 0.7101 | 0.0055 | 0.2325 | 0.2842 | 0.2558 | 0.0182 | 0.1138, 0.1134, 0.1061, 0.1065, 0.1195, 0.1137, 0.1093, 0.1304, 0.1179, 0.1133 |
 
 All arms and the diagnostic arms are in `artifacts/results/fresh_predictions.parquet`. The sealed season (2026 January-July) is unavailable and was not scored (deviation e). Comparison with the earlier Uttarakhand reference result: `docs/decisions/2026-10-01-reference-reconciliation.md`.
 
@@ -194,7 +262,7 @@ Old values are those the Word document states, taken from earlier reference runs
 | Reproduction checks | 133, 0 failures | 133 pass, 0 fail (written 2026-10-01 02:50; scope: labels, features, earlier holdout, leave-year-out 2024, out-of-fold, determinism; not rolling-origin, enriched, network or fresh scoring) | `wildfire-research/studies/reproduction/REPRODUCTION.md` |
 | Peak memory | about 7 GB (was about 10 GB) | still an estimate, not a measured peak: about 7 GB for the 2M-row enriched logistic fit (float64 matrix 3.7 GB plus a 2.7 GB dataset); the old path was about 10 GB. The change is bit-identical (deviation j) | `STATUS.md` |
 
-The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only; and the 2025 boosting AP agrees to four decimals although the predictions differ.
+The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only (the specification declares no month rule for the fresh test, only for validation years); and the 2025 boosting AP agrees to four decimals although the predictions differ.
 
 ## 7. Full deviation list
 Status: written 2026-10-01 after the rolling-origin run, the sanity checks and the notebook run, before the baseline tables. Nothing here changes the stamped specification; each item says what differs from the declared plan or from the paper's natural reading, and whether it was measured.
@@ -215,7 +283,7 @@ Status: written 2026-10-01 after the rolling-origin run, the sanity checks and t
 | l | The specification (section 9 and `configs/baseline.yaml` `guards.required`) names `identity_gate` without defining it. The implemented meaning is row disjointness: no cell-day is both a fit row and a validation row in any rolling-origin fold (2021-2025), checked on the actual fit and validation rows. No threshold. It is **not** a test against cell-identity shortcuts: that question is covered by the diagnostic arms (`coords_only`, `cell_id_only`, `static_only`), which are reported and ungated | The gate protects against fit and validation rows overlapping, nothing more; the place-shortcut is read from the diagnostic arms. The guard for `no_validation_information_in_tuning_or_climatology` is implemented as `no_validation_information_in_tuning` (see c). The power gate is implemented as a self-test of the decision rule, and the saved contrasts obey it | `src/wildfire/guards/baseline_guards.py` (`identity_gate`, `power_gate`), `docs/baseline_spec.md` section 9 |
 | m | Ablations A, B1 and B2 of enriched boosting are secondary and post hoc (defined after the baseline tables) and do not change the baseline or the freeze | Their verdict labels are descriptive only | `2026-10-01-ablations.md` |
 | n | Tooling change: `scripts/check_names.py` no longer scans the payload of notebook image outputs (`data` fields `image/png`, `image/jpeg`, `image/svg+xml`), because random base64 text produced label-like tokens and blocked committing executed notebooks. Every source cell, every text, stream and other output field and the notebook metadata are still scanned with the unchanged rule; only those three image fields are skipped | No change to the rule for text. A test with an executed-notebook fixture checks that label-like text in a source cell, a stream output, a text output next to an image and the metadata still fails, that an image blob passes, and that other mime types are still scanned | `scripts/check_names.py`, `tests/test_check_names.py` |
-| o | Fresh-state test rows: every fire-season month of 2020-2025 through 2025-07-31 is scored (UK 590,870 rows with 27,511 onsets, AP 782,694 rows with 37,676 onsets), not January-July only as in the validation folds. The fresh row file also holds 2019 rows (UK 77,322), which are not among the scored rows. The specification declares no row rule for the fresh test | Measured on the saved UK predictions: restricting to January-July (508,703 rows, 22,970 onsets) changes `boosting@tabular` AP from 0.1075 to 0.0801 and `fwi_season` AP from 0.0869 to 0.0947. The fresh table in the handoff uses all scored rows. Nothing was re-scored | `src/wildfire/pipelines/fresh_states.py` (`score_once`), `docs/decisions/2026-10-01-reference-reconciliation.md` |
+| o | Fresh-state test rows: every fire-season month of 2020-2025 through 2025-07-31 is scored (UK 590,870 rows with 27,511 onsets, AP 782,694 rows with 37,676 onsets). The specification declares no month or row rule for the fresh test: its section 2 gives only the states and "once, every access recorded in a ledger", and `configs/baseline.yaml` `fresh_geographic_test` holds the states, `scores_allowed` and the ledger name. The January-to-July rule ("Every validation year uses the rows of January to July", spec "Compute limits declared in advance", and `validation_months`) is stated for validation years. So this is **not a deviation from a declared fresh-test row set**; it is a difference from the January-July rule of the validation folds and from the earlier reference run, which scored January-July only. Scored rows of months outside a state's fire season are onset-only because matched non-fire days are drawn inside the season only (UK months 7-11: 1,967 rows; AP months 6-11: 3,080 rows). The fresh row file also holds 2019 rows (UK 77,322), which are not among the scored rows | Measured on the saved UK predictions (no re-scoring): restricting to January-July (508,703 rows, 22,970 onsets) changes `boosting@tabular` AP from 0.1075 to 0.0801 and `fwi_season` AP from 0.0869 to 0.0947. The handoff shows both row sets, the January-July table labelled a post hoc sensitivity | `docs/baseline_spec.md` sections 2 and "Compute limits", `configs/baseline.yaml`, `src/wildfire/pipelines/fresh_states.py` (`score_once`), `docs/decisions/2026-10-01-reference-reconciliation.md` |
 
 ## 8. Limits to state in the paper
 - Sealed season unavailable; 2025 is a development fold; the fresh test uses two states with unit weights.

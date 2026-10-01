@@ -62,7 +62,7 @@ def sealed_status() -> pd.DataFrame:
         ("burned-area product", "no items after 2025-07 (searched 2026-10-01)"),
         ("sealed season 2026 Jan-Jul", "unavailable; not replaced by 2025"),
         ("arms needing burn inputs", "all arms that include them (logistic_with_burn, boosting, network and their enriched versions)"),
-        ("other 2026 sources", "not pulled, because the test cannot be completed without burn")],
+        ("other 2026 sources", "partly pulled after the decision (fire detections, weather for January-February, vegetation index); not used for scoring")],
         columns=["item", "status"])
 
 

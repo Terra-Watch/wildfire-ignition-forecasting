@@ -1,13 +1,13 @@
 # Paper handoff: baseline results
 
-Generated 2026-10-01 21:39 IST from the saved tables by `docs/methodology/make_paper_handoff.py`. Numbers below are read from files under `artifacts/results/`; the paper and the Word document were not touched.
+Generated 2026-10-01 21:49 IST from the saved tables by `docs/methodology/make_paper_handoff.py`. Numbers below are read from files under `artifacts/results/`; the paper and the Word document were not touched.
 
 ## 0. Provenance
 - Frozen baseline: local tag `baseline-final` on commit `5d7d83f` (not pushed); records in `artifacts/baseline_final/` (code hash, config snapshot, data manifest, artifact manifest).
 - Code that produced each result (the `code_commit` stamped in the files): baseline tables `d55a8ca`, ablation tables `0f3ac9e`, sanity checks `d55a8ca`, fresh scoring `5d7d83f`. Rolling-origin folds 2023-2025 were fitted by `d55a8ca`, folds 2021 and 2022 by the earlier code `5af5654` (deviation j). Specification commit `99c867c`.
 - Guard record (`guards.json`, code `9da492c`), every guard true: timestamp_before_day, shifted_feature_fails, identity_gate, label_shuffle, coordinate_unit_test, no_validation_information_in_tuning, power_gate, geo_ledger, provenance; label-shuffle mean AUC 0.5012.
 - Data and artifact records: `wildfire verify-data` (21:2x on 2026-10-01) compared `data/MANIFEST.json` with the data folders and found no differences (exit code 0, no output). The frozen artifact manifest (`artifacts/baseline_final/artifact_manifest.json`) compared with the folders now: labels and features unchanged; results changed from 39 to 44 files, the five files added after the freeze (the fresh predictions, the fresh fit prevalences, the ledger and the two strata CSVs). The data manifest record itself was copied from the committed manifest.
-- Tests at this commit: 169 passed in 12.42s. Sanity checks (`sanity.csv`): global label shuffle mean AP 0.0502 against prevalence 0.0522, cell x week shuffle max AP 0.0933 against climatology 0.1167, permuted holdout labels 0.0522: all passed.
+- Tests at this commit: 169 passed in 12.81s. Sanity checks (`sanity.csv`): global label shuffle mean AP 0.0502 against prevalence 0.0522, cell x week shuffle max AP 0.0933 against climatology 0.1167, permuted holdout labels 0.0522: all passed.
 - Fresh geographic test scored once: ledger entries AP, UK at 2026-10-01T20:38:14 (commit `5d7d83f`).
 
 ## 1. All 43 contrasts are INCONCLUSIVE
@@ -238,6 +238,104 @@ In months where the share is 1.0 every scored row is an onset: the matched non-f
 | AP | tabular | 0.1925 | 0.2195 | 0.2074 | 0.0092 | 0.7445 | 0.7606 | 0.7527 | 0.0055 | 0.6338 | 0.6457 | 0.6403 | 0.0042 | 0.7285 | 0.7357 | 0.7319 | 0.0021 | 0.1918 | 0.1976 | 0.1946 | 0.0019 | 0.2070, 0.2015, 0.2105, 0.2173, 0.2131, 0.2195, 0.1989, 0.1981, 0.2154, 0.1925 |
 | AP | enriched | 0.1061 | 0.1304 | 0.1144 | 0.0071 | 0.7427 | 0.7643 | 0.7507 | 0.0069 | 0.6631 | 0.6757 | 0.6675 | 0.0042 | 0.7017 | 0.7219 | 0.7101 | 0.0055 | 0.2325 | 0.2842 | 0.2558 | 0.0182 | 0.1138, 0.1134, 0.1061, 0.1065, 0.1195, 0.1137, 0.1093, 0.1304, 0.1179, 0.1133 |
 
+### 5f. AP, January to July only: SENSITIVITY (POST HOC)
+Rows of months 1-7 of the saved AP predictions, same metric code; nothing refitted or re-scored. Onset-only rows (rows in a month where the state has no matched non-fire rows, so every row is an onset) inside each state's January-July set: **UK 19** of 508,703 rows (month 7), **AP 1,414** of 662,106 rows (months 6 and 7).
+
+| state | rows | onsets | prevalence | arm | seeds | AP | lift (AP / prevalence) | AUC pooled | AUC spatial | AUC temporal | log loss |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| AP | 662106 | 34635 | 0.0523 | climatology_cell | 1 | 0.0934 | 1.7846 | 0.6421 | 0.6140 | 0.5595 | 0.2240 |
+| AP | 662106 | 34635 | 0.0523 | landcover_season | 1 | 0.0799 | 1.5281 | 0.6485 | 0.5345 | 0.6092 | 0.2275 |
+| AP | 662106 | 34635 | 0.0523 | fwi_season | 1 | 0.1002 | 1.9155 | 0.6673 | 0.5457 | 0.6515 | 0.2282 |
+| AP | 662106 | 34635 | 0.0523 | logistic_weather_static@tabular | 1 | 0.1088 | 2.0805 | 0.7015 | 0.5784 | 0.6658 | 0.2187 |
+| AP | 662106 | 34635 | 0.0523 | logistic_weather_static@enriched | 1 | 0.1730 | 3.3063 | 0.7590 | 0.6676 | 0.7067 | 0.2117 |
+| AP | 662106 | 34635 | 0.0523 | logistic_with_burn@tabular | 1 | 0.1101 | 2.1049 | 0.7031 | 0.5934 | 0.6645 | 0.2200 |
+| AP | 662106 | 34635 | 0.0523 | logistic_with_burn@enriched | 1 | 0.1737 | 3.3210 | 0.7595 | 0.6684 | 0.7065 | 0.2116 |
+| AP | 662106 | 34635 | 0.0523 | boosting@tabular | 1 | 0.1991 | 3.8062 | 0.7504 | 0.6449 | 0.6956 | 0.2146 |
+| AP | 662106 | 34635 | 0.0523 | boosting@enriched | 1 | 0.2572 | 4.9169 | 0.8008 | 0.7171 | 0.7301 | 0.2024 |
+| AP | 662106 | 34635 | 0.0523 | tabular_network@tabular | 10 | 0.1709 ± 0.0050 [0.1638-0.1795] | 3.2665 ± 0.0954 [3.1315-3.4315] | 0.7302 ± 0.0041 [0.7246-0.7366] | 0.6268 ± 0.0039 [0.6213-0.6316] | 0.6995 ± 0.0014 [0.6963-0.7007] | 0.2166 ± 0.0021 [0.2134-0.2199] |
+| AP | 662106 | 34635 | 0.0523 | tabular_network@enriched | 10 | 0.1702 ± 0.0085 [0.1562-0.1856] | 3.2529 ± 0.1621 [2.9866-3.5488] | 0.7678 ± 0.0038 [0.7625-0.7739] | 0.6857 ± 0.0037 [0.6813-0.6928] | 0.7107 ± 0.0021 [0.7068-0.7137] | 0.2103 ± 0.0025 [0.2058-0.2138] |
+| AP | 662106 | 34635 | 0.0523 | coords_only | 1 | 0.0535 | 1.0237 | 0.4973 | 0.5000 | 0.5000 | 0.2428 |
+| AP | 662106 | 34635 | 0.0523 | cell_id_only | 1 | 0.0523 | 1.0000 | 0.5000 | 0.5000 | 0.5000 | 0.2348 |
+| AP | 662106 | 34635 | 0.0523 | static_only | 1 | 0.0673 | 1.2869 | 0.5913 | 0.5722 | 0.5000 | 0.2377 |
+
+### 5g. Paired ISO-week cluster bootstrap on the January-July rows: DESCRIPTIVE, POST HOC, NO VERDICTS
+Differences are arm minus reference, on the saved fresh predictions, with the baseline's paired ISO-week cluster bootstrap (2,000 draws, 99% percentile interval). No verdict is given and none of these contrasts was declared; log loss uses the corrected probabilities and unit weights as in 5a.
+
+| state | arm | reference | rows | onsets | clusters | ΔAP | ΔAP 99% lo | ΔAP 99% hi | ΔAP SE | Δlog loss | Δlog loss 99% lo | Δlog loss 99% hi | ΔBrier | ΔBrier 99% lo | ΔBrier 99% hi |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| UK | logistic_with_burn@tabular | boosting@tabular | 508703 | 22970 | 167 | 0.0359 | 0.0162 | 0.0592 | 0.0089 | -0.0278 | -0.0370 | -0.0202 | -0.0026 | -0.0039 | -0.0015 |
+| UK | boosting@enriched | fwi_season | 508703 | 22970 | 167 | -0.0133 | -0.0296 | 0.0035 | 0.0066 | -0.0073 | -0.0264 | 0.0121 | 0.0092 | 0.0055 | 0.0136 |
+| UK | boosting@enriched | logistic_with_burn@enriched | 508703 | 22970 | 167 | -0.0469 | -0.0846 | -0.0160 | 0.0135 | -0.0001 | -0.0162 | 0.0151 | 0.0104 | 0.0071 | 0.0144 |
+| AP | logistic_with_burn@tabular | boosting@tabular | 662106 | 34635 | 184 | -0.0890 | -0.1222 | -0.0579 | 0.0122 | 0.0054 | 0.0008 | 0.0109 | 0.0013 | 0.0007 | 0.0020 |
+| AP | boosting@enriched | fwi_season | 662106 | 34635 | 184 | 0.1570 | 0.1182 | 0.1935 | 0.0145 | -0.0258 | -0.0352 | -0.0181 | -0.0031 | -0.0043 | -0.0021 |
+| AP | boosting@enriched | logistic_with_burn@enriched | 662106 | 34635 | 184 | 0.0835 | 0.0513 | 0.1173 | 0.0127 | -0.0093 | -0.0147 | -0.0045 | -0.0013 | -0.0024 | -0.0006 |
+
+### 5h. Neighbourhood-block shift for `tabular_network@enriched` (post hoc, read-only)
+Mean, SD and 99th percentile of the 12 neighbourhood columns for the rows the network was standardised on ("fit": fit rows 2019-2024 without the early-stopping year 2025, after the 2,000,000-row cap), the AP rows and the UK rows that were scored. The network standardises each column with the mean and SD of the fit rows ("fit" mean and SD in the table; SD plus 1e-6).
+
+| column | mean fit | mean AP | mean UK | sd fit | sd AP | sd UK | p99 fit | p99 AP | p99 UK |
+|---|---|---|---|---|---|---|---|---|---|
+| ring_8_tree_cover | 0.514 | 0.507 | 0.717 | 0.219 | 0.225 | 0.184 | 0.947 | 0.981 | 0.969 |
+| ring_8_burn_count | 0.512 | 0.349 | 0.880 | 0.593 | 0.527 | 0.654 | 2.415 | 2.208 | 2.242 |
+| ring_8_years_since_burn | 7.452 | 8.211 | 5.618 | 2.623 | 2.476 | 2.979 | 10.000 | 10.000 | 10.000 |
+| ring_8_vegetation_index | 0.494 | 0.560 | 0.560 | 0.115 | 0.106 | 0.119 | 0.762 | 0.807 | 0.759 |
+| ring_8_fire_weather_index | 30.317 | 23.388 | 10.852 | 16.618 | 14.924 | 12.878 | 69.782 | 57.487 | 56.190 |
+| ring_8_onsets_recent | 3.342 | 2.535 | 2.910 | 4.425 | 3.566 | 4.046 | 18.000 | 16.000 | 18.000 |
+| ring_24_tree_cover | 0.494 | 0.488 | 0.708 | 0.207 | 0.212 | 0.176 | 0.910 | 0.954 | 0.940 |
+| ring_24_burn_count | 0.492 | 0.335 | 0.886 | 0.529 | 0.438 | 0.597 | 2.252 | 1.799 | 2.169 |
+| ring_24_years_since_burn | 7.551 | 8.267 | 5.610 | 2.281 | 2.088 | 2.700 | 10.000 | 10.000 | 10.000 |
+| ring_24_vegetation_index | 0.491 | 0.556 | 0.554 | 0.111 | 0.101 | 0.119 | 0.748 | 0.796 | 0.742 |
+| ring_24_fire_weather_index | 30.335 | 23.422 | 10.836 | 16.574 | 14.866 | 12.702 | 69.730 | 57.429 | 55.732 |
+| ring_24_onsets_recent | 9.768 | 7.537 | 8.610 | 11.909 | 9.482 | 11.000 | 48.000 | 43.000 | 49.000 |
+
+Standardised values the network saw (value minus fit mean, divided by fit SD) in the scored rows:
+
+| column | z_min AP | z_p99 AP | z_max AP | z_min UK | z_p99 UK | z_max UK |
+|---|---|---|---|---|---|---|
+| ring_8_tree_cover | -2.19 | 2.13 | 2.21 | -2.11 | 2.08 | 2.19 |
+| ring_8_burn_count | -0.86 | 2.86 | 3.60 | -0.86 | 2.92 | 3.86 |
+| ring_8_years_since_burn | -2.81 | 0.97 | 0.97 | -2.81 | 0.97 | 0.97 |
+| ring_8_vegetation_index | -4.36 | 2.71 | 3.47 | -4.65 | 2.30 | 2.99 |
+| ring_8_fire_weather_index | -1.82 | 1.63 | 2.91 | -1.82 | 1.56 | 3.80 |
+| ring_8_onsets_recent | -0.76 | 2.86 | 5.35 | -0.76 | 3.31 | 6.48 |
+| ring_24_tree_cover | -2.23 | 2.22 | 2.40 | -2.13 | 2.15 | 2.25 |
+| ring_24_burn_count | -0.93 | 2.47 | 3.42 | -0.93 | 3.17 | 3.98 |
+| ring_24_years_since_burn | -3.16 | 1.07 | 1.07 | -3.26 | 1.07 | 1.07 |
+| ring_24_vegetation_index | -3.66 | 2.75 | 3.59 | -4.76 | 2.26 | 2.93 |
+| ring_24_fire_weather_index | -1.83 | 1.63 | 2.90 | -1.83 | 1.53 | 3.76 |
+| ring_24_onsets_recent | -0.82 | 2.79 | 5.73 | -0.82 | 3.29 | 5.90 |
+
+- Largest standardised value: AP **5.73** (`ring_24_onsets_recent`), UK **6.48** (`ring_8_onsets_recent`); smallest: AP -4.36 (`ring_8_vegetation_index`), UK -4.76 (`ring_24_vegetation_index`). Largest absolute value in these columns: AP 5.73, UK 6.48; no value exceeds 10.
+- Largest shift of a column mean from the fit mean, in fit SDs: AP 0.58 (`ring_24_vegetation_index`), UK 1.18 (`ring_24_fire_weather_index`).
+
+What the network scored on rows split by their largest standardised neighbourhood value (saved predictions; thresholds 5 and 10 fixed before looking; AP of the mean over seeds' individual APs):
+
+| state | group | rows | share_of_rows | onsets | prevalence | network_tabular_AP_mean_of_seeds | network_enriched_AP_mean_of_seeds | boosting_enriched_AP | boosting_tabular_AP |
+|---|---|---|---|---|---|---|---|---|---|
+| AP | max |z| <= 5 | 782671 | 1.0000 | 37668 | 0.0481 | 0.2073 | 0.1144 | 0.2944 | 0.2493 |
+| AP | 5 < max |z| <= 10 | 23 | 0.0000 | 8 | 0.3478 | 0.6031 | 0.5995 | 0.6034 | 0.5639 |
+| AP | max |z| > 10 | 0 | 0.0000 | 0 |  |  |  |  |  |
+| AP | all rows | 782694 | 1.0000 | 37676 | 0.0481 | 0.2074 | 0.1144 | 0.2945 | 0.2494 |
+| UK | max |z| <= 5 | 590746 | 0.9998 | 27466 | 0.0465 | 0.0812 | 0.1234 | 0.0978 | 0.1074 |
+| UK | 5 < max |z| <= 10 | 124 | 0.0002 | 45 | 0.3629 | 0.3023 | 0.3341 | 0.4245 | 0.3367 |
+| UK | max |z| > 10 | 0 | 0.0000 | 0 |  |  |  |  |  |
+| UK | all rows | 590870 | 1.0000 | 27511 | 0.0466 | 0.0813 | 0.1238 | 0.0979 | 0.1075 |
+
+AP of the same predictions by month group (every row of a month in which the state has matched non-fire days carries both labels; the other months are onset-only):
+
+| state | months | rows | onsets | prevalence | network tabular AP (mean of seeds) | network enriched AP (mean of seeds) | boosting@enriched AP |
+|---|---|---|---|---|---|---|---|
+| AP | months 1-7 | 662106 | 34635 | 0.0523 | 0.1709 | 0.1702 | 0.2572 |
+| AP | months 8-11 | 1666 | 1666 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| AP | month 12 | 118922 | 1375 | 0.0116 | 0.0243 | 0.0121 | 0.0296 |
+| AP | all months | 782694 | 37676 | 0.0481 | 0.2074 | 0.1144 | 0.2945 |
+| UK | months 1-7 | 508703 | 22970 | 0.0452 | 0.0689 | 0.1072 | 0.0814 |
+| UK | months 8-11 | 1948 | 1948 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| UK | month 12 | 80219 | 2593 | 0.0323 | 0.0462 | 0.0917 | 0.1097 |
+| UK | all months | 590870 | 27511 | 0.0466 | 0.0813 | 0.1238 | 0.0979 |
+
+**Is the AP collapse explained by the neighbourhood block?** The collapse is `tabular_network@enriched` AP 0.1144 in AP, against 0.2074 for `tabular_network@tabular` and 0.2945 for `boosting@enriched` on the same rows. By these numbers extreme neighbourhood values do not explain it: 782,671 of 782,694 AP rows (0.99997 of the rows) have no standardised neighbourhood value above 5, and on them the network's AP is 0.1144, the same as on all rows; the 23 rows above 5 are not what lowers it (network AP there 0.5995). On the January-July rows the enriched network's AP in AP is 0.1702 against 0.1709 for the tabular network (5f), so the gap between 0.1144 and the tabular network arises in the other months (table above). These checks do not test the weather-window or anomaly blocks, and do not rule out an effect of the moderate shifts of the column means shown above; they only show that the collapse is not carried by a few extreme neighbourhood values. For UK the same split gives network AP 0.1234 on 590,746 rows with no value above 5 (all rows 0.1238).
+
 All arms and the diagnostic arms are in `artifacts/results/fresh_predictions.parquet`. The sealed season (2026 January-July) is unavailable and was not scored (deviation e). Comparison with the earlier Uttarakhand reference result: `docs/decisions/2026-10-01-reference-reconciliation.md`.
 
 ## 6. Numbers that changed from the Word document (earlier reference values)
@@ -264,6 +362,24 @@ Old values are those the Word document states, taken from earlier reference runs
 
 The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only (the specification declares no month rule for the fresh test, only for validation years); and the 2025 boosting AP agrees to four decimals although the predictions differ.
 
+## 6b. Settings to quote (deviation i): `tuned.json` and `models.yaml` side by side with the specification text
+| Item | `artifacts/results/tuned.json` (used by the results) | `configs/models.yaml` / `configs/baseline.yaml` | Specification text (`docs/baseline_spec.md`) |
+|---|---|---|---|
+| Boosting max depth | 8 | 6 (`arms.boosting.params`; used only by the older single-split pipelines) | not stated |
+| Boosting learning rate | 0.05 | 0.1 | not stated |
+| Boosting iterations | 500 | 300 | not stated |
+| Boosting L2 / minimum leaf | 0 / 100 | not listed | not stated |
+| Boosting search space | | `boosting_space`: depth [4, 6, 8], learning rate [0.05, 0.1], iterations [200, 300, 500], L2 [0, 1], leaf [20, 100] | section 6: "12 random-search trials each ... Search spaces are in `configs/baseline.yaml`" |
+| Network width | 256 | search [128, 256, 512] | "MLP 3 layers of 256" |
+| Network depth (hidden layers) | 2 (two hidden layers plus a one-unit output layer) | search [2, 3, 4] | "3 layers" (not defined further) |
+| Network dropout | 0.1 | search [0.0, 0.1, 0.2] | 0.1 |
+| Network learning rate | 0.0003 | search [0.001, 0.0003] | "AdamW" (no rate) |
+| Network weight decay | 0.0001 | search [0.0001, 0.01] | "weight decay" (no value) |
+| Network training | batch 4096, at most 20 epochs, stop after 2 epochs without a gain of 1e-06, 10 seeds | the same (`network:`) | "cross-entropy with the design weights, early stopping on validation log loss inside the training years, 10 seeds" |
+| Logistic C | land cover plus season 1.0; the other logistic arms 0.01 | the same (used) | not stated |
+
+**Quote `tuned.json`**: the boosting settings and the network architecture the results were produced with. State the network as two hidden layers of 256 units with dropout 0.1 and one output unit, not as "3 layers of 256" and not with the `models.yaml` boosting values (depth 6, learning rate 0.1, 300 iterations), which the baseline folds, fresh scoring, ablations and notebooks do not use.
+
 ## 7. Full deviation list
 Status: written 2026-10-01 after the rolling-origin run, the sanity checks and the notebook run, before the baseline tables. Nothing here changes the stamped specification; each item says what differs from the declared plan or from the paper's natural reading, and whether it was measured.
 
@@ -277,7 +393,7 @@ Status: written 2026-10-01 after the rolling-origin run, the sanity checks and t
 | f | 2025 is a development fold (scored in earlier work), not untouched | Its numbers are not a clean test | `docs/evaluation.md`, `docs/baseline_spec.md` |
 | g | Fresh-state test: UK and AP only (KA, TN, KL have no usable cells), unit design weights, the configured population rate 0.0147; scored once | Log loss and Brier there are less comparable than AP and the AUC views | `2026-10-01-fresh-state-scope.md`, `2026-10-01-fresh-test-correction.md` |
 | h | Network trains on the fit years before the last one and stops early on the last fit year, so it sees one year fewer than the other arms | Network and the other arms are not fitted on identical years | `2026-10-01-network-early-stopping-year.md` |
-| i | Tuned settings in use (`tuned.json`): boosting depth 8, learning rate 0.05, 500 iterations, leaf 100; network width 256, depth 2. `configs/models.yaml` still lists boosting depth 6, learning rate 0.1, 300 iterations, and the specification text says a 3-layer MLP of 256 | The run uses `tuned.json` (via `ladder_fit.settings_for`); the config and spec text are stale or differ. To be checked against the spec before the paper quotes them | `configs/models.yaml`, `artifacts/results/tuned.json`, `docs/baseline_spec.md` section 4 |
+| i | Settings the results use differ from `configs/models.yaml` and from the wording of the specification (section 4). Used (`artifacts/results/tuned.json`, via `ladder_fit.settings_for` and `tuned["network"]`): boosting depth 8, learning rate 0.05, 500 iterations, minimum leaf 100, L2 0; network width 256, depth 2 (two hidden layers of 256 plus the output layer), dropout 0.1, learning rate 0.0003, weight decay 0.0001. `configs/models.yaml` `arms.boosting.params` (depth 6, learning rate 0.1, 300 iterations) is read only by the older single-split pipelines (`holdout`, `leave_year_out`, `out_of_fold`) and not by the rolling-origin folds, the fresh scoring, the ablations or the notebooks. Specification section 4 says "MLP 3 layers of 256" and gives no boosting settings; section 6 sends the search spaces to `configs/baseline.yaml` (network depth in {2, 3, 4}, width in {128, 256, 512}). Side-by-side table: `docs/PAPER_HANDOFF.md` section 6b | The paper must quote `tuned.json` (what was fitted), with the architecture stated as two hidden layers of 256 units and one output unit; it must not quote `models.yaml` boosting values or "3 layers of 256" as the fitted network. The logistic C values (0.01 for the weather and fire-weather arms, 1.0 for land cover plus season) are the ones in `models.yaml`, which are used | `artifacts/results/tuned.json`, `configs/models.yaml`, `configs/baseline.yaml`, `docs/baseline_spec.md` section 4 |
 | j | Rolling-origin folds 2021 and 2022 were produced by code before commit d55a8ca (5af5654); 2023-2025 by d55a8ca | d55a8ca changed only how the logistic arm passes data to scikit-learn (float64, no float32 copies) and added per-model checkpoints. Verified bit-identical: the 2022 `logistic_with_burn@enriched` refit (max abs difference 0.0 on 839,785 rows) and the notebook refits of logistic, boosting and network seed 0 against the saved 2024 predictions (0.0 on 726,279 rows). Not re-verified: 2021, and the other 2022 arms | STATUS.md, `docs/PAPER_HANDOFF.md` |
 | k | One row set for every arm (about 0.5% of rows dropped for missing values, nothing imputed) | Same rows for all arms | `2026-10-01-common-rows-and-missing-values.md` |
 | l | The specification (section 9 and `configs/baseline.yaml` `guards.required`) names `identity_gate` without defining it. The implemented meaning is row disjointness: no cell-day is both a fit row and a validation row in any rolling-origin fold (2021-2025), checked on the actual fit and validation rows. No threshold. It is **not** a test against cell-identity shortcuts: that question is covered by the diagnostic arms (`coords_only`, `cell_id_only`, `static_only`), which are reported and ungated | The gate protects against fit and validation rows overlapping, nothing more; the place-shortcut is read from the diagnostic arms. The guard for `no_validation_information_in_tuning_or_climatology` is implemented as `no_validation_information_in_tuning` (see c). The power gate is implemented as a self-test of the decision rule, and the saved contrasts obey it | `src/wildfire/guards/baseline_guards.py` (`identity_gate`, `power_gate`), `docs/baseline_spec.md` section 9 |

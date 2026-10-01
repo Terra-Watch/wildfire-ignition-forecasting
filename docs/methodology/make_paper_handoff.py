@@ -118,6 +118,58 @@ for st in ("UK", "AP"):
         row["AP by seed 0-9"] = ", ".join(f"{v:.4f}" for v in g.ap)
         seed_detail.append(row)
 seed_detail = pd.DataFrame(seed_detail)
+
+fresh_table_ap_jj = fresh_all_arms(seed_rows_jj, states=("AP",))
+_jj = _f[_f.month <= 7]
+_neg = _f.groupby(["state", "month"]).label.apply(lambda v: int((v == 0).sum()))
+onset_only = {st: int(sum(((_jj.state == st) & (_jj.month == mo)).sum() for mo in range(1, 8) if _neg.get((st, mo), 0) == 0)) for st in ("UK", "AP")}
+boot = pd.read_csv(R / "post_hoc_fresh_jan_jul_bootstrap.csv")
+boot_view = boot[["state", "arm", "reference", "rows", "onsets", "clusters", "delta_ap", "ap_lo99", "ap_hi99", "ap_se", "delta_log_loss", "ll_lo99", "ll_hi99", "delta_brier", "brier_lo99", "brier_hi99"]].rename(
+    columns={"delta_ap": "ΔAP", "ap_lo99": "ΔAP 99% lo", "ap_hi99": "ΔAP 99% hi", "ap_se": "ΔAP SE", "delta_log_loss": "Δlog loss", "ll_lo99": "Δlog loss 99% lo", "ll_hi99": "Δlog loss 99% hi",
+             "delta_brier": "ΔBrier", "brier_lo99": "ΔBrier 99% lo", "brier_hi99": "ΔBrier 99% hi"})
+shift = pd.read_csv(R / "post_hoc_neighbourhood_shift_columns.csv")
+grp = pd.read_csv(R / "post_hoc_neighbourhood_shift_groups.csv")
+sh = shift.pivot(index="column", columns="rows", values=["mean", "sd", "p99"])
+sh_table = pd.DataFrame({"column": sh.index})
+for stat in ("mean", "sd", "p99"):
+    for rows_name, label in (("fit (standardiser rows)", "fit"), ("AP", "AP"), ("UK", "UK")):
+        sh_table[f"{stat} {label}"] = sh[(stat, rows_name)].values
+order = list(neighbourhood_columns := shift[shift.rows == "AP"].column.tolist())
+sh_table = sh_table.set_index("column").loc[order].reset_index()
+z_table = shift[shift.rows.isin(["AP", "UK"])].pivot(index="column", columns="rows", values=["z_min", "z_max", "z_p99"])
+z_view = pd.DataFrame({"column": order})
+for rows_name in ("AP", "UK"):
+    for stat in ("z_min", "z_p99", "z_max"):
+        z_view[f"{stat} {rows_name}"] = z_table[(stat, rows_name)].loc[order].values
+shift_sd = {rn: ((shift[shift.rows == rn].set_index("column").loc[order, "mean"] - shift[shift.rows == rn].set_index("column").loc[order, "fit_mean"]) / shift[shift.rows == rn].set_index("column").loc[order, "fit_sd"]) for rn in ("AP", "UK")}
+big = {}
+for rn in ("AP", "UK"):
+    d = shift[shift.rows == rn].set_index("column").loc[order]
+    zz = pd.concat([d.z_max, -d.z_min]).abs()
+    big[rn] = (zz.max(), zz.idxmax(), d.z_max.max(), d.z_max.idxmax(), d.z_min.min(), d.z_min.idxmin())
+
+def month_group_ap() -> pd.DataFrame:
+    """AP of the networks (mean of the seeds' own APs) and of boosting@enriched by month group, from the saved fresh predictions."""
+    from wildfire.evaluation import metrics as official_metrics
+    rows = pd.read_parquet(R / "fresh_predictions.parquet")
+    month = pd.to_datetime(rows.day, unit="D").dt.month.values
+    pcols = [c for c in rows.columns if c.startswith("p_")]
+    out = []
+    for st in ("AP", "UK"):
+        for label, sel in (("months 1-7", month <= 7), ("months 8-11", (month >= 8) & (month <= 11)), ("month 12", month == 12), ("all months", month >= 1)):
+            m = (rows.state.values == st) & sel
+            y = rows.label.values[m]
+            row = dict(state=st, months=label, rows=int(m.sum()), onsets=int(y.sum()), prevalence=float(y.mean()))
+            for lvl in ("tabular", "enriched"):
+                row[f"network {lvl} AP (mean of seeds)"] = float(np.mean([official_metrics.average_precision(y, rows[c].values[m]) for c in pcols if c.startswith(f"p_tabular_network@{lvl}#")]))
+            row["boosting@enriched AP"] = float(official_metrics.average_precision(y, rows["p_boosting@enriched"].values[m]))
+            out.append(row)
+    return pd.DataFrame(out)
+
+
+month_ap = month_group_ap()
+g_ap = grp[grp.state == "AP"].set_index("group")
+g_uk = grp[grp.state == "UK"].set_index("group")
 prev_state = {st: float(seed_rows[seed_rows.state == st].onsets.iloc[0] / seed_rows[seed_rows.state == st].rows.iloc[0]) for st in ("UK", "AP")}
 abl_m, abl_c = pd.read_csv(R / "ablation_metrics.csv"), pd.read_csv(R / "ablation_contrasts.csv")
 gain = pd.read_csv(R / "post_hoc_onsets_recent_gain.csv")
@@ -127,6 +179,9 @@ fit_prev = json.loads((R / "fresh_fit_prevalence.json").read_text())
 dev = (config.REPO_ROOT / "docs/decisions/2026-10-01-deviation-list.md").read_text().split("\n", 1)[1].strip()
 tests = subprocess.run([str(config.REPO_ROOT / ".venv/bin/python"), "-m", "pytest", "-q", "tests"], capture_output=True, text=True, cwd=config.REPO_ROOT).stdout.strip().splitlines()[-1]
 
+tuned = json.loads((R / "tuned.json").read_text())
+models = config.load("models")
+baseline = config.load("baseline")
 NO_LEVEL = ["climatology_cell", "landcover_season", "fwi_season"]
 DIAG = ["coords_only", "cell_id_only", "static_only"]
 MAIN = ["boosting@enriched", "tabular_network@enriched", "logistic_with_burn@enriched", "logistic_weather_static@enriched"]
@@ -240,6 +295,38 @@ In months where the share is 1.0 every scored row is an onset: the matched non-f
 ### 5e. Per-seed range of the network, UK and AP
 {md(seed_detail, 4)}
 
+### 5f. AP, January to July only: SENSITIVITY (POST HOC)
+Rows of months 1-7 of the saved AP predictions, same metric code; nothing refitted or re-scored. Onset-only rows (rows in a month where the state has no matched non-fire rows, so every row is an onset) inside each state's January-July set: **UK {onset_only['UK']:,}** of {int(fresh_table_uk_jj.rows.iloc[0]):,} rows (month 7), **AP {onset_only['AP']:,}** of {int(fresh_table_ap_jj.rows.iloc[0]):,} rows (months 6 and 7).
+
+{md(fresh_table_ap_jj)}
+
+### 5g. Paired ISO-week cluster bootstrap on the January-July rows: DESCRIPTIVE, POST HOC, NO VERDICTS
+Differences are arm minus reference, on the saved fresh predictions, with the baseline's paired ISO-week cluster bootstrap (2,000 draws, 99% percentile interval). No verdict is given and none of these contrasts was declared; log loss uses the corrected probabilities and unit weights as in 5a.
+
+{md(boot_view)}
+
+### 5h. Neighbourhood-block shift for `tabular_network@enriched` (post hoc, read-only)
+Mean, SD and 99th percentile of the 12 neighbourhood columns for the rows the network was standardised on ("fit": fit rows 2019-2024 without the early-stopping year 2025, after the 2,000,000-row cap), the AP rows and the UK rows that were scored. The network standardises each column with the mean and SD of the fit rows ("fit" mean and SD in the table; SD plus 1e-6).
+
+{md(sh_table, 3)}
+
+Standardised values the network saw (value minus fit mean, divided by fit SD) in the scored rows:
+
+{md(z_view, 2)}
+
+- Largest standardised value: AP **{big['AP'][2]:.2f}** (`{big['AP'][3]}`), UK **{big['UK'][2]:.2f}** (`{big['UK'][3]}`); smallest: AP {big['AP'][4]:.2f} (`{big['AP'][5]}`), UK {big['UK'][4]:.2f} (`{big['UK'][5]}`). Largest absolute value in these columns: AP {big['AP'][0]:.2f}, UK {big['UK'][0]:.2f}; no value exceeds 10.
+- Largest shift of a column mean from the fit mean, in fit SDs: AP {shift_sd['AP'].abs().max():.2f} (`{shift_sd['AP'].abs().idxmax()}`), UK {shift_sd['UK'].abs().max():.2f} (`{shift_sd['UK'].abs().idxmax()}`).
+
+What the network scored on rows split by their largest standardised neighbourhood value (saved predictions; thresholds 5 and 10 fixed before looking; AP of the mean over seeds' individual APs):
+
+{md(grp, 4)}
+
+AP of the same predictions by month group (every row of a month in which the state has matched non-fire days carries both labels; the other months are onset-only):
+
+{md(month_ap, 4)}
+
+**Is the AP collapse explained by the neighbourhood block?** The collapse is `tabular_network@enriched` AP {g_ap.loc['all rows', 'network_enriched_AP_mean_of_seeds']:.4f} in AP, against {g_ap.loc['all rows', 'network_tabular_AP_mean_of_seeds']:.4f} for `tabular_network@tabular` and {g_ap.loc['all rows', 'boosting_enriched_AP']:.4f} for `boosting@enriched` on the same rows. By these numbers extreme neighbourhood values do not explain it: {int(g_ap.loc['max |z| <= 5', 'rows']):,} of {int(g_ap.loc['all rows', 'rows']):,} AP rows ({g_ap.loc['max |z| <= 5', 'share_of_rows']:.5f} of the rows) have no standardised neighbourhood value above 5, and on them the network's AP is {g_ap.loc['max |z| <= 5', 'network_enriched_AP_mean_of_seeds']:.4f}, the same as on all rows; the {int(g_ap.loc['5 < max |z| <= 10', 'rows'])} rows above 5 are not what lowers it (network AP there {g_ap.loc['5 < max |z| <= 10', 'network_enriched_AP_mean_of_seeds']:.4f}). On the January-July rows the enriched network's AP in AP is {fresh_table_ap_jj[fresh_table_ap_jj.arm == 'tabular_network@enriched'].AP.iloc[0].split(' ')[0]} against {fresh_table_ap_jj[fresh_table_ap_jj.arm == 'tabular_network@tabular'].AP.iloc[0].split(' ')[0]} for the tabular network (5f), so the gap between 0.1144 and the tabular network arises in the other months (table above). These checks do not test the weather-window or anomaly blocks, and do not rule out an effect of the moderate shifts of the column means shown above; they only show that the collapse is not carried by a few extreme neighbourhood values. For UK the same split gives network AP {g_uk.loc['max |z| <= 5', 'network_enriched_AP_mean_of_seeds']:.4f} on {int(g_uk.loc['max |z| <= 5', 'rows']):,} rows with no value above 5 (all rows {g_uk.loc['all rows', 'network_enriched_AP_mean_of_seeds']:.4f}).
+
 All arms and the diagnostic arms are in `artifacts/results/fresh_predictions.parquet`. The sealed season (2026 January-July) is unavailable and was not scored (deviation e). Comparison with the earlier Uttarakhand reference result: `docs/decisions/2026-10-01-reference-reconciliation.md`.
 
 ## 6. Numbers that changed from the Word document (earlier reference values)
@@ -265,6 +352,24 @@ Old values are those the Word document states, taken from earlier reference runs
 | Peak memory | about 7 GB (was about 10 GB) | still an estimate, not a measured peak: about 7 GB for the 2M-row enriched logistic fit (float64 matrix 3.7 GB plus a 2.7 GB dataset); the old path was about 10 GB. The change is bit-identical (deviation j) | `STATUS.md` |
 
 The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only (the specification declares no month rule for the fresh test, only for validation years); and the 2025 boosting AP agrees to four decimals although the predictions differ.
+
+## 6b. Settings to quote (deviation i): `tuned.json` and `models.yaml` side by side with the specification text
+| Item | `artifacts/results/tuned.json` (used by the results) | `configs/models.yaml` / `configs/baseline.yaml` | Specification text (`docs/baseline_spec.md`) |
+|---|---|---|---|
+| Boosting max depth | {tuned['boosting']['max_depth']} | {models['arms']['boosting']['params']['max_depth']} (`arms.boosting.params`; used only by the older single-split pipelines) | not stated |
+| Boosting learning rate | {tuned['boosting']['learning_rate']} | {models['arms']['boosting']['params']['learning_rate']} | not stated |
+| Boosting iterations | {tuned['boosting']['max_iter']} | {models['arms']['boosting']['params']['max_iter']} | not stated |
+| Boosting L2 / minimum leaf | {tuned['boosting']['l2_regularization']} / {tuned['boosting']['min_samples_leaf']} | not listed | not stated |
+| Boosting search space | | `boosting_space`: depth {baseline['tuning']['boosting_space']['max_depth']}, learning rate {baseline['tuning']['boosting_space']['learning_rate']}, iterations {baseline['tuning']['boosting_space']['max_iter']}, L2 {baseline['tuning']['boosting_space']['l2_regularization']}, leaf {baseline['tuning']['boosting_space']['min_samples_leaf']} | section 6: "12 random-search trials each ... Search spaces are in `configs/baseline.yaml`" |
+| Network width | {tuned['network']['width']} | search {baseline['tuning']['network_space']['width']} | "MLP 3 layers of 256" |
+| Network depth (hidden layers) | {tuned['network']['depth']} (two hidden layers plus a one-unit output layer) | search {baseline['tuning']['network_space']['depth']} | "3 layers" (not defined further) |
+| Network dropout | {tuned['network']['dropout']} | search {baseline['tuning']['network_space']['dropout']} | 0.1 |
+| Network learning rate | {tuned['network']['learning_rate']} | search {baseline['tuning']['network_space']['learning_rate']} | "AdamW" (no rate) |
+| Network weight decay | {tuned['network']['weight_decay']} | search {baseline['tuning']['network_space']['weight_decay']} | "weight decay" (no value) |
+| Network training | batch {models['network']['batch_size']}, at most {models['network']['max_epochs']} epochs, stop after {models['network']['patience']} epochs without a gain of {models['network']['min_improvement']}, {models['network']['seeds']} seeds | the same (`network:`) | "cross-entropy with the design weights, early stopping on validation log loss inside the training years, 10 seeds" |
+| Logistic C | land cover plus season {models['arms']['landcover_season']['params']['C']}; the other logistic arms {models['arms']['fwi_season']['params']['C']} | the same (used) | not stated |
+
+**Quote `tuned.json`**: the boosting settings and the network architecture the results were produced with. State the network as two hidden layers of 256 units with dropout 0.1 and one output unit, not as "3 layers of 256" and not with the `models.yaml` boosting values (depth 6, learning rate 0.1, 300 iterations), which the baseline folds, fresh scoring, ablations and notebooks do not use.
 
 ## 7. Full deviation list
 {dev}

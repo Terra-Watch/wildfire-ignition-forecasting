@@ -9,7 +9,7 @@ What is affected: two of the 42 tabular inputs, `sw1_anom` and `sw2_anom` (soil 
 
 What the guard `no_validation_information_in_tuning` tests, and why it passes: it compares two numbers in `configs/baseline.yaml` (`max(tuning_years)` = 2024 is below `last_development_fold` = 2025). It does not read any data or any climatology, although its docstring says it also covers the climatology. It passes because 2024 < 2025; it cannot detect the 2017-2023 norm. `validity.climatology_first_year_is_nan` (the label-based cell-week climatology must be empty in the first year) exists but no pipeline calls it.
 
-Effect on results: unmeasured. A sensitivity run is planned (boosting enriched with `sw1_anom` and `sw2_anom` dropped, research repository), reported beside the main result and not replacing it.
+Effect on results: measured for one model only. Ablation A (`2026-10-01-ablations.md`: `boosting@enriched` without `sw1_anom` and `sw2_anom`, same folds, rows and settings) gives ΔAP +0.0010 (99% CI -0.0003 to 0.0025) against `boosting@enriched`. The logistic arms and the network were not tested. The deviation stands.
 
 Why it is not fixed now: the 42 inputs are the reproduced inputs and the specification is stamped; changing them would change the baseline after scoring started.
 

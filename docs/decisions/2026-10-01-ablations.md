@@ -12,3 +12,5 @@ Decision: three ablations of enriched boosting are run and reported as secondary
 - A is a sensitivity check for deviation (c); a small difference supports, but does not prove, that the look-ahead in the 2017-2023 norm is not driving the result. It does not remove the deviation.
 - Code: `pipelines/ablations.py`, settings in `configs/ablations.yaml`; outputs `ablation_*.parquet`, `ablation_metrics.csv`, `ablation_contrasts.csv` under the results folder. Run after the guard record is valid for the committed code, one fit at a time.
 Why: the owner asked for a sensitivity analysis of the soil-anomaly inputs and, optionally, a split of the enriched blocks, after the baseline numbers were known. Recording them as post hoc keeps them from being read as part of the pre-declared design.
+
+**Reporting note.** The verdict labels that the contrast code attaches to these rows (PASS, FAIL, INCONCLUSIVE) are descriptive and meaningless for removal contrasts, because the decision rule is built for a gain over a reference, not for the effect of taking inputs away. The paper reports ΔAP and its 99% interval only, and no verdict, for the ablations.

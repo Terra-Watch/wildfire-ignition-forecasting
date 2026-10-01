@@ -168,6 +168,10 @@ def month_group_ap() -> pd.DataFrame:
 
 
 month_ap = month_group_ap()
+uk_all_boost_tab = fresh_table_uk_all[fresh_table_uk_all.arm == "boosting@tabular"].AP.iloc[0]
+uk_jj_boost_tab = fresh_table_uk_jj[fresh_table_uk_jj.arm == "boosting@tabular"].AP.iloc[0]
+ap_all_net_enr = fresh_table[(fresh_table.state == "AP") & (fresh_table.arm == "tabular_network@enriched")].AP.iloc[0].split(" ")[0]
+ap_jj_net_enr = fresh_table_ap_jj[fresh_table_ap_jj.arm == "tabular_network@enriched"].AP.iloc[0].split(" ")[0]
 g_ap = grp[grp.state == "AP"].set_index("group")
 g_uk = grp[grp.state == "UK"].set_index("group")
 prev_state = {st: float(seed_rows[seed_rows.state == st].onsets.iloc[0] / seed_rows[seed_rows.state == st].rows.iloc[0]) for st in ("UK", "AP")}
@@ -252,7 +256,7 @@ The information comparison (enriched boosting against tabular boosting) is contr
 
 {md(abl_c[['contrast', 'delta_ap', 'ap_lo99', 'ap_hi99', 'mde', 'verdict']].round(4))}
 
-(A_no_soil_anomaly removes `sw1_anom` and `sw2_anom`; B_windows_only keeps the weather windows and their anomalies but no neighbourhood block; B_neighbourhood_only keeps the neighbourhood block but no windows. Verdict labels here are descriptive only.) Post hoc stratification by recent neighbour onsets (`docs/decisions/2026-10-01-onsets-recent-strata.md`): the enriched AP gain is +{gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].delta_ap.iloc[0]:.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_hi99.iloc[0]:.4f}) in rows with recent onsets in the 8 neighbouring cells (94.1% of positives) and {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].delta_ap.iloc[0]:+.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_hi99.iloc[0]:.4f}) in rows with none, so a gain there is not demonstrated.
+(A_no_soil_anomaly removes `sw1_anom` and `sw2_anom`; B_windows_only keeps the weather windows and their anomalies but no neighbourhood block; B_neighbourhood_only keeps the neighbourhood block but no windows. **Note on the verdict column:** the verdict labels are descriptive and meaningless for removal contrasts (the decision rule is built for a gain over a reference, not for the effect of removing inputs); the paper reports ΔAP and its 99% CI only, with no verdict. Ablation A was run for `boosting@enriched` only; the logistic arms and the network were not tested.) Post hoc stratification by recent neighbour onsets (`docs/decisions/2026-10-01-onsets-recent-strata.md`): the enriched AP gain is +{gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].delta_ap.iloc[0]:.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_hi99.iloc[0]:.4f}) in rows with recent onsets in the 8 neighbouring cells (94.1% of positives) and {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].delta_ap.iloc[0]:+.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_hi99.iloc[0]:.4f}) in rows with none, so a gain there is not demonstrated.
 
 ## 4. Rolling-origin results per year
 Each year is scored by models fitted on all earlier years from 2019, January to July rows only. Rows and onsets per year: {', '.join(f'{int(r.year)}: {int(r.rows):,} / {int(r.onsets):,}' for r in rows_year.itertuples())}. Network rows are means over 10 seeds.
@@ -354,6 +358,8 @@ Old values are those the Word document states, taken from earlier reference runs
 The first five rows were reconciled against the earlier reference runs; the result, including the differences found and the one measured effect of the row set, is in `docs/decisions/2026-10-01-reference-reconciliation.md`. In short: the earlier 0.107 is the same-day weather arm, not the next-day FWI+season arm; the UK test rows now include every season month, not January-July only (the specification declares no month rule for the fresh test, only for validation years); and the 2025 boosting AP agrees to four decimals although the predictions differ.
 
 ## 6b. Settings to quote (deviation i): `tuned.json` and `models.yaml` side by side with the specification text
+Every parameter of every arm (library and class, scaling, how design weights enter the loss, optimiser, stopping, seeds) is in `docs/MODEL_SPEC_TABLE.md`, built from the code and `tuned.json`.
+
 | Item | `artifacts/results/tuned.json` (used by the results) | `configs/models.yaml` / `configs/baseline.yaml` | Specification text (`docs/baseline_spec.md`) |
 |---|---|---|---|
 | Boosting max depth | {tuned['boosting']['max_depth']} | {models['arms']['boosting']['params']['max_depth']} (`arms.boosting.params`; used only by the older single-split pipelines) | not stated |
@@ -379,6 +385,12 @@ The first five rows were reconciled against the earlier reference runs; the resu
 - Logistic arms stop at the 300-iteration cap; the 2021-2022 folds come from earlier code (verified identical for the 2022 enriched logistic refit and the 2024 notebook refits).
 - The soil-moisture anomaly norm covers 2017-2023, so rows in 2021-2023 see their own year (deviation c); ablation A shows ΔAP {abl_c.iloc[0].delta_ap:+.4f} (99% CI {abl_c.iloc[0].ap_lo99:.4f} to {abl_c.iloc[0].ap_hi99:.4f}) when the two inputs are removed.
 - No causal claim; the place shortcut is read from the diagnostic arms (reported, not gated).
+
+## 9. Primary table choice for the fresh states
+**Primary: the January-to-July tables, for both states (5c for UK, 5f for AP). Appendix: the as-scored all-months table (5a).**
+- **Why.** (1) Rows outside a state's fire season are onset-only, because the matched non-fire days are drawn inside the season only (UK months 7 to 11: 1,967 rows; AP months 6 to 11: 3,080 rows; section 5d); they carry positives only, which raises the sampled prevalence and affects pooled AP and AUC. The January-July sets still hold a few onset-only rows (UK {onset_only['UK']:,}, AP {onset_only['AP']:,}). (2) The January-to-July set is the row set of the rolling-origin validation folds (spec "Compute limits declared in advance", `validation_months`), so the fresh results are read on the same footing as the validation results.
+- **How it was chosen.** The choice was made after both tables had been seen, so it is a post hoc choice. The specification declares no month rule for the fresh test (section 5), so neither table is the pre-declared one; the as-scored table is what the scoring run produced. The two tables differ materially, for example UK `boosting@tabular` AP {uk_all_boost_tab} (as scored) against {uk_jj_boost_tab} (January-July), and `tabular_network@enriched` in AP {ap_all_net_enr} against {ap_jj_net_enr}; the paper should say that both were computed and which one is primary.
+- **Fit.** The models are the same in both: nothing was refitted or re-scored for the January-July tables.
 """
 (config.REPO_ROOT / "docs" / "PAPER_HANDOFF.md").write_text(out)
 print(len(out), "characters written")

@@ -1,5 +1,6 @@
 import numpy as np
 
+from wildfire import config
 from wildfire.models.fit import Model, thin
 
 
@@ -30,10 +31,16 @@ def test_boosting_is_deterministic():
     assert (Model("boosting", p).fit(x, y).predict(x) == Model("boosting", p).fit(x, y).predict(x)).all()
 
 
-def test_in_place_standardisation_gives_the_same_predictions():
+def test_float64_standardisation_gives_the_float32_fit_and_leaves_the_input_alone(tmp_path):
+    from sklearn.linear_model import LogisticRegression
     rng = np.random.default_rng(5)
     x = rng.normal(3.0, 2.0, size=(3000, 4)).astype(np.float32)
     y = (x[:, 0] + rng.normal(size=3000) > 4).astype(int)
-    a = Model("logistic", {"C": 0.1}).fit(x.copy(), y)
-    b = Model("logistic", {"C": 0.1}).fit(x.copy(), y, inplace=True)
-    assert np.array_equal(a.predict(x), b.predict(x))
+    before = x.copy()
+    a = Model("logistic", {"C": 0.1}).fit(x, y)
+    np.save(tmp_path / "x.npy", x)
+    b = Model("logistic", {"C": 0.1}).fit(np.load(tmp_path / "x.npy", mmap_mode="r"), y)
+    cfg = config.load("models")["logistic"]
+    legacy = LogisticRegression(C=0.1, solver=cfg["solver"], max_iter=cfg["max_iter"], tol=cfg["tol"]).fit((x - a.mu) / a.sd, y)
+    assert np.array_equal(x, before) and np.array_equal(a.predict(x), b.predict(x))
+    assert np.array_equal(a.m.coef_, legacy.coef_) and np.array_equal(a.m.intercept_, legacy.intercept_)

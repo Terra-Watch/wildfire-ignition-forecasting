@@ -24,20 +24,24 @@ class Model:
     def __init__(self, kind: str, params: dict):
         self.kind, self.params = kind, params
 
-    def fit(self, x, y, inplace: bool = False):
-        """Fit on (x, y). With inplace=True the logistic arm standardises `x` itself instead of a copy (memory)."""
+    def fit(self, x, y):
+        """Fit on (x, y); `x` may be memory-mapped and is never modified.
+        The logistic arm standardises `x` in float32, in row chunks, straight into a float64 matrix. scikit-learn's
+        lbfgs multiplies by float64 coefficients, which turns a float32 input into a full float64 copy on every call
+        (about 2.2 times the input in extra memory); handing it float64 gives the same numbers without those copies."""
         cfg = config.load("models")
         if self.kind == "logistic":
             from sklearn.linear_model import LogisticRegression
             lg = cfg["logistic"]
             self.mu = x.mean(0, dtype=np.float64).astype(np.float32)
             self.sd = (x.std(0, dtype=np.float64) + lg["scale_epsilon"]).astype(np.float32)
-            if inplace:
-                x -= self.mu
-                x /= self.sd
-                xs = x
-            else:
-                xs = (x - self.mu) / self.sd
+            xs = np.empty(x.shape, np.float64)
+            chunk = cfg["chunks"]["matrix_file"]
+            for start in range(0, len(x), chunk):
+                block = np.array(x[start:start + chunk], dtype=np.float32)
+                block -= self.mu
+                block /= self.sd
+                xs[start:start + chunk] = block
             self.m = LogisticRegression(C=self.params["C"], solver=lg["solver"], max_iter=lg["max_iter"], tol=lg["tol"]).fit(xs, y)
         else:
             from sklearn.ensemble import HistGradientBoostingClassifier

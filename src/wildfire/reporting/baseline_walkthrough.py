@@ -196,7 +196,7 @@ class Walkthrough:
         x = dataset.matrix(self.ds, self.fit_idx, self.cols, self.level, year)
         self.x_sub = x[self.sub_pos].copy()                            # raw training sample, reused by every model
         kind, params = ladder_fit.settings_for("logistic_with_burn", self.tuned)
-        model = Model(kind, params).fit(x, self.y_fit, inplace=True)   # as ladder_fit.fit_standard
+        model = Model(kind, params).fit(x, self.y_fit)   # as ladder_fit.fit_standard
         del x
         gc.collect()
         self._store("logistic_with_burn@" + self.level, model, dataset.predict_chunks(model.predict, self.xv), model.predict(self.x_sub))

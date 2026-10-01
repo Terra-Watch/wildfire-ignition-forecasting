@@ -8,11 +8,12 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from wildfire import config
-from wildfire.evaluation import bootstrap, ladder, metrics
+from wildfire.evaluation import bootstrap, ladder, metrics, verdict
 from wildfire.features import neighbourhood
 from wildfire.pipelines import baseline_tables, dataset, rolling_origin
 
 ARMS = ("boosting@tabular", "boosting@enriched")
+REFERENCE = "climatology_cell"                                  # reported beside them as the baseline arm
 FEATURES = ("ring_8_onsets_recent", "ring_24_onsets_recent")     # primary: the 8 nearest neighbours; secondary: the 24-cell ring
 OUT = config.output_dir("results") / "post_hoc_onsets_recent_strata.csv"
 
@@ -50,7 +51,7 @@ def main() -> None:
             in_period = np.ones(len(rows), bool) if period == "pooled" else (rows.year.values == period)
             for name, stratum in (("zero", v == 0), ("above_zero", v > 0)):
                 m = in_period & stratum
-                for arm in ARMS:
+                for arm in (REFERENCE,) + ARMS:
                     out.append(dict(feature=feature, period=period, stratum=name, arm=arm, **stats(y[m], scores[arm][m]),
                                     share_of_positives=float(y[m].sum() / y[in_period].sum()), share_of_rows=float(m.sum() / in_period.sum())))
     table = pd.DataFrame(out)
@@ -64,7 +65,8 @@ def main() -> None:
             d = o[ARMS[1]]["delta_ap"]
             a0, a1 = [stats(sub.label.values, scores[a][stratum]) for a in ARMS]
             gains.append(dict(feature=feature, stratum=name, rows=len(sub), onsets=int(sub.label.sum()), ap_tabular=a0["ap"], ap_enriched=a1["ap"],
-                              delta_ap=d["point"], ap_lo99=d["lo99"], ap_hi99=d["hi99"], delta_auc=a1["auc"] - a0["auc"]))
+                              delta_ap=d["point"], ap_lo99=d["lo99"], ap_hi99=d["hi99"], ap_se=d["se"], mde=verdict.minimum_detectable_effect(d["se"]),
+                              random_baseline_ap=float(sub.label.mean()), ap_climatology=stats(sub.label.values, scores[REFERENCE][stratum])["ap"], delta_auc=a1["auc"] - a0["auc"]))
     gains = pd.DataFrame(gains)
     table.to_csv(OUT, index=False)
     gains.to_csv(OUT.with_name("post_hoc_onsets_recent_gain.csv"), index=False)

@@ -37,3 +37,36 @@ Zero stratum: 755,811 rows (16.7%), 3,716 onsets (1.6% of positives), prevalence
 - **Does the enriched gain exist in the zero stratum?** It is not demonstrated. The pooled point estimate is +0.0034 with a 99% interval of -0.0057 to +0.0170, which contains zero and also contains the 0.010 threshold, so a small gain cannot be excluded and none is shown. The per-year ΔAP in that stratum goes both ways (2021 -0.0247, 2022 -0.0042, 2023 +0.0107, 2024 +0.0177, 2025 +0.0140); ΔAUC is positive in every year but small (pooled +0.0095). With the 24-cell ring as the stratifier the zero-stratum ΔAP is -0.0027 (CI -0.0175 to +0.0157).
 - **Where the gain is.** The enriched AP gain sits in rows with recent neighbour onsets: +0.0294 (CI +0.0202 to +0.0372) in the above-zero stratum, which holds 94.1% of all positives and 67.6% of rows. This agrees with the neighbourhood-only ablation carrying the enriched gain.
 - **Limits.** The zero stratum has few positives (14,211 pooled, 2,500 to 3,100 per year), so its interval is wide. AP is not comparable between strata because it depends on prevalence (0.0097 against 0.0740); AP divided by prevalence is 10.0 against 3.1 for enriched. `onsets_recent` is built from observed fire onsets of neighbouring cells (not from any model output); the split shows where the gain occurs and not why. No causal reading is made.
+
+## Addendum: baseline AP, positives per year and MDE of the zero stratum (both rings)
+Added after the first version of this note. `random AP` is the AP of a random score (the stratum's sampled prevalence); `climatology AP` is the AP of the baseline arm `climatology_cell` on the same rows. The MDE is (2.575829 + 0.841621) x the bootstrap standard error of the paired ΔAP, the formula of the decision rule; it is computed here for information and gives no verdict.
+
+### Zero stratum, 8 neighbouring cells (primary)
+| period | rows | positives | random AP (prevalence) | climatology AP | boosting@tabular AP | boosting@enriched AP |
+|---|---|---|---|---|---|---|
+| pooled | 1,463,672 | 14,211 | 0.0097 | 0.0221 | 0.0935 | 0.0969 |
+| 2021 | 300,826 | 2,501 | 0.0083 | 0.0121 | 0.0891 | 0.0644 |
+| 2022 | 325,005 | 3,074 | 0.0095 | 0.0222 | 0.1203 | 0.1161 |
+| 2023 | 269,239 | 3,092 | 0.0115 | 0.0206 | 0.1000 | 0.1107 |
+| 2024 | 263,581 | 2,888 | 0.0110 | 0.0246 | 0.0851 | 0.1028 |
+| 2025 | 305,021 | 2,656 | 0.0087 | 0.0275 | 0.0990 | 0.1130 |
+
+### Zero stratum, 24-cell ring (secondary)
+| period | rows | positives | random AP (prevalence) | climatology AP | boosting@tabular AP | boosting@enriched AP |
+|---|---|---|---|---|---|---|
+| pooled | 755,811 | 3,716 | 0.0049 | 0.0140 | 0.0858 | 0.0831 |
+| 2021 | 149,369 | 617 | 0.0041 | 0.0129 | 0.1272 | 0.0850 |
+| 2022 | 191,838 | 911 | 0.0047 | 0.0127 | 0.0916 | 0.0806 |
+| 2023 | 120,366 | 719 | 0.0060 | 0.0120 | 0.0846 | 0.0795 |
+| 2024 | 139,152 | 768 | 0.0055 | 0.0127 | 0.0621 | 0.0848 |
+| 2025 | 155,086 | 701 | 0.0045 | 0.0219 | 0.0980 | 0.1033 |
+
+### Pooled enriched gain with its standard error and MDE
+| feature | stratum | rows | positives | random AP | climatology AP | tabular AP | enriched AP | ΔAP | 99% lo | 99% hi | SE | MDE |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ring_8_onsets_recent | zero | 1,463,672 | 14,211 | 0.0097 | 0.0221 | 0.0935 | 0.0969 | 0.0034 | -0.0057 | 0.0170 | 0.0045 | 0.0153 |
+| ring_8_onsets_recent | above_zero | 3,057,330 | 226,284 | 0.0740 | 0.1101 | 0.2023 | 0.2317 | 0.0294 | 0.0202 | 0.0372 | 0.0034 | 0.0116 |
+| ring_24_onsets_recent | zero | 755,811 | 3,716 | 0.0049 | 0.0140 | 0.0858 | 0.0831 | -0.0027 | -0.0175 | 0.0157 | 0.0062 | 0.0212 |
+| ring_24_onsets_recent | above_zero | 3,765,191 | 236,779 | 0.0629 | 0.1017 | 0.1946 | 0.2276 | 0.0330 | 0.0235 | 0.0412 | 0.0035 | 0.0121 |
+
+In the zero stratum the MDE is 0.0153 (8-cell stratifier) and 0.0212 (24-cell ring), both above the 0.010 power threshold of the decision rule, so a gain of the size of that threshold could not be reliably detected there; this is why the absence of a demonstrated gain is not evidence of no gain. The zero stratum has 14,211 positives (8-cell) and 3,716 (24-cell ring) pooled; per-year counts are in the tables above.

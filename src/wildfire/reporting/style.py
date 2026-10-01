@@ -1,9 +1,12 @@
 """Shared plot style so every figure looks the same."""
 from __future__ import annotations
 
+import sys
+
 import matplotlib
 
-matplotlib.use("Agg")
+if "ipykernel" not in sys.modules:       # scripts draw off screen; in a notebook the inline backend shows a returned figure
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 COLOURS = {"primary": "#1f5f8b", "secondary": "#d1495b", "neutral": "#6b7280", "good": "#2f855a", "warn": "#c77c02"}

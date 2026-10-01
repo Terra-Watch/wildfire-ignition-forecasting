@@ -5,6 +5,7 @@ camelCase), so ordinary words such as "background" and names such as "v10" do no
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -18,6 +19,7 @@ _LABEL = re.compile(
 _TOKEN = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+|[A-Za-z]\d+")
 SELF = Path(__file__).resolve()
 SKIP_SUFFIX = {".json", ".lock", ".png", ".pdf"}
+IMAGE_MIMES = {"image/png", "image/jpeg", "image/svg+xml"}      # base64 or markup payloads of notebook image outputs
 
 
 def tokens(text: str) -> list[str]:
@@ -39,10 +41,39 @@ def bad_tokens(text: str, is_code: bool = False) -> list[str]:
     return sorted({t for t in tokens(text) if _LABEL.match(t)})
 
 
+def _notebook_strings(node, where: str):
+    """Every string of a notebook with its location, except the payload of an image output (`data` -> image mime type)."""
+    if isinstance(node, str):
+        yield where, node
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from _notebook_strings(v, f"{where}[{i}]")
+    elif isinstance(node, dict):
+        for k, v in node.items():
+            if where.endswith(".data") and k in IMAGE_MIMES:
+                continue
+            yield from _notebook_strings(v, f"{where}.{k}" if where else k)
+
+
+def check_notebook(path: Path) -> list[str]:
+    """A notebook is checked line by line in every field (source, text and stream outputs, metadata) except image payloads."""
+    nb = json.loads(path.read_text(encoding="utf-8"))
+    problems = []
+    for where, text in _notebook_strings(nb, ""):
+        for n, line in enumerate(text.splitlines(), 1):
+            problems += [f"{path}: {where} line {n}: uses '{t}'" for t in bad_tokens(line, is_code=True)]
+    return problems
+
+
 def check_file(path: Path) -> list[str]:
     problems = [f"{path}: file name uses '{t}'" for t in bad_tokens(str(path))]
     if path.resolve() == SELF or path.suffix in SKIP_SUFFIX:
         return problems
+    if path.suffix == ".ipynb":
+        try:
+            return problems + check_notebook(path)
+        except (ValueError, OSError):
+            pass                                  # not valid JSON: fall through to the plain line scan
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (UnicodeDecodeError, OSError):

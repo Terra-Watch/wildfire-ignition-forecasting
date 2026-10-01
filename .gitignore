@@ -10,3 +10,5 @@ data/*
 artifacts/*
 !artifacts/.gitkeep
 !artifacts/MANIFEST.json
+
+logs/

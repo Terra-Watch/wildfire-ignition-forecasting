@@ -53,6 +53,7 @@ def burn_by_day(days: np.ndarray, ncell: int) -> tuple[np.ndarray, np.ndarray]:
     b = burn_mod.load_burn(config.data_file("burn"))
     count = np.full((len(days), ncell), np.nan, np.float32)
     years = np.full((len(days), ncell), np.nan, np.float32)
+    consts = config.load("features")["tabular"]["constants"]
     patterns, inverse = np.unique(b["covered"].T, axis=0, return_inverse=True)
     lo, hi = days - cfg["lookback_days"], days - cfg["lag_days"]
     obs = [burn_mod.window_coverage(p.astype(float), b["month_start"], b["month_end"], lo, hi) for p in patterns]
@@ -62,8 +63,8 @@ def burn_by_day(days: np.ndarray, ncell: int) -> tuple[np.ndarray, np.ndarray]:
         last = np.searchsorted(dates, hi, "left") - 1
         ref = dates[np.clip(last, 0, len(dates) - 1)] if len(dates) else np.zeros(len(days), np.int64)
         ref = np.where(last >= 0, ref, cfg["archive_start_day"])
-        years[:, c] = np.minimum((days - ref) / config.load("features")["tabular"]["constants"]["days_per_year"], cfg["years_since_cap"])
-        count[:, c] = np.where(obs[inverse[c]] >= cfg["min_observed_share"] - config.load("features")["tabular"]["constants"]["tolerance"], np.log1p(n), np.nan)
+        years[:, c] = np.minimum((days - ref) / consts["days_per_year"], cfg["years_since_cap"])
+        count[:, c] = np.where(obs[inverse[c]] >= cfg["min_observed_share"] - consts["tolerance"], np.log1p(n), np.nan)
     return count, years
 
 

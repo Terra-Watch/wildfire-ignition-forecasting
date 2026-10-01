@@ -1,0 +1,110 @@
+# STATUS
+
+STATUS.md did not exist when this session started (no file in the repo or its history); created here at the start of the
+rolling-origin resume. Newest entries at the bottom.
+
+## 2026-10-01 16:56 IST - Step 0, memory plan (not launched yet)
+
+State found
+- No wildfire process running (no kernel, no ERA5 job, no waiter). RAM: about 70% free (roughly 5.6 GB reclaimable of 8 GB).
+  Swap: 3.6 GB used of 5.1 GB, left over from the earlier thrash (macOS does not give it back until the pages are touched).
+- `artifacts/results`: predictions and fit prevalences for 2021 and 2022 only. `artifacts/cache` holds stale 2023 validation
+  matrices from the killed run (the run deletes them at start).
+- `guards.json` belongs to code 5af5654; HEAD is addd138 (and now there are uncommitted edits), so `rolling_origin.run` would refuse to
+  start: it calls `provenance.require_clean()` and `baseline_guards.require_record()`. The guard record therefore has to be
+  regenerated, on committed code, BEFORE the launch, not after it. Changes between 5af5654 and addd138 are in evaluation/classification,
+  evaluation/importance, models/network_traced and reporting only; no fitting code, so the 2021 and 2022 predictions are still valid.
+
+Where the 10 GB comes from (measured, not assumed)
+- Fit rows are 2,000,000 in every fold from 2022 on (2023: 2.0M with 182,700 onsets; 2024: 237,416; 2025: 279,777).
+  The enriched input has 251 columns: float32 matrix 1.87 GB at 2M rows.
+- Base process after `load_dataset`: 2.7 GB (model table 1.56 GB plus the arrays).
+- scikit-learn 1.7.2 lbfgs computes `X @ coef` and `X.T @ grad` with float64 coefficients. With a float32 X numpy makes a full float64
+  copy of X inside each call. Measured extra peak during the fit = 2.2 x the float32 matrix (4.1 GB at 2M rows). In
+  `Model.fit` the standard deviation also makes a float64 temporary the size of X.
+  Total about 2.7 + 1.9 + 4.1 = 8.7 GB, about 10 GB with the build transient and page cache. Resident-size (RSS) readings hide
+  this on macOS because the pages get compressed or swapped; allocation tracing shows it.
+- A 2M-row enriched logistic fit alone takes about 4.5 min once it is not swapping (measured 226 s and 264 s), which matches the "~4 min" of the early folds.
+
+Changes made (uncommitted), none changes a number
+1. `models/fit.py`: the logistic arm standardises in float32, in row chunks, straight into a float64 matrix and hands sklearn float64.
+   sklearn then makes no copies. Verified bit-identical to the old path: at 600k real rows mu, sd, coefficients and intercept are
+   all exactly equal (`np.array_equal`), 300 iterations both ways. The `inplace` argument is gone (it is no longer needed); the input is
+   never modified and may be memory-mapped.
+2. `pipelines/ladder_fit.py`: `fit_standard` writes the logistic input to a temporary file and reads it memory-mapped.
+3. Per-model checkpoints and model-level resume: `FoldStore` (one file per finished model, written atomically, stamped with the code
+   version and refused if it differs); `fit_network` saves every seed; `predict_all` and `run_fold` take the store; `rolling_origin.run`
+   keeps the folder `artifacts/results/fold_<year>_models/` while a year runs and removes it when `predictions_<year>.parquet` is written.
+   Tests: `tests/pipelines/test_resume.py` (stop after 3 models then resume refits only the rest and gives the same columns; a finished fold
+   reads back with no fit; network seeds resume one at a time; other-code files refused). Whole suite: 161 passed.
+
+Resulting footprint at 2M rows: about 4.0 GB for the matrix and fit plus the 2.7 GB base = about 6.7-7 GB peak (was about 10 GB).
+That still exceeds the ~5.6 GB that is reclaimable right now. Decision needed from the owner: see the question in the chat
+(float32 chunked objective, about 4.7 GB total, but not bit-identical: at 300k rows coefficients differ by up to 0.006 and
+probabilities by up to 0.004 because lbfgs stops at the 300-iteration cap before converging; that would be a deviation).
+
+## 2026-10-01 17:02 IST - Step 1, launch
+- Decision (owner): bit-identical memory fix only. Committed as d55a8ca (code and tests only); guard record regenerated on that commit,
+  all guards true, array hashes unchanged (guards.json now code_version d55a8ca).
+- Launched 2026-10-01 17:02:41 IST, PID 91235, command:
+  `nohup perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV' sh -c 'set -a; . ./.env; set +a; PYTHONUNBUFFERED=1 exec .venv/bin/wildfire rolling-origin' > logs/rolling_origin.log 2>&1 < /dev/null &`
+  Deviation from the requested line: macOS has no `setsid` binary, so the same new-session detach is done with perl's POSIX::setsid.
+  No Bash-tool background mode, no timeout, no ulimit, nothing that kills it. Resumes at 2023 (2021, 2022 predictions exist, skipped).
+- Per-model timings: the log has no timestamps, so they come from the modification times of the checkpoint files in
+  `artifacts/results/fold_<year>_models/` (one per finished model) and of `predictions_<year>.parquet`.
+- A detached sampler (read-only, never signals the run) appends RSS, swap and CPU for PID 91235 below every 10 min until it exits.
+
+### Resource samples
+- 17:03 IST: RSS 0.97 GB, CPU 78.6%, running 00:19; swap used 2468.69M of 3072.00M; RAM free 33%; last log: 
+
+## 2026-10-01 17:09 IST - Scoring plan (decided with the owner)
+- "Sealed scoring" is dropped from the queue. The season is unavailable (docs/decisions/2026-10-01-sealed-season-unavailable.md): there is no
+  sealed scoring pipeline in the code, the burn-free arms named in the burn-free decision (boosting_no_burn, tabular_network_no_burn) are not in
+  src or configs, ERA5 2026 stops at February, and no sealed score will be written. 2025 is not used in its place. Nothing labelled sealed will be run.
+- March CDS request abandoned. No further sealed pulls. Partial pulls already on disk are listed in the decision doc and not used.
+- Final scoring = rolling-origin validation scores on 2021-2025 (baseline tables, ablations; 2025 is a development fold, not untouched) plus the one-time
+  fresh geographic scoring `wildfire score-fresh-states`: UK and AP rows (2019-2025 in the fresh table), every arm fitted on all development years
+  before 2026 (fit_rows(ds, 2026), 2,000,000-row cap), design weights 1, true rate 0.0147, one ledger line per state, a second run is refused.
+- Guard hash covers src, configs, scripts, tests, pyproject.toml. Edits to docs/ and STATUS.md do not change it; no regeneration needed.
+- 17:13 IST: RSS 1.23 GB, CPU 6.2%, running 10:19; swap used 3478.75M of 5120.00M; RAM free 31%; last log: fitted boosting@tabular 2023
+- 17:23 IST: RSS 0.52 GB, CPU 56.1%, running 20:19; swap used 3126.94M of 4096.00M; RAM free 37%; last log: network tabular 2023 seed 8 0.06671
+- 17:33 IST: RSS 0.41 GB, CPU 6.9%, running 30:19; swap used 6195.25M of 7168.00M; RAM free 27%; last log: fitted logistic_with_burn@tabular 2024
+- 17:43 IST: RSS 0.58 GB, CPU 53.0%, running 40:19; swap used 3948.25M of 5120.00M; RAM free 35%; last log: network tabular 2024 seed 0 0.07561
+- 17:53 IST: RSS 1.63 GB, CPU 165.7%, running 50:19; swap used 5068.62M of 6144.00M; RAM free 38%; last log: network enriched 2024 seed 4 0.07263
+- 18:03 IST: RSS 1.49 GB, CPU 775.7%, running 01:00:19; swap used 4816.50M of 6144.00M; RAM free 36%; last log: fitted logistic_with_burn@enriched 2025
+
+## 2026-10-01 18:10 IST - Paper handoff plan (docs/PAPER_HANDOFF.md, written after the baseline freeze, not before)
+Owner supplied the Word-document (earlier reference) numbers to compare. Each goes into the handoff as old value, new value from the saved tables, source file. Paper and Word document untouched.
+- Earlier-reference holdout 2025, trained states: boosting AP 0.200; climatology AP 0.117 -> final 2025 fold (development fold, fit through 2024) from baseline tables.
+- Earlier-reference Uttarakhand: boosting AP 0.059, log loss 0.286; FWI+season AP 0.107 -> fresh-state UK rows of fresh_predictions.parquet (tables from score-fresh-states).
+- True rate 0.0147 (configs/baseline.yaml prior_shift.true_rate); enriched input 251 columns (verified: 42 tabular + 209 enriched = 251); fit cap 2,000,000 (verified 2.0M rows in folds 2022-2025); tuning fits 600,000 (configs row_cap); 96 tuning trials (tuning_trials.csv has 96 rows: verified); 10 network seeds (models.yaml).
+- 161 tests passing (verified at d55a8ca; re-run before freeze); "133 reproduction checks, 0 failures": source found and counted: ~/wildfire-research/studies/reproduction/REPRODUCTION.md (133 PASS rows, 0 FAIL, written 2026-10-01 02:50; earlier-reference pipeline, covers labels, features, earlier-reference holdout, leave-year-out 2024, out-of-fold, determinism; not rolling-origin, enriched, network or fresh scoring); peak memory ~7 GB (was ~10): estimate from allocation tracing, to be replaced by a measured figure.
+- 18:13 IST: RSS 0.37 GB, CPU 49.4%, running 01:10:19; swap used 3990.31M of 5120.00M; RAM free 37%; last log: network tabular 2025 seed 4 0.06141
+- 18:23 IST: process 91235 has exited
+
+## 2026-10-01 18:23 IST - Rolling-origin finished; 2022 refit check
+- Process 91235 exited cleanly (log ends "saved 2025 (980554, 41)", no errors). All five predictions_*.parquet and fit_prevalence_*.json exist; no fold_*_models folders left.
+- Per-fold times (file mtimes): 2021 10:20:34 and 2022 10:54:55 (earlier run, old code). Resumed run from 17:02:41: 2023 done 17:27:27 (24 min 46 s incl. dataset load), 2024 done 17:55:37 (28 min 10 s), 2025 done 18:22:15 (26 min 38 s). Whole resumed run 79 min 34 s.
+- Refit of logistic_with_burn@enriched for 2022 with the current code (d55a8ca): 2,000,000 fit rows, 839,785 validation rows, 42+209 inputs, C 0.01, 300 iterations, fit 235 s.
+  Predictions vs saved predictions_2022.parquet column p_logistic_with_burn@enriched: keys identical, max |diff| 0.0, 0 rows differ, bit-identical. Fit prevalence 0.066994 both.
+  Coefficients and intercept were not saved by the 2022 run, so they cannot be compared directly; identical predictions on all 839,785 rows imply the same model. Refit intercept -3.19912, max |coef| 1.425 (kept in scratchpad).
+- 18:29 IST: sanity-checks launched (detached, logs/sanity.log), started 18:28:11. Queue stage 2. Null-model fits on holdout-year 2025 rows with shuffled labels; no real score.
+- 18:34 IST: sanity-checks done (code d55a8ca, spec 99c867c, written to results/sanity.csv and sanity_univariate.csv). Global label shuffle: mean AP 0.0502 vs prevalence 0.0522, PASS. Cell x ISO-week shuffle: max AP 0.0933 vs climatology 0.1167, PASS. Permuted holdout labels: mean AP 0.0522 vs prevalence 0.0522, PASS. decisions {a,b,c: True, stop: False}. Univariate screen (AUC outside 0.2-0.8): no input flagged. Took about 6 min.
+- 18:34 IST: queue stage 3: notebook run launched detached (18:34:36), notebooks/00_baseline_pipeline.ipynb, test year 2024 so fit set = dataset.fit_rows(ds, 2024) at the official 2,000,000 cap (smoke mode off), no cell timeout, log logs/notebook.log.
+- 18:45 IST: owner chose option 2. First notebook run (nbconvert, started 18:34:36, about 10 min, thrashing: swap 7.8 of 8.2 GB, no outputs until the end) stopped by me at the owner's request (kill of pids 16964 and 17020 only; VS Code's own kernel 21159 untouched). Relaunched detached 18:44:53 with logs/run_nb_incremental.py (nbclient, no timeout, saves the notebook after every cell so outputs appear as produced). Log logs/notebook.log. Same settings: smoke off, test year 2024, fit_rows(ds, 2024) at the 2,000,000 cap.
+- 18:51 IST: notebook cell 28 (w.fit_logistic, 2M rows, 251 inputs, C 0.01) finished with sklearn ConvergenceWarning: lbfgs reached the 300-iteration cap (configs/models.yaml logistic max_iter 300, tol 1e-5). Same cap in every fold (2022 refit and the 2023 profiling fits also stopped at 300). Candidate deviation (d): logistic arms are not converged at the declared cap; results are those of a 300-iteration stop.
+- 19:03 IST: stage 3 done. Incremental notebook run finished cleanly (started 18:46, finished 19:02, about 16 min; no errors; 26 of 27 code cells have outputs, the one without is the import cell; all 27 executed). Official ladder for test year 2024 (fit_rows(ds, 2024), 2M cap, notebook sample 726,279 rows): AP climatology 0.1059, logistic_with_burn@tabular 0.1270, @enriched 0.1788, boosting@tabular 0.1988, @enriched 0.2471, network@tabular 0.1768, @enriched 0.2273. match_check: refits of logistic, boosting and network seed 0 equal the saved 2024 predictions, max abs difference 0.0, identical fit prevalences (0.118708, 0.118708, 0.014323). Not official: threshold metrics.
+- 19:04 IST: stage 4 done. Deviation list written to docs/decisions/2026-10-01-deviation-list.md (a-k: owner's a, b, c; d logistic 300-iteration stop; e sealed season and partial pulls; f 2025 development fold; g fresh scope; h network years; i tuned settings differ from models.yaml and spec text, to be checked; j code versions of folds and what was verified; k common rows). No code or spec files changed; guard record still valid.
+- 19:03 IST: stage 5 baseline-tables launched detached (19:03:18), log logs/baseline_tables.log; pools 2021-2025 predictions, so memory-heavy, nothing else running.
+- 19:13 IST: stage 5 done. baseline-tables exited cleanly; five files written 19:05-19:13 (baseline_metrics, _by_year, _network_seeds, _reliability, _contrasts), stamped code d55a8ca / spec 99c867c. Pooled 2021-2025 (network = mean of 10 seeds) AP: climatology 0.0951; logistic_with_burn@tabular 0.1038, @enriched 0.1637; boosting@tabular 0.1909, @enriched 0.2261; network@tabular 0.1694, @enriched 0.1982. Spatial AUC: climatology 0.654, boosting@enriched 0.811. All 43 contrasts are INCONCLUSIVE: the rule makes a contrast inconclusive when the minimum detectable effect exceeds 0.010 (enriched vs tabular boosting: delta AP 0.0352, 99% CI 0.0251 to 0.0441, MDE 0.0127; enriched boosting vs enriched logistic: 0.0623, 0.0433 to 0.0812, MDE 0.0254). Took 10 min.
+- 19:15 IST: code change committed as f57c0e1 (labels notebook cell/day/row helpers, transfer.sealed_status text, one test; 162 tests pass); guard record regenerated on f57c0e1, all guards true. Baseline tables stay stamped d55a8ca (d55a8ca to f57c0e1 changed only reporting helpers and tests). Notebook 02 gets the one-cell views, 06 markdown says pooled 2021-2025 incl. 2025 dev fold.
+- Name check: STATUS.md reworded (it had the forbidden word). scripts/check_names.py also flags base64 'image/png' lines in executed notebooks (25 hits in 00_baseline_pipeline.ipynb: label-like tokens that occur by chance inside image data). It will flag every executed notebook and the pre-commit hook would block committing them. Not changed; owner to decide.
+- 19:16 IST: stage 6a: notebooks 01-06 launched detached one at a time (logs/run_notebooks_01_06.sh, log logs/notebooks_01_06.log), incremental runner, no timeout. 07 waits for fresh scoring.
+- 19:18 IST: notebooks 01-06 first run finished (19:15-19:17, no errors) but figure cells showed only '<Figure size ...>' text: style.py forced the Agg backend inside the kernel. Fixed in commit 3dc2e93 (Agg only outside ipykernel; 162 tests pass); guard record regenerated on 3dc2e93, all true. Re-running 01-06.
+- 19:22 IST: stage 6a done. Notebooks 01-06 executed with the incremental runner, no errors, all plots now render (png outputs: 01:6, 02:6, 03:4, 04:2, 05:4, 06:4). Checked: 02 one-cell views and row counts (fixed to the main forest band rows through 2025-07-31, commits 3dc2e93 then a8cddab; guard record regenerated on a8cddab, all true), 05 fold table (rows 1,034,752 / 839,785 / 939,632 / 726,279 / 980,554), 06 contrasts and findings equal baseline_contrasts.csv. Noted: rows.csv has a secondary tree-cover band B (1.8M rows) that the model table excludes; 00_baseline_pipeline's 'labelled rows' overview does not filter by band (shows rows.csv train rows up to 2024), so it counts more rows than the model table (6,880,578).
+- 19:28 IST: owner decisions received. (1) power_gate implemented from spec section 7 and configs/baseline.yaml (decision_rule.power_gate, mde_z, evaluation verdict.min_ap_gain): self-test that a clear gain is INCONCLUSIVE when MDE = 2 x threshold, PASS when MDE = 0.5 x threshold, and MDE = sum(mde_z) x se; test also fails a gate that never holds anything back. Saved baseline_contrasts.csv obeys it: 43 contrasts, MDE 0.0127 to 0.0307, none at or below 0.010, all INCONCLUSIVE. (2) Ablations: decision doc docs/decisions/2026-10-01-ablations.md (secondary, post hoc, defined after the baseline tables, no effect on baseline or freeze), configs/ablations.yaml, src/wildfire/pipelines/ablations.py (A_no_soil_anomaly, B_windows_only, B_neighbourhood_only), 3 tests; 166 tests pass. Committed 7bc9d29; guard record regenerated, all true incl. power_gate. identity_gate NOT implemented: spec section 9 only names it (see question to owner). Ablations, freeze and fresh scoring wait for that answer.
+- 19:31 IST: owner decisions 1-6 received. identity_gate implemented as row disjointness (reading 3): for every validation year 2021-2025 no cell-day is in both fit_rows and validation_rows; no threshold; test added (167 tests pass). Deviation (l) recorded in docs/decisions/2026-10-01-deviation-list.md (spec names identity_gate without defining it; meaning implemented is row disjointness; shortcut question covered by diagnostic arms, reported and ungated; not described as protection against cell-identity shortcuts) and (m) ablations post hoc. Committed 391a9aa; guard record regenerated, identity_gate and power_gate true, no failed guard.
+- 19:32 IST: ablations launched detached (19:32:25) on 0f3ac9e: A, then B1, then B2, five folds each, one fit at a time, log logs/ablations.log; guard record valid. Nothing else running.
+- 19:43 IST: owner decision: after the ablations finish and before the freeze, extend scripts/check_names.py narrowly to skip only base64 image payloads (data.image/png, image/jpeg, image/svg+xml) in .ipynb, still scanning every source cell, text/stream output and all other fields; add fixture tests; regenerate guards; commit notebooks; confirm guard record; tag baseline-final locally; add deviation entry (n). Fallback if infeasible: strip image outputs from committed notebooks and keep executed copies outside git. Not started: scripts/ and src/ stay untouched while the ablations run (their tables are stamped with the code state).
+- 20:23 IST: ablations finished (tables written 20:15, process exited; all 15 (ablation, year) parquet files). Metrics pooled 2021-2025 / contrasts vs boosting@enriched: A_no_soil_anomaly AP 0.2271 (delta +0.0010, 99% CI -0.0003 to 0.0025, MDE 0.0018); B_windows_only AP 0.1876 (delta -0.0384, CI -0.0480 to -0.0300, MDE 0.0123); B_neighbourhood_only AP 0.2293 (delta +0.0032, CI -0.0033 to 0.0106, MDE 0.0095); reference boosting@enriched AP 0.2261. Verdict labels secondary and not meaningful for a removal contrast.
+- 20:26 IST: check_names.py extended narrowly (image/png, image/jpeg, image/svg+xml data only; all else scanned), 2 fixture tests (169 tests pass, check_names --all exit 0 incl. executed notebooks); notebook runner moved to scripts/run_notebook.py; logs/ ignored. Deviation (n) recorded. Committed 9da492c; guard record regenerated on 9da492c, all guards true. Next: commit notebooks and docs, tree clean, tag baseline-final locally, write four records, stop for owner go before score-fresh-states.

@@ -82,6 +82,20 @@ def no_validation_information_in_tuning() -> bool:
     return bool(max(cfg["validation"]["tuning_years"]) < cfg["periods"]["last_development_fold"])
 
 
+def identity_gate(ds) -> bool:
+    """No cell-day is both a fit row and a validation row in any rolling-origin fold. This is the meaning given to the specification's
+    "identity gate" (see docs/decisions/2026-10-01-deviation-list.md, item l); it does not test for cell-identity shortcuts, which the
+    diagnostic arms report without a gate."""
+    from wildfire.pipelines import dataset
+    t = ds.table
+    key = t.cell.values.astype(np.int64) * 1_000_000 + t.day.values.astype(np.int64)
+    for year in config.load("baseline")["validation"]["validation_years"]:
+        shared = np.intersect1d(key[dataset.fit_rows(ds, year)], key[dataset.validation_rows(ds, year)])
+        if len(shared):
+            return False
+    return True
+
+
 def power_gate() -> bool:
     """The decision rule must hold back a verdict when the effect it could detect is larger than the threshold (spec section 7,
     `decision_rule.power_gate`): a contrast with a clear 3x-threshold gain is INCONCLUSIVE when its minimum detectable effect is
@@ -105,7 +119,7 @@ def ledger_ready() -> bool:
 def run_all(ds) -> dict:
     shuffle_ok, shuffle_auc = label_shuffle(ds)
     return dict(timestamp_before_day=timestamp_before_day(), shifted_feature_fails=shifted_feature_fails(),
-                label_shuffle=shuffle_ok, label_shuffle_mean_auc=shuffle_auc, coordinate_unit_test=coordinates_consistent(),
+                identity_gate=identity_gate(ds), label_shuffle=shuffle_ok, label_shuffle_mean_auc=shuffle_auc, coordinate_unit_test=coordinates_consistent(),
                 no_validation_information_in_tuning=no_validation_information_in_tuning(), power_gate=power_gate(), geo_ledger=ledger_ready(),
                 provenance=bool(provenance.require_clean()))
 

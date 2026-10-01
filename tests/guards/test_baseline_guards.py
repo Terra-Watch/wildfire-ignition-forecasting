@@ -81,3 +81,12 @@ def test_power_gate_holds_back_a_verdict_when_the_detectable_effect_is_too_large
     assert verdict.baseline_verdict(dict(clear_gain, se=0.002), 0.0)[0] == "PASS"
     monkeypatch.setattr(verdict, "minimum_detectable_effect", lambda se: 0.0)       # a gate that never holds anything back must be caught
     assert not g.power_gate()
+
+
+def test_identity_gate_means_no_cell_day_is_both_fit_and_validation(monkeypatch):
+    from tests.pipelines.test_dataset import tiny_dataset
+    from wildfire.pipelines import dataset
+    ds = tiny_dataset()
+    assert g.identity_gate(ds)
+    monkeypatch.setattr(dataset, "fit_rows", lambda d, year, cap=None: dataset.validation_rows(d, year))     # fit rows that are the validation rows
+    assert not g.identity_gate(ds)

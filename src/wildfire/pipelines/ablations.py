@@ -75,8 +75,8 @@ def run(log=print) -> None:
     tuned = tuning.load_tuned()
     ds = dataset.load_dataset()
     dataset.clear_cache()
-    for year in config.load("baseline")["validation"]["validation_years"]:
-        for name, spec in settings()["ablations"].items():
+    for name, spec in settings()["ablations"].items():           # one ablation at a time, in the order of the configuration
+        for year in config.load("baseline")["validation"]["validation_years"]:
             path = prediction_path(name, year)
             if path.exists():
                 continue
@@ -86,7 +86,7 @@ def run(log=print) -> None:
             assert len(base) == len(val) and (base.cell.values == ds.table.cell.values[val]).all() and (base.day.values == ds.table.day.values[val]).all()
             pd.DataFrame({"p": p, "prevalence": prevalence}).to_parquet(path)
             log("saved", name, year, len(p))
-        dataset.clear_cache()
+            dataset.clear_cache()
     write_tables(log)
 
 

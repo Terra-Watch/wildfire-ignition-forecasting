@@ -66,10 +66,11 @@ def cell_block(cells: pd.DataFrame, cell: int) -> pd.DataFrame:
 
 @lru_cache(maxsize=1)
 def _label_rows() -> pd.DataFrame:
-    """Labelled rows of the training cells (the rows file, the columns this notebook needs)."""
-    rows = pd.read_csv(config.output_dir("labels") / "rows.csv", usecols=["cell", "day", "label", "kind", "state", "year", "group", "date"],
-                       dtype={"kind": "category", "state": "category", "group": "category"})
-    return rows[rows.group == "train"].reset_index(drop=True)
+    """Labelled rows the models are built from: training cells of the main forest band (A), up to the end of the modelling window."""
+    rows = pd.read_csv(config.output_dir("labels") / "rows.csv", usecols=["cell", "day", "label", "kind", "state", "year", "group", "band", "date"],
+                       dtype={"kind": "category", "state": "category", "group": "category", "band": "category"})
+    keep = (rows.group == "train") & (rows.band == "A") & (rows.date <= config.load("domain")["modelling_window_end"])
+    return rows[keep].reset_index(drop=True)
 
 
 def example_cell() -> tuple[int, int]:
@@ -138,16 +139,15 @@ def cell_rows_table(n: int = 14) -> pd.DataFrame:
 
 def row_counts_table() -> pd.DataFrame:
     """From possible cell-days to the labelled rows kept, and how many rows a cell has."""
-    cells, _ = load_grid()
     rows = _label_rows()
-    n_cells = int((cells.role == "train").sum())
+    n_cells = int(rows.cell.nunique())
     days = int(rows.day.max() - rows.day.min() + 1)
     per_cell = rows.groupby("cell").size()
     return pd.DataFrame([
-        ("training cells (5 x 5 km each)", f"{n_cells:,}"),
+        ("training cells with rows (5 x 5 km each)", f"{n_cells:,}"),
         ("days in the label window", f"{days:,}"),
         ("possible cell-days", f"{n_cells * days:,}"),
-        ("labelled rows kept", f"{len(rows):,}"),
+        ("labelled rows kept (main forest band)", f"{len(rows):,}"),
         ("  onsets (label 1)", f"{int(rows.label.sum()):,}"),
         ("  matched non-fire days (label 0)", f"{int((rows.label == 0).sum()):,}"),
         ("rows per cell: median", f"{per_cell.median():.0f}"),

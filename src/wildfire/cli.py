@@ -25,6 +25,7 @@ PIPELINES = {                     # command -> (module, function)
     "tune": ("tuning", "run"),
     "rolling-origin": ("rolling_origin", "run"),
     "baseline-tables": ("baseline_tables", "run"),
+    "sealed-coverage": ("sealed_coverage", "run"),
     "score-fresh-states": ("fresh_states", "score_once"),
 }
 

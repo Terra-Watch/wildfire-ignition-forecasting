@@ -1,0 +1,42 @@
+{
+ "average_precision_reproduced": {
+  "baseline_2024": {
+   "recorded": 0.226737,
+   "recomputed": 0.22673684288667484
+  },
+  "deep_2024": {
+   "recorded": 0.2913381635,
+   "recomputed": 0.29133814090206284
+  },
+  "baseline_2023": {
+   "recorded": 0.17975,
+   "recomputed": 0.17974960285555772
+  },
+  "deep_2023": {
+   "recorded": 0.2531670707,
+   "recomputed": 0.2531670752339655
+  }
+ },
+ "thresholds": {
+  "baseline_scored_on_2024": 0.06561053188413875,
+  "deep_scored_on_2024": 0.07775238611711865,
+  "baseline_scored_on_2023": 0.07552071655249554,
+  "deep_scored_on_2023": 0.09291040890236017
+ },
+ "bootstrap_2024_all rows": {
+  "blocks": 25,
+  "draws": 2000
+ },
+ "bootstrap_2024_quiet stratum": {
+  "blocks": 25,
+  "draws": 2000
+ },
+ "bootstrap_2023_all rows": {
+  "blocks": 27,
+  "draws": 2000
+ },
+ "bootstrap_2023_quiet stratum": {
+  "blocks": 27,
+  "draws": 2000
+ }
+}

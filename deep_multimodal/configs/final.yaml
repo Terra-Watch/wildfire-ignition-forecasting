@@ -1,0 +1,23 @@
+# Final settings of the deep multimodal model (chosen on validation year 2024 only; reused unchanged for 2023).
+model:
+  width: 64
+  layers: 2
+  heads: 4
+  dropout: 0.1
+  modality_dropout: 0.1      # share of training rows for which a whole weather, forecast or static stream is hidden
+  auxiliary_weight: 0.2      # weight of the detection-size auxiliary loss (training only)
+  use_forecast: true
+training:
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  max_epochs: 20
+  patience: 2
+  minimum_gain: 0.000001
+  batch_size: 4096
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7]
+inputs:
+  history_days: 14
+  neighbourhood_radius: 3
+  max_fire_tokens: 32
+  weather_days: 60
+labels: hard           # one-day-ahead fire occurrence, 0 or 1; no soft labels, no distillation

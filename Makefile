@@ -1,6 +1,6 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: setup test check-names manifest notebooks
+.PHONY: setup test test-deep-multimodal check-names manifest notebooks
 
 setup:
 	python3 -m venv .venv
@@ -8,6 +8,9 @@ setup:
 
 test: check-names
 	@set -a; [ -f .env ] && . ./.env; set +a; $(PYTHON) -m pytest -q
+
+test-deep-multimodal:
+	$(PYTHON) -m pytest -q deep_multimodal/tests
 
 check-names:
 	$(PYTHON) scripts/check_names.py --all

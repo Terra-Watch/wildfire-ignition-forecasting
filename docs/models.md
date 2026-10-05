@@ -17,6 +17,8 @@ List the arms compared, how each is fitted and tuned.
 
 Logistic, boosting and network arms run at two information levels: tabular (42 inputs) and enriched (tabular + weather windows + neighbourhood).
 
+**Naming.** The boosting arm at the enriched level is the **extended boosting baseline** (code name `boosting@enriched`); at the tabular level it is **plain boosting** (`boosting@tabular`). The extended version adds 209 inputs (180 weather-window columns, 17 anomalies, 12 neighbourhood columns) to the 42 plain ones. Recorded results on the same folds are in `docs/extended_boosting_baseline.md`: AP 0.2315 against 0.1863 on 2025, and 0.1977 against 0.1626 pooled over five folds (in-season rows).
+
 ## Tuning
 Boosting and network get the same budget: 12 random-search trials, rolling-origin validation on 2021-2024, choice by validation log loss (AP as tie-break). Logistic regularisation is fixed at the value chosen earlier. Every trial is saved.
 

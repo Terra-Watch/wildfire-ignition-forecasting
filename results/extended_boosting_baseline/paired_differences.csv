@@ -1,0 +1,13 @@
+fold,model,compared_with,average_precision_model,average_precision_compared,difference,interval_low_95,interval_high_95,interval_low_99,interval_high_99,week_blocks,draws
+2025,Extended boosting baseline,Plain boosting,0.231545,0.186327,0.045218,0.028104,0.058629,0.022722,0.063165,27,2000
+2025,Extended boosting baseline,Extended logistic (with burn history),0.231545,0.185967,0.045578,0.029806,0.054735,0.024324,0.057544,27,2000
+2025,Extended boosting baseline,Fire weather index and season,0.231545,0.119350,0.112195,0.080683,0.136625,0.074637,0.143778,27,2000
+2025,Plain boosting,Fire weather index and season,0.186327,0.119350,0.066977,0.049855,0.081274,0.045588,0.085303,27,2000
+2025,Extended network (mean of 10 seeds),Extended boosting baseline,0.232188,0.231545,0.000643,-0.014185,0.011017,-0.017515,0.013089,27,2000
+2025,Extended boosting baseline,Cell climatology,0.231545,0.115534,0.116011,0.083238,0.135482,0.072864,0.140520,27,2000
+pooled over the five folds,Extended boosting baseline,Plain boosting,0.197657,0.162629,0.035027,0.026353,0.042489,0.024502,0.044827,133,2000
+pooled over the five folds,Extended boosting baseline,Extended logistic (with burn history),0.197657,0.165146,0.032511,0.025494,0.038132,0.023750,0.039797,133,2000
+pooled over the five folds,Extended boosting baseline,Fire weather index and season,0.197657,0.095717,0.101939,0.089786,0.113492,0.084681,0.116503,133,2000
+pooled over the five folds,Plain boosting,Fire weather index and season,0.162629,0.095717,0.066912,0.056512,0.078219,0.053659,0.081139,133,2000
+pooled over the five folds,Extended network (mean of 10 seeds),Extended boosting baseline,0.196152,0.197657,-0.001505,-0.008036,0.004834,-0.010219,0.006566,133,2000
+pooled over the five folds,Extended boosting baseline,Cell climatology,0.197657,0.093399,0.104258,0.089481,0.116843,0.084594,0.120385,133,2000

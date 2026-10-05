@@ -1,0 +1,41 @@
+fold,rows_scored,model,bin,rows,weight,mean_prediction,observed_rate
+2024,all rows,Extended boosting baseline,1,72545,329827.742218,0.000439,0.000212
+2024,all rows,Extended boosting baseline,2,72544,286160.958789,0.001119,0.000881
+2024,all rows,Extended boosting baseline,3,72544,272827.374713,0.002148,0.001862
+2024,all rows,Extended boosting baseline,4,72544,264328.365195,0.003597,0.003227
+2024,all rows,Extended boosting baseline,5,72544,257367.503454,0.005604,0.005005
+2024,all rows,Extended boosting baseline,6,72544,250160.030081,0.008471,0.007987
+2024,all rows,Extended boosting baseline,7,72544,243789.172685,0.012812,0.012835
+2024,all rows,Extended boosting baseline,8,72544,235834.914125,0.019907,0.021027
+2024,all rows,Extended boosting baseline,9,72544,225369.151084,0.033597,0.034810
+2024,all rows,Extended boosting baseline,10,72544,204614.787656,0.078305,0.077898
+2024,quiet,Extended boosting baseline,1,20110,100219.452086,0.000239,0.000060
+2024,quiet,Extended boosting baseline,2,20110,92164.075909,0.000453,0.000174
+2024,quiet,Extended boosting baseline,3,20110,85601.565769,0.000655,0.000269
+2024,quiet,Extended boosting baseline,4,20110,81718.533794,0.000900,0.000563
+2024,quiet,Extended boosting baseline,5,20110,78888.724473,0.001236,0.000849
+2024,quiet,Extended boosting baseline,6,20110,77257.558231,0.001718,0.001243
+2024,quiet,Extended boosting baseline,7,20110,76470.268719,0.002442,0.001896
+2024,quiet,Extended boosting baseline,8,20110,75532.620285,0.003569,0.002436
+2024,quiet,Extended boosting baseline,9,20110,74292.671130,0.005683,0.003217
+2024,quiet,Extended boosting baseline,10,20109,72777.815230,0.016380,0.007502
+2023,all rows,Extended boosting baseline,1,93638,301630.164253,0.000613,0.000683
+2023,all rows,Extended boosting baseline,2,93638,278898.888282,0.001652,0.001886
+2023,all rows,Extended boosting baseline,3,93638,272776.705869,0.003089,0.003237
+2023,all rows,Extended boosting baseline,4,93638,268582.558590,0.005057,0.005585
+2023,all rows,Extended boosting baseline,5,93638,265171.510910,0.007748,0.008236
+2023,all rows,Extended boosting baseline,6,93638,260821.826858,0.011401,0.011609
+2023,all rows,Extended boosting baseline,7,93638,256429.667216,0.016657,0.017014
+2023,all rows,Extended boosting baseline,8,93638,250602.393594,0.024946,0.025658
+2023,all rows,Extended boosting baseline,9,93638,242447.234674,0.040520,0.041155
+2023,all rows,Extended boosting baseline,10,93638,227019.049755,0.084890,0.079597
+2023,quiet,Extended boosting baseline,1,20835,72417.410807,0.000281,0.000166
+2023,quiet,Extended boosting baseline,2,20835,67710.900582,0.000558,0.000665
+2023,quiet,Extended boosting baseline,3,20835,64757.509489,0.000831,0.001035
+2023,quiet,Extended boosting baseline,4,20835,62802.703740,0.001171,0.001051
+2023,quiet,Extended boosting baseline,5,20835,61830.913017,0.001637,0.001423
+2023,quiet,Extended boosting baseline,6,20835,60855.454905,0.002314,0.002186
+2023,quiet,Extended boosting baseline,7,20835,60005.883127,0.003341,0.002816
+2023,quiet,Extended boosting baseline,8,20834,60060.411116,0.005166,0.003213
+2023,quiet,Extended boosting baseline,9,20834,59863.187028,0.009264,0.004828
+2023,quiet,Extended boosting baseline,10,20834,58113.739789,0.028560,0.007468

@@ -1,0 +1,29 @@
+fold,model,Chhattisgarh,Jharkhand,Maharashtra,Madhya Pradesh,Odisha,Telangana
+2025,Cell climatology,0.105488,0.146865,0.118167,0.137622,0.114100,0.098582
+2025,Land cover and season,0.100840,0.176440,0.088945,0.131869,0.109299,0.083655
+2025,Fire weather index and season,0.132370,0.159762,0.100127,0.124687,0.142130,0.103037
+2025,Plain logistic (weather and static),0.130263,0.186351,0.105389,0.131333,0.134546,0.109730
+2025,Extended logistic (weather and static),0.174773,0.246669,0.159969,0.197727,0.209868,0.153630
+2025,Plain logistic (with burn history),0.126274,0.181691,0.122499,0.138888,0.136680,0.116196
+2025,Extended logistic (with burn history),0.175355,0.247582,0.160645,0.198276,0.210476,0.154086
+2025,Plain boosting,0.172614,0.271273,0.164421,0.193477,0.199689,0.148129
+2025,Extended boosting baseline,0.236023,0.335888,0.187703,0.228950,0.246126,0.208757
+2025,Coordinates only,0.062951,0.114047,0.097146,0.079276,0.089445,0.065399
+2025,Cell identity only,0.069296,0.133401,0.102910,0.088631,0.102732,0.070551
+2025,Static inputs only,0.063543,0.119119,0.098163,0.081418,0.089177,0.064292
+2025,Plain network (mean of 10 seeds),0.183482,0.254591,0.167493,0.182272,0.200388,0.154275
+2025,Extended network (mean of 10 seeds),0.238035,0.316552,0.190720,0.236055,0.258166,0.203970
+pooled over the five folds,Cell climatology,0.085815,0.106062,0.098836,0.100262,0.094299,0.085083
+pooled over the five folds,Land cover and season,0.075736,0.104880,0.077068,0.090900,0.081741,0.074293
+pooled over the five folds,Fire weather index and season,0.096467,0.134600,0.081677,0.100545,0.106157,0.086856
+pooled over the five folds,Plain logistic (weather and static),0.107862,0.163286,0.088935,0.109042,0.116687,0.092128
+pooled over the five folds,Extended logistic (weather and static),0.159856,0.209772,0.138355,0.172746,0.182509,0.140991
+pooled over the five folds,Plain logistic (with burn history),0.109780,0.163191,0.100086,0.118377,0.120743,0.099121
+pooled over the five folds,Extended logistic (with burn history),0.159919,0.210227,0.139019,0.172658,0.182998,0.141017
+pooled over the five folds,Plain boosting,0.157917,0.245617,0.138384,0.163160,0.169997,0.134698
+pooled over the five folds,Extended boosting baseline,0.197392,0.275846,0.162867,0.202339,0.207057,0.171063
+pooled over the five folds,Coordinates only,0.059846,0.097036,0.091161,0.076699,0.078286,0.058365
+pooled over the five folds,Cell identity only,0.069963,0.117575,0.100137,0.085656,0.093911,0.064967
+pooled over the five folds,Static inputs only,0.063518,0.104094,0.091697,0.074178,0.080506,0.057900
+pooled over the five folds,Plain network (mean of 10 seeds),0.162608,0.224299,0.139649,0.161541,0.173767,0.141325
+pooled over the five folds,Extended network (mean of 10 seeds),0.199023,0.249625,0.163885,0.205370,0.213583,0.184842

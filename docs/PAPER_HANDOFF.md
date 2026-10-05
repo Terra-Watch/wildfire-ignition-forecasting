@@ -96,11 +96,11 @@ The information comparison (enriched boosting against tabular boosting) is contr
 (A_no_soil_anomaly removes `sw1_anom` and `sw2_anom`; B_windows_only keeps the weather windows and their anomalies but no neighbourhood block; B_neighbourhood_only keeps the neighbourhood block but no windows. **Note on the verdict column:** the verdict labels are descriptive and meaningless for removal contrasts (the decision rule is built for a gain over a reference, not for the effect of removing inputs); the paper reports ΔAP and its 99% CI only, with no verdict. Ablation A was run for `boosting@enriched` only; the logistic arms and the network were not tested.) Post hoc stratification by recent neighbour onsets (`docs/decisions/2026-10-01-onsets-recent-strata.md`): the enriched AP gain is +0.0294 (99% CI 0.0202 to 0.0372) in rows with recent onsets in the 8 neighbouring cells (94.1% of positives) and +0.0034 (99% CI -0.0057 to 0.0170) in rows with none, so a gain there is not demonstrated.
 
 ## 4. Rolling-origin results per year
-Each year is scored by models fitted on all earlier years from 2019, January to July rows only. Rows and onsets per year: 2021: 1,034,752 / 57,080, 2022: 839,785 / 44,058, 2023: 939,632 / 50,420, 2024: 726,279 / 37,679, 2025: 980,554 / 51,258. Network rows are means over 10 seeds.
+Each year is scored by models fitted on all earlier years from 2019, January to July rows only. Rows and onsets per year: 2021: 1,034,752 / 57,080, 2022: 839,785 / 44,058, 2023: 939,632 / 50,420, 2024: 726,279 / 37,679, 2025: 980,554 / 51,258. Network rows are means over 10 seeds. **Every value in the 2023 columns below is provisional** (`docs/limitations.md`: the soil-moisture anomaly norm includes later 2023 weather, and the settings were chosen on validation years 2021-2024, which include the scored folds).
 
 AP:
 
-| arm | 2021 | 2022 | 2023 | 2024 | 2025 |
+| arm | 2021 | 2022 | 2023 (provisional) | 2024 | 2025 |
 |---|---|---|---|---|---|
 | climatology_cell | 0.0704 | 0.1002 | 0.0844 | 0.1059 | 0.1167 |
 | logistic_with_burn@tabular | 0.1105 | 0.1323 | 0.1010 | 0.1270 | 0.1122 |
@@ -112,7 +112,7 @@ AP:
 
 Within-day spatial AUC:
 
-| arm | 2021 | 2022 | 2023 | 2024 | 2025 |
+| arm | 2021 | 2022 | 2023 (provisional) | 2024 | 2025 |
 |---|---|---|---|---|---|
 | climatology_cell | 0.6003 | 0.6480 | 0.6399 | 0.6826 | 0.7001 |
 | logistic_with_burn@tabular | 0.6276 | 0.6413 | 0.6041 | 0.6368 | 0.6410 |
@@ -124,7 +124,7 @@ Within-day spatial AUC:
 
 Within-cell temporal AUC:
 
-| arm | 2021 | 2022 | 2023 | 2024 | 2025 |
+| arm | 2021 | 2022 | 2023 (provisional) | 2024 | 2025 |
 |---|---|---|---|---|---|
 | climatology_cell | 0.5386 | 0.6409 | 0.5975 | 0.6265 | 0.6786 |
 | logistic_with_burn@tabular | 0.7321 | 0.7804 | 0.6883 | 0.7352 | 0.7380 |
@@ -407,6 +407,7 @@ Status: written 2026-10-01 after the rolling-origin run, the sanity checks and t
 - Sealed season unavailable; 2025 is a development fold; the fresh test uses two states with unit weights.
 - Logistic arms stop at the 300-iteration cap; the 2021-2022 folds come from earlier code (verified identical for the 2022 enriched logistic refit and the 2024 notebook refits).
 - The soil-moisture anomaly norm covers 2017-2023, so rows in 2021-2023 see their own year (deviation c); ablation A shows ΔAP +0.0010 (99% CI -0.0003 to 0.0025) when the two inputs are removed.
+- Provisional values (leakage review, 2026-10-05): every fold-2023 value and every pooled five-fold value is provisional, because the soil-moisture norm includes later 2023 weather and the settings of every model were chosen on scored validation years; every probability of detection, false alarm ratio and critical success index is provisional, because the fold-2023 alert threshold was chosen on fold-2024 labels. See `docs/limitations.md`.
 - No causal claim; the place shortcut is read from the diagnostic arms (reported, not gated).
 
 ## 9. Primary table choice for the fresh states

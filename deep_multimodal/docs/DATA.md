@@ -37,7 +37,7 @@ All inputs are aligned to the 5 km cell and the UTC day. "Window" means the days
 | Calendar, 2 columns | the date | | | sine and cosine of the day of the year | |
 | Auxiliary target (training only) | detections on the target day | cell | day D | log(1 + detections) and log(1 + radiative power) | never an input; used only as a small extra training loss |
 
-Every input uses information available before day D. The weather window ends on D-1, fire history on D-1, the forecast is an issued forecast, and a truncation test (changing the data of day D must not move any input) is part of the baseline repository's guards.
+Every input uses information available before day D. The weather window ends on D-1, fire history on D-1, the forecast is an issued forecast, and a truncation test (changing the data of day D must not move any input) is part of the baseline repository's guards. **Exception:** the two soil-moisture anomaly inputs (`sw1_anom`, `sw2_anom`) are measured against a fixed 2017-2023 norm, so rows in 2023 carry a statistic that includes weather from later in 2023; every fold-2023 value is therefore provisional (MODEL.md, Limitations).
 
 ## Known gaps in the data
 - Burned-area months missing upstream (2023-09, 2024-07, and others) stay missing; rows needing them are dropped.

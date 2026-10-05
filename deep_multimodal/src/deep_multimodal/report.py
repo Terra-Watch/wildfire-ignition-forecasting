@@ -20,6 +20,19 @@ STATE_NAMES = {"CG": "Chhattisgarh", "JH": "Jharkhand", "MH": "Maharashtra", "MP
 STATE_METRICS = [("average_precision", "Average precision", 4), ("auroc", "AUROC", 4), ("precision_top5pct", "Precision, top 5% per day", 4), ("recall_top5pct", "Recall, top 5% per day", 4),
                  ("lift_top5pct", "Lift, top 5% per day", 2), ("brier", "Brier score", 5), ("brier_skill_score", "Brier skill score", 4)]
 MODEL_COLUMNS = {"baseline": "Frozen baseline", "deep": "Deep multimodal model"}
+# Provisional values (docs/MODEL.md, Limitations): every fold-2023 value, and every probability of detection, false alarm ratio and critical success index.
+# Only the markdown is labelled; the CSV files keep their column names and values.
+PROVISIONAL_FOLDS = (2023,)
+PROVISIONAL_METRICS = ("probability_of_detection", "false_alarm_ratio", "critical_success_index")
+PROVISIONAL_NOTE = "Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`)."
+
+
+def fold_name(fold) -> str:
+    return f"{fold} (provisional)" if int(fold) in PROVISIONAL_FOLDS else f"{fold}"
+
+
+def fold_note(fold) -> str:
+    return f"{PROVISIONAL_NOTE}\n\n" if int(fold) in PROVISIONAL_FOLDS else ""
 
 
 def value(table, fold, rows_scored, model, metric):
@@ -41,6 +54,7 @@ def wide_block(table, fold, rows_scored) -> str:
     for key, label, places in LABELS:
         b, d = value(table, fold, rows_scored, "baseline", key), value(table, fold, rows_scored, "deep", key)
         shown = lambda x: f"{x:,.0f}" if places == 0 else f"{x:.{places}f}"
+        label = f"{label} (provisional)" if key in PROVISIONAL_METRICS else label
         text += f"| {label} | {shown(b)} | {shown(d)} | " + ("" if places == 0 else f"{d - b:+.{places}f}") + " |\n"
     return text
 
@@ -54,15 +68,17 @@ def write_report(results: dict, out_dir: Path) -> None:
     text = ["# Results table: frozen baseline against the deep multimodal model\n\n",
             "Folds 2024 and 2023: validation years the models were not trained on. Both models are scored on the same rows with the same labels and weights. Probabilities are corrected from the matched-negative sample "
             "back to the true fire rate and are not calibrated further. The top-1% and top-5% rows are chosen among the cells of each day. \"Deep minus baseline\" is positive where the deep model is higher, which is better "
-            "for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate.\n"]
+            "for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate. "
+            "**Provisional values:** every fold-2023 value, and every probability of detection, false alarm ratio and critical success index on either fold, are provisional "
+            "(see Limitations in `docs/MODEL.md`); they will be replaced when corrected numbers exist.\n"]
     for fold in folds:
-        text.append(f"\n## Fold {fold}\n\n{interval_sentence(table, fold, 'all rows')}\n\n{wide_block(table, fold, 'all rows')}")
+        text.append(f"\n## Fold {fold_name(fold)}\n\n{fold_note(fold)}{interval_sentence(table, fold, 'all rows')}\n\n{wide_block(table, fold, 'all rows')}")
     for fold in folds:
-        text.append(f"\n## Quiet stratum, fold {fold} (no neighbouring fire detection in the previous 7 days)\n\n{interval_sentence(table, fold, 'quiet stratum')} "
+        text.append(f"\n## Quiet stratum, fold {fold_name(fold)} (no neighbouring fire detection in the previous 7 days)\n\n{fold_note(fold)}{interval_sentence(table, fold, 'quiet stratum')} "
                     f"The alert threshold is the one fixed for the whole fold.\n\n{wide_block(table, fold, 'quiet stratum')}")
     state_rows = []
     for fold in folds:
-        text.append(f"\n## Per state, fold {fold}\n\nEach state is ranked on its own rows.\n\n| State | Metric | Frozen baseline | Deep multimodal model | Deep minus baseline |\n|---|---|---|---|---|\n")
+        text.append(f"\n## Per state, fold {fold_name(fold)}\n\n{fold_note(fold)}Each state is ranked on its own rows.\n\n| State | Metric | Frozen baseline | Deep multimodal model | Deep minus baseline |\n|---|---|---|---|---|\n")
         for rows_scored in sorted(s for s in table.rows_scored.unique() if s.startswith("state ")):
             name = STATE_NAMES.get(rows_scored.split()[1], rows_scored.split()[1])
             for key, label, places in STATE_METRICS:
@@ -73,7 +89,7 @@ def write_report(results: dict, out_dir: Path) -> None:
     for fold in folds:
         c = calibration[(calibration.fold == fold) & (calibration.rows_scored == "all rows")]
         b, d = c[c.model == "baseline"].reset_index(), c[c.model == "deep"].reset_index()
-        text.append(f"\nFold {fold}\n\n| Group | Baseline: predicted | observed | Deep model: predicted | observed |\n|---|---|---|---|---|\n")
+        text.append(f"\nFold {fold_name(fold)}\n\n{fold_note(fold)}| Group | Baseline: predicted | observed | Deep model: predicted | observed |\n|---|---|---|---|---|\n")
         for i in range(len(b)):
             text[-1] += f"| {i + 1} | {b.mean_prediction[i]:.5f} | {b.observed_rate[i]:.5f} | {d.mean_prediction[i]:.5f} | {d.observed_rate[i]:.5f} |\n"
     (out_dir / "RESULTS_TABLE.md").write_text("".join(text))

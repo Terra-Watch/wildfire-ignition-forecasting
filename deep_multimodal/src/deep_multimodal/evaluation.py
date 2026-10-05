@@ -45,7 +45,11 @@ def load_fold_predictions(directory: Path, year: int) -> FoldPredictions:
 
 
 def thresholds(folds: dict) -> dict:
-    """One alert threshold per model and scored fold: the corrected-probability threshold that maximises the weighted critical success index on the OTHER fold, never on the scored fold."""
+    """One alert threshold per model and scored fold: the corrected-probability threshold that maximises the weighted critical success index on the OTHER fold, never on the scored fold.
+
+    Other-fold rule, kept as ported from the research code: fold 2024 is scored with the threshold found on fold 2023 (a year before it, so only earlier labels are used),
+    and fold 2023 is scored with the threshold found on fold 2024 (a LATER year, so the fold-2023 threshold uses labels from after the scored year).
+    The probability of detection, false alarm ratio and critical success index that depend on it are therefore labelled provisional (docs/MODEL.md, Limitations)."""
     out = {}
     for year, scored in folds.items():
         other = folds[[y for y in folds if y != year][0]]

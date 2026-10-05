@@ -208,7 +208,7 @@ key_arms = ["climatology_cell", "logistic_with_burn@tabular", "logistic_with_bur
 yr = {}
 for metric in ("ap", "auc_spatial_within_day", "auc_temporal_within_cell"):
     p = by_year[by_year.arm.isin(key_arms)].pivot(index="arm", columns="year", values=metric).loc[key_arms]
-    yr[metric] = p.reset_index()
+    yr[metric] = p.reset_index().rename(columns={2023: "2023 (provisional)"})          # fold-2023 values are provisional (docs/limitations.md)
 rows_year = by_year[by_year.arm == "climatology_cell"][["year", "rows", "onsets"]]
 
 c = contrasts.copy()
@@ -259,7 +259,7 @@ The information comparison (enriched boosting against tabular boosting) is contr
 (A_no_soil_anomaly removes `sw1_anom` and `sw2_anom`; B_windows_only keeps the weather windows and their anomalies but no neighbourhood block; B_neighbourhood_only keeps the neighbourhood block but no windows. **Note on the verdict column:** the verdict labels are descriptive and meaningless for removal contrasts (the decision rule is built for a gain over a reference, not for the effect of removing inputs); the paper reports ΔAP and its 99% CI only, with no verdict. Ablation A was run for `boosting@enriched` only; the logistic arms and the network were not tested.) Post hoc stratification by recent neighbour onsets (`docs/decisions/2026-10-01-onsets-recent-strata.md`): the enriched AP gain is +{gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].delta_ap.iloc[0]:.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'above_zero')].ap_hi99.iloc[0]:.4f}) in rows with recent onsets in the 8 neighbouring cells (94.1% of positives) and {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].delta_ap.iloc[0]:+.4f} (99% CI {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_lo99.iloc[0]:.4f} to {gain[(gain.feature == 'ring_8_onsets_recent') & (gain.stratum == 'zero')].ap_hi99.iloc[0]:.4f}) in rows with none, so a gain there is not demonstrated.
 
 ## 4. Rolling-origin results per year
-Each year is scored by models fitted on all earlier years from 2019, January to July rows only. Rows and onsets per year: {', '.join(f'{int(r.year)}: {int(r.rows):,} / {int(r.onsets):,}' for r in rows_year.itertuples())}. Network rows are means over 10 seeds.
+Each year is scored by models fitted on all earlier years from 2019, January to July rows only. Rows and onsets per year: {', '.join(f'{int(r.year)}: {int(r.rows):,} / {int(r.onsets):,}' for r in rows_year.itertuples())}. Network rows are means over 10 seeds. **Every value in the 2023 columns below is provisional** (`docs/limitations.md`: the soil-moisture anomaly norm includes later 2023 weather, and the settings were chosen on validation years 2021-2024, which include the scored folds).
 
 AP:
 
@@ -384,6 +384,7 @@ Every parameter of every arm (library and class, scaling, how design weights ent
 - Sealed season unavailable; 2025 is a development fold; the fresh test uses two states with unit weights.
 - Logistic arms stop at the 300-iteration cap; the 2021-2022 folds come from earlier code (verified identical for the 2022 enriched logistic refit and the 2024 notebook refits).
 - The soil-moisture anomaly norm covers 2017-2023, so rows in 2021-2023 see their own year (deviation c); ablation A shows ΔAP {abl_c.iloc[0].delta_ap:+.4f} (99% CI {abl_c.iloc[0].ap_lo99:.4f} to {abl_c.iloc[0].ap_hi99:.4f}) when the two inputs are removed.
+- Provisional values (leakage review, 2026-10-05): every fold-2023 value and every pooled five-fold value is provisional, because the soil-moisture norm includes later 2023 weather and the settings of every model were chosen on scored validation years; every probability of detection, false alarm ratio and critical success index is provisional, because the fold-2023 alert threshold was chosen on fold-2024 labels. See `docs/limitations.md`.
 - No causal claim; the place shortcut is read from the diagnostic arms (reported, not gated).
 
 ## 9. Primary table choice for the fresh states

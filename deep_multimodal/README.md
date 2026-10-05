@@ -38,6 +38,6 @@ Notebooks (run from this folder after installing):
 | Fold | Average precision, baseline | Average precision, deep model | Difference (95% interval) |
 |---|---|---|---|
 | 2024 | 0.2267 | 0.2913 | +0.0646 (+0.0543 to +0.0734) |
-| 2023 | 0.1797 | 0.2532 | +0.0734 (+0.0549 to +0.0872) |
+| 2023 (provisional) | 0.1797 | 0.2532 | +0.0734 (+0.0549 to +0.0872) |
 
-The deep model is ahead on almost every metric, but not all (calibration on 2023 and the quiet stratum are worse; see `docs/RESULTS.md`), and its inputs are richer than the baseline's, so the gain is not attributed to the architecture alone. Both folds were development folds.
+The deep model is ahead on almost every metric, but not all (calibration on 2023 and the quiet stratum are worse; see `docs/RESULTS.md`), and its inputs are richer than the baseline's, so the gain is not attributed to the architecture alone. Both folds were development folds. **Every fold-2023 value, and every probability of detection, false alarm ratio and critical success index, is provisional** (fold-2023 soil-moisture anomalies use a norm that includes later 2023 weather; every model's settings were chosen on scored rows; the fold-2023 alert threshold was chosen on fold-2024 labels). See Limitations in `docs/MODEL.md`.

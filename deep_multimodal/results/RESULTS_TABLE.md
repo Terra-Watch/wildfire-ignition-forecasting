@@ -1,6 +1,6 @@
 # Results table: frozen baseline against the deep multimodal model
 
-Folds 2024 and 2023: validation years the models were not trained on. Both models are scored on the same rows with the same labels and weights. Probabilities are corrected from the matched-negative sample back to the true fire rate and are not calibrated further. The top-1% and top-5% rows are chosen among the cells of each day. "Deep minus baseline" is positive where the deep model is higher, which is better for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate.
+Folds 2024 and 2023: validation years the models were not trained on. Both models are scored on the same rows with the same labels and weights. Probabilities are corrected from the matched-negative sample back to the true fire rate and are not calibrated further. The top-1% and top-5% rows are chosen among the cells of each day. "Deep minus baseline" is positive where the deep model is higher, which is better for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate. **Provisional values:** every fold-2023 value, and every probability of detection, false alarm ratio and critical success index on either fold, are provisional (see Limitations in `docs/MODEL.md`); they will be replaced when corrected numbers exist.
 
 ## Fold 2024
 
@@ -28,14 +28,16 @@ Average precision with 95% interval: baseline 0.2267 (0.1704 to 0.2679); deep mo
 | Calibration error, ECE (lower is better) | 0.00048 | 0.00022 | -0.00026 |
 | Alert threshold (probability, fixed on the other fold) | 0.0656 | 0.0778 | +0.0121 |
 | Share of cell-days alerted | 0.0418 | 0.0350 | -0.0068 |
-| Probability of detection | 0.2861 | 0.3173 | +0.0312 |
-| False alarm ratio (lower is better) | 0.9019 | 0.8701 | -0.0318 |
-| Critical success index | 0.0788 | 0.1015 | +0.0227 |
+| Probability of detection (provisional) | 0.2861 | 0.3173 | +0.0312 |
+| False alarm ratio (lower is better) (provisional) | 0.9019 | 0.8701 | -0.0318 |
+| Critical success index (provisional) | 0.0788 | 0.1015 | +0.0227 |
 | Rows | 725,441 | 725,441 |  |
 | Fire onsets | 36,841 | 36,841 |  |
 | Fire rate (population-weighted) | 0.0143 | 0.0143 | +0.0000 |
 
-## Fold 2023
+## Fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Average precision with 95% interval: baseline 0.1797 (0.1419 to 0.2192); deep model 0.2532 (0.2108 to 0.2872); difference +0.0734 (+0.0549 to +0.0872).
 
@@ -61,9 +63,9 @@ Average precision with 95% interval: baseline 0.1797 (0.1419 to 0.2192); deep mo
 | Calibration error, ECE (lower is better) | 0.00079 | 0.00155 | +0.00075 |
 | Alert threshold (probability, fixed on the other fold) | 0.0755 | 0.0929 | +0.0174 |
 | Share of cell-days alerted | 0.0433 | 0.0267 | -0.0166 |
-| Probability of detection | 0.2296 | 0.2286 | -0.0010 |
-| False alarm ratio (lower is better) | 0.9048 | 0.8461 | -0.0587 |
-| Critical success index | 0.0722 | 0.1013 | +0.0291 |
+| Probability of detection (provisional) | 0.2296 | 0.2286 | -0.0010 |
+| False alarm ratio (lower is better) (provisional) | 0.9048 | 0.8461 | -0.0587 |
+| Critical success index (provisional) | 0.0722 | 0.1013 | +0.0291 |
 | Rows | 936,380 | 936,380 |  |
 | Fire onsets | 47,168 | 47,168 |  |
 | Fire rate (population-weighted) | 0.0180 | 0.0180 | +0.0000 |
@@ -94,14 +96,16 @@ Average precision with 95% interval: baseline 0.0343 (0.0287 to 0.0409); deep mo
 | Calibration error, ECE (lower is better) | 0.00138 | 0.00028 | -0.00111 |
 | Alert threshold (probability, fixed on the other fold) | 0.0656 | 0.0778 | +0.0121 |
 | Share of cell-days alerted | 0.0011 | 0.0001 | -0.0010 |
-| Probability of detection | 0.0197 | 0.0197 | +0.0000 |
-| False alarm ratio (lower is better) | 0.9697 | 0.7028 | -0.2669 |
-| Critical success index | 0.0121 | 0.0189 | +0.0068 |
+| Probability of detection (provisional) | 0.0197 | 0.0197 | +0.0000 |
+| False alarm ratio (lower is better) (provisional) | 0.9697 | 0.7028 | -0.2669 |
+| Critical success index (provisional) | 0.0121 | 0.0189 | +0.0068 |
 | Rows | 201,099 | 201,099 |  |
 | Fire onsets | 1,368 | 1,368 |  |
 | Fire rate (population-weighted) | 0.0017 | 0.0017 | +0.0000 |
 
-## Quiet stratum, fold 2023 (no neighbouring fire detection in the previous 7 days)
+## Quiet stratum, fold 2023 (provisional) (no neighbouring fire detection in the previous 7 days)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Average precision with 95% interval: baseline 0.0197 (0.0172 to 0.0253); deep model 0.0347 (0.0271 to 0.0466); difference +0.0150 (+0.0084 to +0.0242). The alert threshold is the one fixed for the whole fold.
 
@@ -127,9 +131,9 @@ Average precision with 95% interval: baseline 0.0197 (0.0172 to 0.0253); deep mo
 | Calibration error, ECE (lower is better) | 0.00270 | 0.00042 | -0.00228 |
 | Alert threshold (probability, fixed on the other fold) | 0.0755 | 0.0929 | +0.0174 |
 | Share of cell-days alerted | 0.0027 | 0.0001 | -0.0026 |
-| Probability of detection | 0.0241 | 0.0074 | -0.0167 |
-| False alarm ratio (lower is better) | 0.9789 | 0.7295 | -0.2493 |
-| Critical success index | 0.0114 | 0.0072 | -0.0042 |
+| Probability of detection (provisional) | 0.0241 | 0.0074 | -0.0167 |
+| False alarm ratio (lower is better) (provisional) | 0.9789 | 0.7295 | -0.2493 |
+| Critical success index (provisional) | 0.0114 | 0.0072 | -0.0042 |
 | Rows | 208,347 | 208,347 |  |
 | Fire onsets | 1,496 | 1,496 |  |
 | Fire rate (population-weighted) | 0.0024 | 0.0024 | +0.0000 |
@@ -183,7 +187,9 @@ Each state is ranked on its own rows.
 | Telangana | Brier score | 0.02265 | 0.02221 | -0.00044 |
 | Telangana | Brier skill score | 0.0254 | 0.0445 | +0.0191 |
 
-## Per state, fold 2023
+## Per state, fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Each state is ranked on its own rows.
 
@@ -251,7 +257,9 @@ Fold 2024
 | 9 | 0.03360 | 0.03481 | 0.03256 | 0.03367 |
 | 10 | 0.07830 | 0.07790 | 0.09032 | 0.09097 |
 
-Fold 2023
+Fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 | Group | Baseline: predicted | observed | Deep model: predicted | observed |
 |---|---|---|---|---|

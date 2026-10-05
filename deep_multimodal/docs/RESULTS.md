@@ -3,25 +3,26 @@
 Deep multimodal model (8-seed ensemble, hard labels) against the extended boosting baseline, scored on the same rows of validation years 2024 and 2023. Everything below is regenerated from the saved predictions by `python scripts/regenerate_results.py`; the tables are also in `results/` as CSV files (`results_table.csv`, `per_state.csv`, `quiet_stratum.csv`, `calibration_curve.csv`).
 
 ## Reading guide
+- **Provisional values.** Every fold-2023 value, and every probability of detection, false alarm ratio and critical success index on either fold, is **provisional**. The three reasons are in `docs/MODEL.md`, Limitations: (1) fold-2023 numbers use soil-moisture anomaly inputs whose norm includes later 2023 weather; (2) the settings of every model were chosen on scored rows; (3) the alert threshold for fold 2023 was chosen on fold-2024 labels. No result was removed; corrected numbers will replace these when they exist.
 - **Fold 2024** was also the year on which the settings were chosen, and fold 2023 repeats the procedure unchanged. Neither is an untouched test.
 - **Average precision (AP)** is computed on the sampled rows (all fires and about 20 non-fire cell-days per fire), so its absolute level is not forecast skill; compare the two columns. **Within-day** AP and AUROC rank the cells of one day against each other (where will fires start today); **within-cell** values rank the days of one cell (when). Top-1% and top-5% values take the highest-scored cells of each day.
 - **Brier score, Brier skill score, log loss, calibration error and thresholded scores** use probabilities corrected to the true fire rate and the population weights. The Brier skill score compares with the cell climatology (the fire rate of the same cell and week in earlier years); it is small for both models because the fire rate is low.
 - **Calibration error (ECE)** is the weighted mean gap between predicted and observed rate over ten equal-count groups.
-- **Probability of detection, false alarm ratio and critical success index** use one alert threshold per model and scored fold, the probability that maximises the critical success index on the other fold, never on the scored fold (2024 uses the threshold found on 2023, and 2023 uses the one found on 2024). The thresholds differ between models and folds, so compare these with care.
+- **Probability of detection, false alarm ratio and critical success index** use one alert threshold per model and scored fold, the probability that maximises the critical success index on the other fold, never on the scored fold (2024 uses the threshold found on 2023, and 2023 uses the one found on 2024). For fold 2023 this means the threshold comes from a **later** year's labels (`thresholds()` in `src/deep_multimodal/evaluation.py`, kept as ported). The thresholds differ between models and folds, so compare these with care. All three scores are provisional.
 - **Quiet stratum**: rows with no fire detection in the 7 by 7 window around the cell in the previous 7 days.
 - **Intervals**: only average precision has one (exact paired bootstrap over 25 weekly blocks for 2024 and 27 for 2023, 2,000 draws). Every other number is a point estimate.
 
 ## Where the deep model does not win
 Everything below is in the tables; none of it was dropped.
-- **Calibration on fold 2023**: calibration error 0.00155 against 0.00079 for the baseline (the model under-predicts in the upper groups). On 2024 it is better (0.00022 against 0.00048).
-- **Probability of detection on 2023** is level with the baseline (0.2286 against 0.2296) at a much higher alert threshold.
-- **Quiet stratum**, ranking days within each cell: average precision 0.4941 against 0.4994 (2024) and 0.4059 against 0.4331 (2023); AUROC 0.7124 against 0.7270 (2024) and 0.6874 against 0.7015 (2023).
-- **Quiet stratum on 2023, thresholded**: probability of detection 0.0074 against 0.0241 and critical success index 0.0072 against 0.0114.
-- **Quiet-area skill is weak for both models**: average precision in the quiet stratum is 0.064 (2024) and 0.035 (2023) for the deep model, against 0.034 and 0.020 for the baseline; the deep model is ahead in the quiet stratum when ranking cells within a day or pooled, but both are far below the skill over all rows.
+- **Calibration on fold 2023 (provisional)**: calibration error 0.00155 against 0.00079 for the baseline (the model under-predicts in the upper groups). On 2024 it is better (0.00022 against 0.00048).
+- **Probability of detection on 2023 (provisional)** is level with the baseline (0.2286 against 0.2296) at a much higher alert threshold.
+- **Quiet stratum**, ranking days within each cell: average precision 0.4941 against 0.4994 (2024) and 0.4059 against 0.4331 (2023, provisional); AUROC 0.7124 against 0.7270 (2024) and 0.6874 against 0.7015 (2023, provisional).
+- **Quiet stratum on 2023, thresholded (provisional)**: probability of detection 0.0074 against 0.0241 and critical success index 0.0072 against 0.0114.
+- **Quiet-area skill is weak for both models**: average precision in the quiet stratum is 0.064 (2024) and 0.035 (2023, provisional) for the deep model, against 0.034 and 0.020 (2023, provisional) for the baseline; the deep model is ahead in the quiet stratum when ranking cells within a day or pooled, but both are far below the skill over all rows.
 - On everything else, on both folds and in all six states (average precision, AUROC, top shares, Brier, Brier skill score, log loss), the deep model is ahead of the baseline.
 - **What the table does not show**: the deep model reads richer inputs than the baseline, so the gain is not an architecture result (MODEL.md, Limitations).
 
-Folds 2024 and 2023: validation years the models were not trained on. Both models are scored on the same rows with the same labels and weights. Probabilities are corrected from the matched-negative sample back to the true fire rate and are not calibrated further. The top-1% and top-5% rows are chosen among the cells of each day. "Deep minus baseline" is positive where the deep model is higher, which is better for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate.
+Folds 2024 and 2023: validation years the models were not trained on. Both models are scored on the same rows with the same labels and weights. Probabilities are corrected from the matched-negative sample back to the true fire rate and are not calibrated further. The top-1% and top-5% rows are chosen among the cells of each day. "Deep minus baseline" is positive where the deep model is higher, which is better for every metric except Brier score, log loss, calibration error and false alarm ratio. **Only average precision has a confidence interval** (exact paired bootstrap over week blocks); every other number is a point estimate. **Provisional values:** every fold-2023 value, and every probability of detection, false alarm ratio and critical success index on either fold, are provisional (see Limitations in `docs/MODEL.md`); they will be replaced when corrected numbers exist.
 
 ## Fold 2024
 
@@ -49,14 +50,16 @@ Average precision with 95% interval: baseline 0.2267 (0.1704 to 0.2679); deep mo
 | Calibration error, ECE (lower is better) | 0.00048 | 0.00022 | -0.00026 |
 | Alert threshold (probability, fixed on the other fold) | 0.0656 | 0.0778 | +0.0121 |
 | Share of cell-days alerted | 0.0418 | 0.0350 | -0.0068 |
-| Probability of detection | 0.2861 | 0.3173 | +0.0312 |
-| False alarm ratio (lower is better) | 0.9019 | 0.8701 | -0.0318 |
-| Critical success index | 0.0788 | 0.1015 | +0.0227 |
+| Probability of detection (provisional) | 0.2861 | 0.3173 | +0.0312 |
+| False alarm ratio (lower is better) (provisional) | 0.9019 | 0.8701 | -0.0318 |
+| Critical success index (provisional) | 0.0788 | 0.1015 | +0.0227 |
 | Rows | 725,441 | 725,441 |  |
 | Fire onsets | 36,841 | 36,841 |  |
 | Fire rate (population-weighted) | 0.0143 | 0.0143 | +0.0000 |
 
-## Fold 2023
+## Fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Average precision with 95% interval: baseline 0.1797 (0.1419 to 0.2192); deep model 0.2532 (0.2108 to 0.2872); difference +0.0734 (+0.0549 to +0.0872).
 
@@ -82,9 +85,9 @@ Average precision with 95% interval: baseline 0.1797 (0.1419 to 0.2192); deep mo
 | Calibration error, ECE (lower is better) | 0.00079 | 0.00155 | +0.00075 |
 | Alert threshold (probability, fixed on the other fold) | 0.0755 | 0.0929 | +0.0174 |
 | Share of cell-days alerted | 0.0433 | 0.0267 | -0.0166 |
-| Probability of detection | 0.2296 | 0.2286 | -0.0010 |
-| False alarm ratio (lower is better) | 0.9048 | 0.8461 | -0.0587 |
-| Critical success index | 0.0722 | 0.1013 | +0.0291 |
+| Probability of detection (provisional) | 0.2296 | 0.2286 | -0.0010 |
+| False alarm ratio (lower is better) (provisional) | 0.9048 | 0.8461 | -0.0587 |
+| Critical success index (provisional) | 0.0722 | 0.1013 | +0.0291 |
 | Rows | 936,380 | 936,380 |  |
 | Fire onsets | 47,168 | 47,168 |  |
 | Fire rate (population-weighted) | 0.0180 | 0.0180 | +0.0000 |
@@ -115,14 +118,16 @@ Average precision with 95% interval: baseline 0.0343 (0.0287 to 0.0409); deep mo
 | Calibration error, ECE (lower is better) | 0.00138 | 0.00028 | -0.00111 |
 | Alert threshold (probability, fixed on the other fold) | 0.0656 | 0.0778 | +0.0121 |
 | Share of cell-days alerted | 0.0011 | 0.0001 | -0.0010 |
-| Probability of detection | 0.0197 | 0.0197 | +0.0000 |
-| False alarm ratio (lower is better) | 0.9697 | 0.7028 | -0.2669 |
-| Critical success index | 0.0121 | 0.0189 | +0.0068 |
+| Probability of detection (provisional) | 0.0197 | 0.0197 | +0.0000 |
+| False alarm ratio (lower is better) (provisional) | 0.9697 | 0.7028 | -0.2669 |
+| Critical success index (provisional) | 0.0121 | 0.0189 | +0.0068 |
 | Rows | 201,099 | 201,099 |  |
 | Fire onsets | 1,368 | 1,368 |  |
 | Fire rate (population-weighted) | 0.0017 | 0.0017 | +0.0000 |
 
-## Quiet stratum, fold 2023 (no neighbouring fire detection in the previous 7 days)
+## Quiet stratum, fold 2023 (provisional) (no neighbouring fire detection in the previous 7 days)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Average precision with 95% interval: baseline 0.0197 (0.0172 to 0.0253); deep model 0.0347 (0.0271 to 0.0466); difference +0.0150 (+0.0084 to +0.0242). The alert threshold is the one fixed for the whole fold.
 
@@ -148,9 +153,9 @@ Average precision with 95% interval: baseline 0.0197 (0.0172 to 0.0253); deep mo
 | Calibration error, ECE (lower is better) | 0.00270 | 0.00042 | -0.00228 |
 | Alert threshold (probability, fixed on the other fold) | 0.0755 | 0.0929 | +0.0174 |
 | Share of cell-days alerted | 0.0027 | 0.0001 | -0.0026 |
-| Probability of detection | 0.0241 | 0.0074 | -0.0167 |
-| False alarm ratio (lower is better) | 0.9789 | 0.7295 | -0.2493 |
-| Critical success index | 0.0114 | 0.0072 | -0.0042 |
+| Probability of detection (provisional) | 0.0241 | 0.0074 | -0.0167 |
+| False alarm ratio (lower is better) (provisional) | 0.9789 | 0.7295 | -0.2493 |
+| Critical success index (provisional) | 0.0114 | 0.0072 | -0.0042 |
 | Rows | 208,347 | 208,347 |  |
 | Fire onsets | 1,496 | 1,496 |  |
 | Fire rate (population-weighted) | 0.0024 | 0.0024 | +0.0000 |
@@ -204,7 +209,9 @@ Each state is ranked on its own rows.
 | Telangana | Brier score | 0.02265 | 0.02221 | -0.00044 |
 | Telangana | Brier skill score | 0.0254 | 0.0445 | +0.0191 |
 
-## Per state, fold 2023
+## Per state, fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 Each state is ranked on its own rows.
 
@@ -272,7 +279,9 @@ Fold 2024
 | 9 | 0.03360 | 0.03481 | 0.03256 | 0.03367 |
 | 10 | 0.07830 | 0.07790 | 0.09032 | 0.09097 |
 
-Fold 2023
+Fold 2023 (provisional)
+
+Every value in this section is **provisional** (fold 2023; see Limitations in `docs/MODEL.md`).
 
 | Group | Baseline: predicted | observed | Deep model: predicted | observed |
 |---|---|---|---|---|

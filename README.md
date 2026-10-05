@@ -13,7 +13,7 @@ Next-day wildfire ignition risk over Indian forest landscapes.
 - `data/`, `artifacts/` not tracked; `data/MANIFEST.json` describes the data
 
 ## Baseline and proposed model
-- The **extended boosting baseline** (gradient boosting on 251 inputs: 42 plain inputs plus weather windows, anomalies and neighbourhood summaries) is the model every later model is compared with. See `docs/extended_boosting_baseline.md`; recorded results (AP 0.2315 on 2025, 0.1977 pooled over five folds, in-season rows) are in `results/extended_boosting_baseline/`.
+- The **extended boosting baseline** (gradient boosting on 251 inputs: 42 plain inputs plus weather windows, anomalies and neighbourhood summaries) is the model every later model is compared with. See `docs/extended_boosting_baseline.md`; recorded results (AP 0.2315 on 2025, 0.1977 pooled over five folds (provisional, see `docs/limitations.md`), in-season rows) are in `results/extended_boosting_baseline/`.
 - `deep_multimodal/` is a self-contained folder for the proposed deep multimodal model (code, configs, tests, data and model descriptions, results, notebooks). It does not import this library.
 
 Exploratory studies and diagnostics live in the sibling repository `wildfire-research`, which depends on this one, never the reverse.

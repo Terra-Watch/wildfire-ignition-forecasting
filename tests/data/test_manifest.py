@@ -1,3 +1,7 @@
+import os
+
+import pytest
+
 from wildfire.data import manifest
 
 
@@ -13,6 +17,7 @@ def test_describe_and_verify(tmp_path, monkeypatch):
     assert manifest.describe_dataset(tmp_path, spec)["sha256"] != info["sha256"]
 
 
+@pytest.mark.skipif(not os.environ.get("DATA_ROOT"), reason="needs DATA_ROOT: the dataset definitions in configs/data.yaml expand it (copy .env.example to .env and set it)")
 def test_artifact_manifest_describes_the_results_folder(tmp_path, monkeypatch):
     monkeypatch.setenv("ARTIFACTS_ROOT", str(tmp_path))
     (tmp_path / "results").mkdir()

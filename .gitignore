@@ -12,3 +12,6 @@ artifacts/*
 !artifacts/MANIFEST.json
 
 logs/
+
+deep_multimodal/results/saved_predictions/
+*.npz

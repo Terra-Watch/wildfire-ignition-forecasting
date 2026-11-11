@@ -1,0 +1,8 @@
+[project]
+name = "wildfire-ignition-forecasting"
+version = "0.1.0"
+description = "Next-day forest fire detection forecasting for Indian forest cells: training, evaluation and live scoring."
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = ["numpy", "pandas", "scikit-learn", "xgboost", "torch", "pyarrow", "scipy", "PyYAML", "joblib", "matplotlib"]
+# exact versions that produced the results: requirements.lock

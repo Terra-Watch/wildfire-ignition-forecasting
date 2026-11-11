@@ -1,0 +1,334 @@
+run_id,group,split,state,n,pos,auprc,auroc
+c1_A_s0,c1_A,blind,Kerala,49917,318,0.216832219045864,0.9725270886344966
+c1_A_s0,c1_A,blind,Uttar Pradesh,77870,1092,0.3678097806420389,0.9592363340116603
+c1_A_s0,c1_A,blind,West Bengal,62136,633,0.44110405853970824,0.9794443297555273
+c1_A_s0__lr1e-3,c1_A_s0__lr1e-3,blind,Kerala,49917,318,0.2246285445463496,0.9729331122394054
+c1_A_s0__lr1e-3,c1_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.3794516879040578,0.9618316812174428
+c1_A_s0__lr1e-3,c1_A_s0__lr1e-3,blind,West Bengal,62136,633,0.45273642258162816,0.9799507590261527
+c1_A_s0__lr3e-4,c1_A_s0__lr3e-4,blind,Kerala,49917,318,0.216832219045864,0.9725270886344966
+c1_A_s0__lr3e-4,c1_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.3678097806420389,0.9592363340116603
+c1_A_s0__lr3e-4,c1_A_s0__lr3e-4,blind,West Bengal,62136,633,0.44110405853970824,0.9794443297555273
+c1_A_s1,c1_A,blind,Kerala,49917,318,0.23847830595188638,0.9725890636616356
+c1_A_s1,c1_A,blind,Uttar Pradesh,77870,1092,0.3774448119773601,0.9638234018883424
+c1_A_s1,c1_A,blind,West Bengal,62136,633,0.4317154431204513,0.980613887006732
+c1_A_s2,c1_A,blind,Kerala,49917,318,0.23645028307658564,0.9717466154026995
+c1_A_s2,c1_A,blind,Uttar Pradesh,77870,1092,0.3669689076311871,0.9616840515975033
+c1_A_s2,c1_A,blind,West Bengal,62136,633,0.4462594242111641,0.9792544316221464
+c1_A_s3,c1_A,blind,Kerala,49917,318,0.22819233908995018,0.9720222853955388
+c1_A_s3,c1_A,blind,Uttar Pradesh,77870,1092,0.37004899294975896,0.9631279354767854
+c1_A_s3,c1_A,blind,West Bengal,62136,633,0.44115465512581326,0.9809526495567241
+c1_A_s4,c1_A,blind,Kerala,49917,318,0.23271584092498276,0.9740281840232882
+c1_A_s4,c1_A,blind,Uttar Pradesh,77870,1092,0.378930838181425,0.962482539688901
+c1_A_s4,c1_A,blind,West Bengal,62136,633,0.42153675523062345,0.9797394642817742
+c2_A_s0,c2_A,blind,Kerala,49917,318,0.24614456362152093,0.9750620098979982
+c2_A_s0,c2_A,blind,Uttar Pradesh,77870,1092,0.3959606081303327,0.9641550869702163
+c2_A_s0,c2_A,blind,West Bengal,62136,633,0.4523336792624912,0.981522767779293
+c2_A_s0__lr1e-3,c2_A_s0__lr1e-3,blind,Kerala,49917,318,0.24614456362152093,0.9750620098979982
+c2_A_s0__lr1e-3,c2_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.3959606081303327,0.9641550869702163
+c2_A_s0__lr1e-3,c2_A_s0__lr1e-3,blind,West Bengal,62136,633,0.4523336792624912,0.981522767779293
+c2_A_s0__lr3e-4,c2_A_s0__lr3e-4,blind,Kerala,49917,318,0.23538284120852515,0.9717945469837912
+c2_A_s0__lr3e-4,c2_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.39768954691940644,0.9631490109393938
+c2_A_s0__lr3e-4,c2_A_s0__lr3e-4,blind,West Bengal,62136,633,0.4639975316838564,0.9793494192181483
+c2_A_s1,c2_A,blind,Kerala,49917,318,0.2354225198024445,0.9732697111336059
+c2_A_s1,c2_A,blind,Uttar Pradesh,77870,1092,0.39210608548577186,0.9642600468292725
+c2_A_s1,c2_A,blind,West Bengal,62136,633,0.45414358995611004,0.9798322685501233
+c2_A_s2,c2_A,blind,Kerala,49917,318,0.2378059685402994,0.9742882572318041
+c2_A_s2,c2_A,blind,Uttar Pradesh,77870,1092,0.39327586309647405,0.9631425702207697
+c2_A_s2,c2_A,blind,West Bengal,62136,633,0.45425321780421174,0.9801049019584424
+c2_A_s3,c2_A,blind,Kerala,49917,318,0.2415578561319862,0.9745694431605627
+c2_A_s3,c2_A,blind,Uttar Pradesh,77870,1092,0.3968166328294899,0.9621980626890888
+c2_A_s3,c2_A,blind,West Bengal,62136,633,0.4635842306715469,0.9799330869152685
+c2_A_s4,c2_A,blind,Kerala,49917,318,0.254016464751728,0.9741992414383481
+c2_A_s4,c2_A,blind,Uttar Pradesh,77870,1092,0.3961625165024104,0.9616797756759726
+c2_A_s4,c2_A,blind,West Bengal,62136,633,0.46200248122479903,0.9790661774060573
+cnn_A_s0,cnn_A,blind,Kerala,49917,318,0.21257632683041133,0.9703023278137202
+cnn_A_s0,cnn_A,blind,Uttar Pradesh,77870,1092,0.3500554540682994,0.9616044848679849
+cnn_A_s0,cnn_A,blind,West Bengal,62136,633,0.3756894760330325,0.9776712878979765
+cnn_A_s0__lr1e-3,cnn_A_s0__lr1e-3,blind,Kerala,49917,318,0.20203949025445947,0.9676850479208029
+cnn_A_s0__lr1e-3,cnn_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.3463977422658648,0.9604497355822605
+cnn_A_s0__lr1e-3,cnn_A_s0__lr1e-3,blind,West Bengal,62136,633,0.3916734241880481,0.9765622345089627
+cnn_A_s0__lr3e-4,cnn_A_s0__lr3e-4,blind,Kerala,49917,318,0.21257632683041133,0.9703023278137202
+cnn_A_s0__lr3e-4,cnn_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.3500554540682994,0.9616044848679849
+cnn_A_s0__lr3e-4,cnn_A_s0__lr3e-4,blind,West Bengal,62136,633,0.3756894760330325,0.9776712878979765
+cnn_A_s1,cnn_A,blind,Kerala,49917,318,0.17529099709513618,0.9661691799679974
+cnn_A_s1,cnn_A,blind,Uttar Pradesh,77870,1092,0.34544051890414446,0.9598640297505858
+cnn_A_s1,cnn_A,blind,West Bengal,62136,633,0.3898573929643816,0.9763654524719237
+cnn_A_s2,cnn_A,blind,Kerala,49917,318,0.2046788061484771,0.9663583068283101
+cnn_A_s2,cnn_A,blind,Uttar Pradesh,77870,1092,0.3489221266038208,0.9616390262034196
+cnn_A_s2,cnn_A,blind,West Bengal,62136,633,0.40954285942044844,0.977361242528171
+cnn_A_s3,cnn_A,blind,Kerala,49917,318,0.1759184698563396,0.9656211368635577
+cnn_A_s3,cnn_A,blind,Uttar Pradesh,77870,1092,0.33506847931133016,0.9612246255962555
+cnn_A_s3,cnn_A,blind,West Bengal,62136,633,0.39743736928052714,0.9778601842692579
+cnn_A_s4,cnn_A,blind,Kerala,49917,318,0.22778007470429082,0.971290060752645
+cnn_A_s4,cnn_A,blind,Uttar Pradesh,77870,1092,0.3556243379684132,0.9611508912952685
+cnn_A_s4,cnn_A,blind,West Bengal,62136,633,0.39744730660765326,0.9775138571311038
+convlstm_A_s0,convlstm_A,blind,Kerala,49917,318,0.2239010451641958,0.9700266578208806
+convlstm_A_s0,convlstm_A,blind,Uttar Pradesh,77870,1092,0.38280228588506343,0.9628873269271561
+convlstm_A_s0,convlstm_A,blind,West Bengal,62136,633,0.4509357991872467,0.9786488792760825
+convlstm_A_s0__lr1e-3,convlstm_A_s0__lr1e-3,blind,Kerala,49917,318,0.21598522316787322,0.9680365461821417
+convlstm_A_s0__lr1e-3,convlstm_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.38454160806794024,0.9609702470287534
+convlstm_A_s0__lr1e-3,convlstm_A_s0__lr1e-3,blind,West Bengal,62136,633,0.4529276621563773,0.9781897640000041
+convlstm_A_s0__lr3e-4,convlstm_A_s0__lr3e-4,blind,Kerala,49917,318,0.2239010451641958,0.9700266578208806
+convlstm_A_s0__lr3e-4,convlstm_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.38280228588506343,0.9628873269271561
+convlstm_A_s0__lr3e-4,convlstm_A_s0__lr3e-4,blind,West Bengal,62136,633,0.4509357991872467,0.9786488792760825
+convlstm_A_s1,convlstm_A,blind,Kerala,49917,318,0.22804095007690375,0.9722423205174683
+convlstm_A_s1,convlstm_A,blind,Uttar Pradesh,77870,1092,0.38429169970407767,0.964688312872363
+convlstm_A_s1,convlstm_A,blind,West Bengal,62136,633,0.4444733840535883,0.9784571317357488
+convlstm_A_s2,convlstm_A,blind,Kerala,49917,318,0.18531519470685537,0.9686063360224472
+convlstm_A_s2,convlstm_A,blind,Uttar Pradesh,77870,1092,0.3682733532052057,0.9612739686572686
+convlstm_A_s2,convlstm_A,blind,West Bengal,62136,633,0.44120694266460386,0.9792105338932208
+convlstm_A_s3,convlstm_A,blind,Kerala,49917,318,0.20647880370695276,0.9681255936763788
+convlstm_A_s3,convlstm_A,blind,Uttar Pradesh,77870,1092,0.37586877477167574,0.9603179095774632
+convlstm_A_s3,convlstm_A,blind,West Bengal,62136,633,0.44794032221641594,0.9793783932604118
+convlstm_A_s4,convlstm_A,blind,Kerala,49917,318,0.20874115621342146,0.9726073550123563
+convlstm_A_s4,convlstm_A,blind,Uttar Pradesh,77870,1092,0.3761668243472737,0.9623103757019071
+convlstm_A_s4,convlstm_A,blind,West Bengal,62136,633,0.4413649346270926,0.9783185289591056
+lr_A_s0,lr_A,blind,Kerala,49917,318,0.21530655368202498,0.9685682950850728
+lr_A_s0,lr_A,blind,Uttar Pradesh,77870,1092,0.3402108930517311,0.9548602175607959
+lr_A_s0,lr_A,blind,West Bengal,62136,633,0.343403911692409,0.970992347333832
+lr_A_s0__C0.01,lr_A_s0__C0.01,blind,Kerala,49917,318,0.21523527982424476,0.9685854135068913
+lr_A_s0__C0.01,lr_A_s0__C0.01,blind,Uttar Pradesh,77870,1092,0.3402189417605551,0.9548408536595258
+lr_A_s0__C0.01,lr_A_s0__C0.01,blind,West Bengal,62136,633,0.3433440522269249,0.9709635145657108
+lr_A_s0__C0.1,lr_A_s0__C0.1,blind,Kerala,49917,318,0.21530655368202498,0.9685682950850728
+lr_A_s0__C0.1,lr_A_s0__C0.1,blind,Uttar Pradesh,77870,1092,0.3402108930517311,0.9548602175607959
+lr_A_s0__C0.1,lr_A_s0__C0.1,blind,West Bengal,62136,633,0.343403911692409,0.970992347333832
+lr_A_s0__C1,lr_A_s0__C1,blind,Kerala,49917,318,0.21524241777316097,0.9685598626772882
+lr_A_s0__C1,lr_A_s0__C1,blind,Uttar Pradesh,77870,1092,0.3401469173711005,0.9548529657887156
+lr_A_s0__C1,lr_A_s0__C1,blind,West Bengal,62136,633,0.34386883027087994,0.9710338434023396
+lr_A_s0__C10,lr_A_s0__C10,blind,Kerala,49917,318,0.21497479487411633,0.9684808643306742
+lr_A_s0__C10,lr_A_s0__C10,blind,Uttar Pradesh,77870,1092,0.34034913849208,0.9548662527526915
+lr_A_s0__C10,lr_A_s0__C10,blind,West Bengal,62136,633,0.34428619409797145,0.971046506702726
+lr_only_fire_history,lr_only_fire_history,blind,Kerala,49917,318,0.1657109784224414,0.9483383464948636
+lr_only_fire_history,lr_only_fire_history,blind,Uttar Pradesh,77870,1092,0.31179597086373906,0.9485562270442054
+lr_only_fire_history,lr_only_fire_history,blind,West Bengal,62136,633,0.28252785713184464,0.9572950871865662
+lstm_A_drop_fire_history_s0,lstm_A_drop_fire_history,blind,Kerala,49917,318,0.05053868874892143,0.9181187209470266
+lstm_A_drop_fire_history_s0,lstm_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.16178564699389458,0.9218076959812873
+lstm_A_drop_fire_history_s0,lstm_A_drop_fire_history,blind,West Bengal,62136,633,0.20319300477519134,0.9616794659755227
+lstm_A_drop_fire_history_s1,lstm_A_drop_fire_history,blind,Kerala,49917,318,0.051267293794964586,0.9287149606510884
+lstm_A_drop_fire_history_s1,lstm_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.17820425505849974,0.9323886993727313
+lstm_A_drop_fire_history_s1,lstm_A_drop_fire_history,blind,West Bengal,62136,633,0.19689944438791315,0.9588971102733811
+lstm_A_drop_fire_history_s2,lstm_A_drop_fire_history,blind,Kerala,49917,318,0.060050308341219466,0.9388086795724351
+lstm_A_drop_fire_history_s2,lstm_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.19323433458094572,0.9384292525703476
+lstm_A_drop_fire_history_s2,lstm_A_drop_fire_history,blind,West Bengal,62136,633,0.1634702404093811,0.9433086260270276
+lstm_A_drop_forecast_s0,lstm_A_drop_forecast,blind,Kerala,49917,318,0.20174388789959943,0.9627919689494653
+lstm_A_drop_forecast_s0,lstm_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3791751764047927,0.9613739131048776
+lstm_A_drop_forecast_s0,lstm_A_drop_forecast,blind,West Bengal,62136,633,0.4139043626836581,0.9772541695714556
+lstm_A_drop_forecast_s1,lstm_A_drop_forecast,blind,Kerala,49917,318,0.21385667797971103,0.9649370974080045
+lstm_A_drop_forecast_s1,lstm_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3782795133938776,0.9604630165826081
+lstm_A_drop_forecast_s1,lstm_A_drop_forecast,blind,West Bengal,62136,633,0.40975143344588266,0.9762170889363622
+lstm_A_drop_forecast_s2,lstm_A_drop_forecast,blind,Kerala,49917,318,0.20656172071182263,0.963381032864707
+lstm_A_drop_forecast_s2,lstm_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.38182748676172384,0.9613673471500583
+lstm_A_drop_forecast_s2,lstm_A_drop_forecast,blind,West Bengal,62136,633,0.41940457540073783,0.9768845450429356
+lstm_A_drop_landcover_terrain_people_s0,lstm_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.20021401801947217,0.9612231606921472
+lstm_A_drop_landcover_terrain_people_s0,lstm_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.3764011741462636,0.9605081851037723
+lstm_A_drop_landcover_terrain_people_s0,lstm_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.4130562832905883,0.9755897418430816
+lstm_A_drop_landcover_terrain_people_s1,lstm_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.2146803170304631,0.9634511549926005
+lstm_A_drop_landcover_terrain_people_s1,lstm_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.3740640286695118,0.9597306472387876
+lstm_A_drop_landcover_terrain_people_s1,lstm_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.41403974327958637,0.9766051818482043
+lstm_A_drop_landcover_terrain_people_s2,lstm_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.22108613456484483,0.9633723468506732
+lstm_A_drop_landcover_terrain_people_s2,lstm_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.3646290173570597,0.9606929979465082
+lstm_A_drop_landcover_terrain_people_s2,lstm_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.4183272671795258,0.9757949104269281
+lstm_A_drop_ndvi_s0,lstm_A_drop_ndvi,blind,Kerala,49917,318,0.22159191247438909,0.967045991873695
+lstm_A_drop_ndvi_s0,lstm_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.3829863412255297,0.9608994587601741
+lstm_A_drop_ndvi_s0,lstm_A_drop_ndvi,blind,West Bengal,62136,633,0.4226798393406222,0.9789048423356171
+lstm_A_drop_ndvi_s1,lstm_A_drop_ndvi,blind,Kerala,49917,318,0.221839367014043,0.9664546772029918
+lstm_A_drop_ndvi_s1,lstm_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.3813759125707197,0.9609269510868929
+lstm_A_drop_ndvi_s1,lstm_A_drop_ndvi,blind,West Bengal,62136,633,0.4172513601656639,0.9773710675026088
+lstm_A_drop_ndvi_s2,lstm_A_drop_ndvi,blind,Kerala,49917,318,0.22450208669902308,0.9681668997942113
+lstm_A_drop_ndvi_s2,lstm_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.3880815992693694,0.9618062761606485
+lstm_A_drop_ndvi_s2,lstm_A_drop_ndvi,blind,West Bengal,62136,633,0.43763105081309445,0.9772429960711146
+lstm_A_drop_weather_s0,lstm_A_drop_weather,blind,Kerala,49917,318,0.2170940865109022,0.9676702119552267
+lstm_A_drop_weather_s0,lstm_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.3778767504144983,0.9612087384903164
+lstm_A_drop_weather_s0,lstm_A_drop_weather,blind,West Bengal,62136,633,0.3976711268115855,0.9780212111052059
+lstm_A_drop_weather_s1,lstm_A_drop_weather,blind,Kerala,49917,318,0.20822164183753983,0.9634821583565605
+lstm_A_drop_weather_s1,lstm_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.3864851227163591,0.96109601995077
+lstm_A_drop_weather_s1,lstm_A_drop_weather,blind,West Bengal,62136,633,0.4036699524344197,0.9780070323185662
+lstm_A_drop_weather_s2,lstm_A_drop_weather,blind,Kerala,49917,318,0.21770466341934938,0.9708263417260519
+lstm_A_drop_weather_s2,lstm_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.3883598702669255,0.9616384417678409
+lstm_A_drop_weather_s2,lstm_A_drop_weather,blind,West Bengal,62136,633,0.40112356481029326,0.9772057510699782
+lstm_A_s0,lstm_A,blind,Kerala,49917,318,0.22021295170952887,0.9665946678525295
+lstm_A_s0,lstm_A,blind,Uttar Pradesh,77870,1092,0.38963689909967164,0.9619115580556358
+lstm_A_s0,lstm_A,blind,West Bengal,62136,633,0.42161128476321036,0.9790329651395265
+lstm_A_s0__lr1e-3,lstm_A_s0__lr1e-3,blind,Kerala,49917,318,0.21599898658613498,0.9654999764780204
+lstm_A_s0__lr1e-3,lstm_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.38769154075296886,0.9619412211430758
+lstm_A_s0__lr1e-3,lstm_A_s0__lr1e-3,blind,West Bengal,62136,633,0.438972918900195,0.977682743946602
+lstm_A_s0__lr3e-4,lstm_A_s0__lr3e-4,blind,Kerala,49917,318,0.22021295170952887,0.9665946678525295
+lstm_A_s0__lr3e-4,lstm_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.38963689909967164,0.9619115580556358
+lstm_A_s0__lr3e-4,lstm_A_s0__lr3e-4,blind,West Bengal,62136,633,0.42161128476321036,0.9790329651395265
+lstm_A_s1,lstm_A,blind,Kerala,49917,318,0.22694822776304352,0.9700257701990086
+lstm_A_s1,lstm_A,blind,Uttar Pradesh,77870,1092,0.3854282603519782,0.961076626231358
+lstm_A_s1,lstm_A,blind,West Bengal,62136,633,0.4253225459668907,0.9774137836659812
+lstm_A_s2,lstm_A,blind,Kerala,49917,318,0.20877750640617054,0.9665977111275195
+lstm_A_s2,lstm_A,blind,Uttar Pradesh,77870,1092,0.385355396223251,0.9617743826762036
+lstm_A_s2,lstm_A,blind,West Bengal,62136,633,0.4190525182509988,0.9784064271617878
+lstm_A_s3,lstm_A,blind,Kerala,49917,318,0.2125638697801551,0.9679468646722819
+lstm_A_s3,lstm_A,blind,Uttar Pradesh,77870,1092,0.38297949536441583,0.9611323861564816
+lstm_A_s3,lstm_A,blind,West Bengal,62136,633,0.4224041538247391,0.977556676039307
+lstm_A_s4,lstm_A,blind,Kerala,49917,318,0.21652558626956958,0.9681700064707633
+lstm_A_s4,lstm_A,blind,Uttar Pradesh,77870,1092,0.38386924879848894,0.9612383121233312
+lstm_A_s4,lstm_A,blind,West Bengal,62136,633,0.4421525201068613,0.9791022665278482
+mlp_A_s0,mlp_A,blind,Kerala,49917,318,0.192576287346572,0.9671953976552328
+mlp_A_s0,mlp_A,blind,Uttar Pradesh,77870,1092,0.3658577896371864,0.9608058715403919
+mlp_A_s0,mlp_A,blind,West Bengal,62136,633,0.3891178121017618,0.9759693326201815
+mlp_A_s0__lr1e-3,mlp_A_s0__lr1e-3,blind,Kerala,49917,318,0.2039077238537361,0.9663365600924445
+mlp_A_s0__lr1e-3,mlp_A_s0__lr1e-3,blind,Uttar Pradesh,77870,1092,0.3655545474803591,0.9603326934121562
+mlp_A_s0__lr1e-3,mlp_A_s0__lr1e-3,blind,West Bengal,62136,633,0.38109422207502586,0.975673183488731
+mlp_A_s0__lr3e-4,mlp_A_s0__lr3e-4,blind,Kerala,49917,318,0.192576287346572,0.9671953976552328
+mlp_A_s0__lr3e-4,mlp_A_s0__lr3e-4,blind,Uttar Pradesh,77870,1092,0.3658577896371864,0.9608058715403919
+mlp_A_s0__lr3e-4,mlp_A_s0__lr3e-4,blind,West Bengal,62136,633,0.3891178121017618,0.9759693326201815
+mlp_A_s1,mlp_A,blind,Kerala,49917,318,0.20179472934883236,0.9681129450647018
+mlp_A_s1,mlp_A,blind,Uttar Pradesh,77870,1092,0.36130748365419496,0.9607910221057866
+mlp_A_s1,mlp_A,blind,West Bengal,62136,633,0.3743933984940479,0.9760974168947795
+mlp_A_s2,mlp_A,blind,Kerala,49917,318,0.20074285872612543,0.9675723199430502
+mlp_A_s2,mlp_A,blind,Uttar Pradesh,77870,1092,0.3680291288678021,0.9609562563566316
+mlp_A_s2,mlp_A,blind,West Bengal,62136,633,0.3750423190878174,0.9759501321799404
+mlp_A_s3,mlp_A,blind,Kerala,49917,318,0.20237713368671642,0.9672225969254552
+mlp_A_s3,mlp_A,blind,Uttar Pradesh,77870,1092,0.36549449849591603,0.9602001219538144
+mlp_A_s3,mlp_A,blind,West Bengal,62136,633,0.38333221847189713,0.9762664578275237
+mlp_A_s4,mlp_A,blind,Kerala,49917,318,0.2001775375240769,0.9660776915136121
+mlp_A_s4,mlp_A,blind,Uttar Pradesh,77870,1092,0.37565298512534906,0.9620738283831878
+mlp_A_s4,mlp_A,blind,West Bengal,62136,633,0.39835607227449243,0.9764567540971235
+ref_climatology,ref_climatology,blind,Kerala,49917,318,0.021544770183468297,0.8041848771803956
+ref_climatology,ref_climatology,blind,Uttar Pradesh,77870,1092,0.07190150807353601,0.8942500078958439
+ref_climatology,ref_climatology,blind,West Bengal,62136,633,0.08839847120569638,0.9345104192120093
+ref_fwi,ref_fwi,blind,Kerala,49917,318,0.03682669265695029,0.8818470992707426
+ref_fwi,ref_fwi,blind,Uttar Pradesh,77870,1092,0.0711971278784266,0.8648014500586201
+ref_fwi,ref_fwi,blind,West Bengal,62136,633,0.04337932188011864,0.8435496756743831
+ref_persistence,ref_persistence,blind,Kerala,49917,318,0.10058966602261954,0.6519105870591578
+ref_persistence,ref_persistence,blind,Uttar Pradesh,77870,1092,0.17701174816418974,0.6979180233921175
+ref_persistence,ref_persistence,blind,West Bengal,62136,633,0.16868806621585328,0.6968421684512287
+rf_A_s0,rf_A,blind,Kerala,49917,318,0.2558827300230854,0.9700831486128816
+rf_A_s0,rf_A,blind,Uttar Pradesh,77870,1092,0.41243134597950015,0.9628893307062836
+rf_A_s0,rf_A,blind,West Bengal,62136,633,0.3960595498832664,0.9770331397543663
+rf_A_s0__d12,rf_A_s0__d12,blind,Kerala,49917,318,0.2565977446855841,0.9682171772331077
+rf_A_s0__d12,rf_A_s0__d12,blind,Uttar Pradesh,77870,1092,0.4035730120033233,0.9613023853463822
+rf_A_s0__d12,rf_A_s0__d12,blind,West Bengal,62136,633,0.385372731929398,0.9769861083081037
+rf_A_s0__d20,rf_A_s0__d20,blind,Kerala,49917,318,0.2558827300230854,0.9700831486128816
+rf_A_s0__d20,rf_A_s0__d20,blind,Uttar Pradesh,77870,1092,0.41243134597950015,0.9628893307062836
+rf_A_s0__d20,rf_A_s0__d20,blind,West Bengal,62136,633,0.3960595498832664,0.9770331397543663
+rf_A_s1,rf_A,blind,Kerala,49917,318,0.2559077530275391,0.9696545540517973
+rf_A_s1,rf_A,blind,Uttar Pradesh,77870,1092,0.41125713086382837,0.9628384132473846
+rf_A_s1,rf_A,blind,West Bengal,62136,633,0.3944223684812139,0.9769578534796554
+rf_A_s2,rf_A,blind,Kerala,49917,318,0.2548355495293503,0.9694117260682243
+rf_A_s2,rf_A,blind,Uttar Pradesh,77870,1092,0.41040852481913015,0.96282461341137
+rf_A_s2,rf_A,blind,West Bengal,62136,633,0.39671719902577024,0.977143590447392
+rf_A_s3,rf_A,blind,Kerala,49917,318,0.2582660537546923,0.9704198743102069
+rf_A_s3,rf_A,blind,Uttar Pradesh,77870,1092,0.4102934844717996,0.9630198626037277
+rf_A_s3,rf_A,blind,West Bengal,62136,633,0.395574832337814,0.9769161904507978
+rf_A_s4,rf_A,blind,Kerala,49917,318,0.25840017733144005,0.9699108865681381
+rf_A_s4,rf_A,blind,Uttar Pradesh,77870,1092,0.409968778832509,0.9633906571603569
+rf_A_s4,rf_A,blind,West Bengal,62136,633,0.39409965177772943,0.9765980924548846
+xgboost_A_drop_fire_history_s0,xgboost_A_drop_fire_history,blind,Kerala,49917,318,0.06853248121451723,0.9387820509162729
+xgboost_A_drop_fire_history_s0,xgboost_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.20214283252648418,0.9379479996893187
+xgboost_A_drop_fire_history_s0,xgboost_A_drop_fire_history,blind,West Bengal,62136,633,0.17597338304798496,0.9526477330033786
+xgboost_A_drop_fire_history_s1,xgboost_A_drop_fire_history,blind,Kerala,49917,318,0.06545206248459433,0.9345156963881778
+xgboost_A_drop_fire_history_s1,xgboost_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.18690417988902705,0.9339855741738443
+xgboost_A_drop_fire_history_s1,xgboost_A_drop_fire_history,blind,West Bengal,62136,633,0.16843293197816958,0.9529538226972013
+xgboost_A_drop_fire_history_s2,xgboost_A_drop_fire_history,blind,Kerala,49917,318,0.06815417854528281,0.935270238380998
+xgboost_A_drop_fire_history_s2,xgboost_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.18965494605502978,0.9325076618311658
+xgboost_A_drop_fire_history_s2,xgboost_A_drop_fire_history,blind,West Bengal,62136,633,0.1715291161464381,0.9519218921467475
+xgboost_A_drop_fire_history_s3,xgboost_A_drop_fire_history,blind,Kerala,49917,318,0.07088353468656453,0.9379176340160033
+xgboost_A_drop_fire_history_s3,xgboost_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.18134602113286505,0.9321203838057626
+xgboost_A_drop_fire_history_s3,xgboost_A_drop_fire_history,blind,West Bengal,62136,633,0.17430561535695047,0.9533073291304018
+xgboost_A_drop_fire_history_s4,xgboost_A_drop_fire_history,blind,Kerala,49917,318,0.07571926799155874,0.9369910835846889
+xgboost_A_drop_fire_history_s4,xgboost_A_drop_fire_history,blind,Uttar Pradesh,77870,1092,0.1932417000650565,0.9326569016307614
+xgboost_A_drop_fire_history_s4,xgboost_A_drop_fire_history,blind,West Bengal,62136,633,0.1727818432630651,0.9526821268354626
+xgboost_A_drop_forecast_s0,xgboost_A_drop_forecast,blind,Kerala,49917,318,0.20815811187367803,0.9641195976638299
+xgboost_A_drop_forecast_s0,xgboost_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.39321068266380393,0.962739083053496
+xgboost_A_drop_forecast_s0,xgboost_A_drop_forecast,blind,West Bengal,62136,633,0.3934092637553894,0.974390183101306
+xgboost_A_drop_forecast_s1,xgboost_A_drop_forecast,blind,Kerala,49917,318,0.20818003815728098,0.964493793684469
+xgboost_A_drop_forecast_s1,xgboost_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3967752291106892,0.962407779643837
+xgboost_A_drop_forecast_s1,xgboost_A_drop_forecast,blind,West Bengal,62136,633,0.38821403862760306,0.9744000851343667
+xgboost_A_drop_forecast_s2,xgboost_A_drop_forecast,blind,Kerala,49917,318,0.19976376614630534,0.9638041748914343
+xgboost_A_drop_forecast_s2,xgboost_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3853108824241763,0.9622921508536529
+xgboost_A_drop_forecast_s2,xgboost_A_drop_forecast,blind,West Bengal,62136,633,0.38443215923655805,0.9740471694839428
+xgboost_A_drop_forecast_s3,xgboost_A_drop_forecast,blind,Kerala,49917,318,0.21351054727563168,0.9650867250950104
+xgboost_A_drop_forecast_s3,xgboost_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3991293232425303,0.9629954236547271
+xgboost_A_drop_forecast_s3,xgboost_A_drop_forecast,blind,West Bengal,62136,633,0.39193685855541593,0.9754805112449209
+xgboost_A_drop_forecast_s4,xgboost_A_drop_forecast,blind,Kerala,49917,318,0.2109377450975821,0.9644594934392697
+xgboost_A_drop_forecast_s4,xgboost_A_drop_forecast,blind,Uttar Pradesh,77870,1092,0.3981479505575642,0.9629919349321392
+xgboost_A_drop_forecast_s4,xgboost_A_drop_forecast,blind,West Bengal,62136,633,0.3974941796400471,0.9750528102008356
+xgboost_A_drop_landcover_terrain_people_s0,xgboost_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.2508909655128807,0.9686834957237549
+xgboost_A_drop_landcover_terrain_people_s0,xgboost_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.3986831074870616,0.9620273836455555
+xgboost_A_drop_landcover_terrain_people_s0,xgboost_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.4199950058129784,0.9774950291408743
+xgboost_A_drop_landcover_terrain_people_s1,xgboost_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.24092410282880122,0.9669449614841849
+xgboost_A_drop_landcover_terrain_people_s1,xgboost_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.40188772909007325,0.9618183167262983
+xgboost_A_drop_landcover_terrain_people_s1,xgboost_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.40552271220157865,0.9767645133944455
+xgboost_A_drop_landcover_terrain_people_s2,xgboost_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.25262525734159863,0.9684473249042225
+xgboost_A_drop_landcover_terrain_people_s2,xgboost_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.39713983340465797,0.961255189191577
+xgboost_A_drop_landcover_terrain_people_s2,xgboost_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.4045340624943,0.9772109910563451
+xgboost_A_drop_landcover_terrain_people_s3,xgboost_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.23195309911046352,0.9674347385528796
+xgboost_A_drop_landcover_terrain_people_s3,xgboost_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.39547209752591156,0.9614376881465111
+xgboost_A_drop_landcover_terrain_people_s3,xgboost_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.405246180940946,0.9762759360381578
+xgboost_A_drop_landcover_terrain_people_s4,xgboost_A_drop_landcover_terrain_people,blind,Kerala,49917,318,0.23330857004122071,0.9664958882184808
+xgboost_A_drop_landcover_terrain_people_s4,xgboost_A_drop_landcover_terrain_people,blind,Uttar Pradesh,77870,1092,0.39361044069494955,0.9616775094971974
+xgboost_A_drop_landcover_terrain_people_s4,xgboost_A_drop_landcover_terrain_people,blind,West Bengal,62136,633,0.4068397183644638,0.9767461220697463
+xgboost_A_drop_ndvi_s0,xgboost_A_drop_ndvi,blind,Kerala,49917,318,0.24271246774372815,0.971991535637828
+xgboost_A_drop_ndvi_s0,xgboost_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.404132749561192,0.9634511104609962
+xgboost_A_drop_ndvi_s0,xgboost_A_drop_ndvi,blind,West Bengal,62136,633,0.4160130732880128,0.9774573346311034
+xgboost_A_drop_ndvi_s1,xgboost_A_drop_ndvi,blind,Kerala,49917,318,0.2365327585366481,0.9713897597093468
+xgboost_A_drop_ndvi_s1,xgboost_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.3959219657073319,0.9627886467687583
+xgboost_A_drop_ndvi_s1,xgboost_A_drop_ndvi,blind,West Bengal,62136,633,0.4137760713688785,0.976589693064973
+xgboost_A_drop_ndvi_s2,xgboost_A_drop_ndvi,blind,Kerala,49917,318,0.24129409377025351,0.971618861254684
+xgboost_A_drop_ndvi_s2,xgboost_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.39209869148397847,0.9619465049177988
+xgboost_A_drop_ndvi_s2,xgboost_A_drop_ndvi,blind,West Bengal,62136,633,0.40316637093085667,0.9764599777161874
+xgboost_A_drop_ndvi_s3,xgboost_A_drop_ndvi,blind,Kerala,49917,318,0.24239660338293384,0.9712634320964829
+xgboost_A_drop_ndvi_s3,xgboost_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.394807598348422,0.9622760669479781
+xgboost_A_drop_ndvi_s3,xgboost_A_drop_ndvi,blind,West Bengal,62136,633,0.3952796540269101,0.9767340495521366
+xgboost_A_drop_ndvi_s4,xgboost_A_drop_ndvi,blind,Kerala,49917,318,0.2443495622558554,0.9724407991082189
+xgboost_A_drop_ndvi_s4,xgboost_A_drop_ndvi,blind,Uttar Pradesh,77870,1092,0.3973079822579365,0.962923848187205
+xgboost_A_drop_ndvi_s4,xgboost_A_drop_ndvi,blind,West Bengal,62136,633,0.40190063194576336,0.9761855719595383
+xgboost_A_drop_weather_s0,xgboost_A_drop_weather,blind,Kerala,49917,318,0.21908618264815913,0.9699594521648527
+xgboost_A_drop_weather_s0,xgboost_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.40458350977826096,0.9626106742077462
+xgboost_A_drop_weather_s0,xgboost_A_drop_weather,blind,West Bengal,62136,633,0.38008458744617307,0.977240093529647
+xgboost_A_drop_weather_s1,xgboost_A_drop_weather,blind,Kerala,49917,318,0.22694290995262853,0.9702062744468499
+xgboost_A_drop_weather_s1,xgboost_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.40347084174597264,0.9625416392459035
+xgboost_A_drop_weather_s1,xgboost_A_drop_weather,blind,West Bengal,62136,633,0.3783999135917884,0.9761222297713987
+xgboost_A_drop_weather_s2,xgboost_A_drop_weather,blind,Kerala,49917,318,0.21664831521459157,0.9690952888708321
+xgboost_A_drop_weather_s2,xgboost_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.40687497605128004,0.9621675766209357
+xgboost_A_drop_weather_s2,xgboost_A_drop_weather,blind,West Bengal,62136,633,0.365899828808284,0.9763123719237523
+xgboost_A_drop_weather_s3,xgboost_A_drop_weather,blind,Kerala,49917,318,0.22717188627213175,0.9701980322437521
+xgboost_A_drop_weather_s3,xgboost_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.40725670372115214,0.96327558298761
+xgboost_A_drop_weather_s3,xgboost_A_drop_weather,blind,West Bengal,62136,633,0.37110728552432903,0.9767529289147816
+xgboost_A_drop_weather_s4,xgboost_A_drop_weather,blind,Kerala,49917,318,0.21822617631980942,0.9696802950860872
+xgboost_A_drop_weather_s4,xgboost_A_drop_weather,blind,Uttar Pradesh,77870,1092,0.4046840693205347,0.9619817022523528
+xgboost_A_drop_weather_s4,xgboost_A_drop_weather,blind,West Bengal,62136,633,0.37085403119188665,0.9762977950008936
+xgboost_A_s0,xgboost_A,blind,Kerala,49917,318,0.24537050452964557,0.9705857961987213
+xgboost_A_s0,xgboost_A,blind,Uttar Pradesh,77870,1092,0.40717662705963364,0.9637127706187203
+xgboost_A_s0,xgboost_A,blind,West Bengal,62136,633,0.3943092927860877,0.9762007268220698
+xgboost_A_s0__d4,xgboost_A_s0__d4,blind,Kerala,49917,318,0.24494003032878897,0.9690718302927847
+xgboost_A_s0__d4,xgboost_A_s0__d4,blind,Uttar Pradesh,77870,1092,0.4077118096086217,0.9638495583623095
+xgboost_A_s0__d4,xgboost_A_s0__d4,blind,West Bengal,62136,633,0.4135511294139912,0.9782529520708978
+xgboost_A_s0__d6,xgboost_A_s0__d6,blind,Kerala,49917,318,0.24537050452964557,0.9705857961987213
+xgboost_A_s0__d6,xgboost_A_s0__d6,blind,Uttar Pradesh,77870,1092,0.40717662705963364,0.9637127706187203
+xgboost_A_s0__d6,xgboost_A_s0__d6,blind,West Bengal,62136,633,0.3943092927860877,0.9762007268220698
+xgboost_A_s0__d8,xgboost_A_s0__d8,blind,Kerala,49917,318,0.23235371387510534,0.9701469939861083
+xgboost_A_s0__d8,xgboost_A_s0__d8,blind,Uttar Pradesh,77870,1092,0.4005486830393642,0.9624024779782289
+xgboost_A_s0__d8,xgboost_A_s0__d8,blind,West Bengal,62136,633,0.3870578228483419,0.9749568208427342
+xgboost_A_s1,xgboost_A,blind,Kerala,49917,318,0.23721958763217607,0.9691466758370685
+xgboost_A_s1,xgboost_A,blind,Uttar Pradesh,77870,1092,0.4006416908930091,0.9626296385459167
+xgboost_A_s1,xgboost_A,blind,West Bengal,62136,633,0.39704604690084794,0.9763312898157089
+xgboost_A_s2,xgboost_A,blind,Kerala,49917,318,0.2305103075684282,0.9703347260120506
+xgboost_A_s2,xgboost_A,blind,Uttar Pradesh,77870,1092,0.4028175610503163,0.9626852732348447
+xgboost_A_s2,xgboost_A,blind,West Bengal,62136,633,0.39824517388890246,0.9756823791510806
+xgboost_A_s3,xgboost_A,blind,Kerala,49917,318,0.229452212207063,0.9709741307677511
+xgboost_A_s3,xgboost_A,blind,Uttar Pradesh,77870,1092,0.40185247816409253,0.9634970363629615
+xgboost_A_s3,xgboost_A,blind,West Bengal,62136,633,0.4023148116194747,0.9754958715971137
+xgboost_A_s4,xgboost_A,blind,Kerala,49917,318,0.22706637567540708,0.9698020260856851
+xgboost_A_s4,xgboost_A,blind,Uttar Pradesh,77870,1092,0.3978902128333059,0.9630857487697989
+xgboost_A_s4,xgboost_A,blind,West Bengal,62136,633,0.41358151586319225,0.9761611957484497
+xgboost_only_fire_history_s0,xgboost_only_fire_history,blind,Kerala,49917,318,0.20806497644223906,0.9498060926618904
+xgboost_only_fire_history_s0,xgboost_only_fire_history,blind,Uttar Pradesh,77870,1092,0.3652036028940199,0.9556576083445759
+xgboost_only_fire_history_s0,xgboost_only_fire_history,blind,West Bengal,62136,633,0.32531545177946664,0.9685230551308983
+xgboost_only_fire_history_s1,xgboost_only_fire_history,blind,Kerala,49917,318,0.21059144263029514,0.9535472603487517
+xgboost_only_fire_history_s1,xgboost_only_fire_history,blind,Uttar Pradesh,77870,1092,0.37336000185659357,0.9565098406547129
+xgboost_only_fire_history_s1,xgboost_only_fire_history,blind,West Bengal,62136,633,0.3318110482594337,0.9711033502803226
+xgboost_only_fire_history_s2,xgboost_only_fire_history,blind,Kerala,49917,318,0.20735844344852306,0.952934642753119
+xgboost_only_fire_history_s2,xgboost_only_fire_history,blind,Uttar Pradesh,77870,1092,0.37300591788151877,0.9559138117823549
+xgboost_only_fire_history_s2,xgboost_only_fire_history,blind,West Bengal,62136,633,0.3316205730782548,0.9701014725928547
+xgboost_only_fire_history_s3,xgboost_only_fire_history,blind,Kerala,49917,318,0.20633011797888304,0.953402419479699
+xgboost_only_fire_history_s3,xgboost_only_fire_history,blind,Uttar Pradesh,77870,1092,0.37219653770129196,0.9557256831622536
+xgboost_only_fire_history_s3,xgboost_only_fire_history,blind,West Bengal,62136,633,0.3321526665594935,0.969601259384488
+xgboost_only_fire_history_s4,xgboost_only_fire_history,blind,Kerala,49917,318,0.20769668419850323,0.9529109939703846
+xgboost_only_fire_history_s4,xgboost_only_fire_history,blind,Uttar Pradesh,77870,1092,0.3728405031443667,0.9561642961005409
+xgboost_only_fire_history_s4,xgboost_only_fire_history,blind,West Bengal,62136,633,0.3312275342033809,0.9702425797747467

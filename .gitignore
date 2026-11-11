@@ -1,0 +1,14 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# run outputs, stores and bundles stay out of git (data lives in the research bucket)
+runs*/
+live_state*/
+bundle_inputs/
+pilot_archive/
+*.npy
+*.npz
+*.pt
+*.pkl

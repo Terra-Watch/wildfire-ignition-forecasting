@@ -1,0 +1,19 @@
+seed 1   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 1 c2: 100,241 params, train 100,000 (0.0604 pos), val 100,000 (0.0585), pos weight 3.94, device mps
+seed 1 best val AUPRC 0.4475
+seed 1   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 1 c1: 110,769 params, train 100,000 (0.0604 pos), val 100,000 (0.0585), pos weight 3.94, device mps
+seed 1 best val AUPRC 0.4239
+seed 1   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 1 convlstm: 106,801 params, train 100,000 (0.0604 pos), val 100,000 (0.0585), pos weight 3.94, device mps
+seed 1 best val AUPRC 0.4293
+seed 2   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 2 c2: 100,241 params, train 100,000 (0.0595 pos), val 100,000 (0.0585), pos weight 3.98, device mps
+seed 2 best val AUPRC 0.4489
+seed 2   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 2 c1: 110,769 params, train 100,000 (0.0595 pos), val 100,000 (0.0585), pos weight 3.98, device mps
+seed 2 best val AUPRC 0.424
+seed 2   ty, vy = torch.tensor(tr.y_forest.values, dtype=torch.float32), va.y_forest.values; w = float(np.sqrt((ty == 0).sum() / max(1, ty.sum()))); print(f"{a.model}: {npar:,} params, train {len(tr):,} ({ty.mean():.4f} pos), val {len(va):,} ({vy.mean():.4f}), pos weight {w:.2f}, device {dev}", flush=True)
+seed 2 convlstm: 106,801 params, train 100,000 (0.0595 pos), val 100,000 (0.0585), pos weight 3.98, device mps
+seed 2 best val AUPRC 0.4309
+ALL DONE

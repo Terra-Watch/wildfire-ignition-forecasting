@@ -1,0 +1,13 @@
+{
+ "run_id": "ref_persistence",
+ "model": "persistence",
+ "variant": "persistence",
+ "seed": 0,
+ "split": "A",
+ "label": "y_forest",
+ "train_rows": 12636929,
+ "val_rows": 2586404,
+ "complete": true,
+ "no_training": true,
+ "note": "persistence"
+}

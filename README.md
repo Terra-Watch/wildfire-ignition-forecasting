@@ -12,7 +12,7 @@ The data comes from the sibling folder `../terrawatch-datasets/dataset/` (overri
 | `scripts/cloud/` | shell jobs for the cloud machines (training, evaluation, blind scoring, extras) |
 | `scripts/live/` | building the live bundle and stores for the dashboard (see its README) |
 | `notebooks/` | numbered notebooks that explain the data, `00` to `08` |
-| `results/` | the final tables: `all_runs.csv`, `per_state.csv`, `paired.csv`, `seeds.csv`, `refs_only/` |
+| `results/` | the final study tables: `all_runs.csv`, `per_state.csv`, `paired.csv`, `seeds.csv`, `intervals.csv`, `freeze.json` (hash of the 131 runs), `blind/` (blind states, scored once), `extras/` (permutation importance, land-cover split), `run_manifests/` (manifest of every run) |
 | `tests/` | unit tests |
 | `runs/`, `runs_local/`, `live_state*/`, `bundle_inputs/` | run outputs and live state (not tracked) |
 

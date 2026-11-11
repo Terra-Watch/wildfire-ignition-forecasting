@@ -1,0 +1,51 @@
+{
+ "run_id": "xgboost_only_fire_history_s0",
+ "model": "xgboost",
+ "variant": "xgboost__only_fire_history_only",
+ "seed": 0,
+ "split": "A",
+ "hp": {
+  "max_depth": 6,
+  "tree_method": "hist",
+  "device": "cpu",
+  "learning_rate": 0.1,
+  "subsample": 1.0,
+  "colsample_bytree": 0.8,
+  "scale_pos_weight": 7.479667108368016,
+  "objective": "binary:logistic",
+  "eval_metric": "aucpr",
+  "nthread": 16,
+  "seed": 0
+ },
+ "n_params": 12,
+ "epochs_or_trees": 12,
+ "best_val_auprc": 0.41623768857254745,
+ "channels": [
+  "fire_days_7d",
+  "fire_days_30d",
+  "days_since_last_fire",
+  "has_history",
+  "doy_sin",
+  "doy_cos",
+  "fire_days_7d_f",
+  "fire_days_30d_f",
+  "days_since_last_fire_f"
+ ],
+ "neighbour_features": false,
+ "label": "y_forest",
+ "train_rows": 12636929,
+ "val_rows": 2586404,
+ "positive_weight": 7.479667108368016,
+ "wallclock_s": 33,
+ "machine": "ml-clean-cpu Linux-6.1.0-54-cloud-amd64-x86_64-with-glibc2.36 device=cpu",
+ "started": "2026-11-05T07:35:41",
+ "ended": "2026-11-05T07:36:15",
+ "script_sha256": "4410eba6f6074f9889dcc27d5e7c8a57fd58410b05961590c201fe6858e948bb",
+ "libraries": {
+  "python": "3.11.2",
+  "numpy": "2.4.6",
+  "pandas": "3.1.1"
+ },
+ "tiny": false,
+ "complete": true
+}

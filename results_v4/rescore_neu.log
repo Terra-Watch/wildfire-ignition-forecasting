@@ -1,6 +1,0 @@
-{'run': 'mlp_A_s0', 'model': 'mlp', 'rows': 100000, 'max_abs_diff': 0.008709520101547241, 'mean_abs_diff': 0.00020111395299481855, 'auprc_saved': 0.3844820940308674, 'auprc_rescored': 0.38491594405085816}
-{'run': 'lstm_A_s0', 'model': 'lstm', 'rows': 100000, 'max_abs_diff': 0.0017424523830413818, 'mean_abs_diff': 0.00010243556762560729, 'auprc_saved': 0.41332999104011015, 'auprc_rescored': 0.4138126719908309}
-{'run': 'cnn_A_s0', 'model': 'cnn', 'rows': 100000, 'max_abs_diff': 0.0046596527099609375, 'mean_abs_diff': 0.00018588329199386067, 'auprc_saved': 0.35424653154422847, 'auprc_rescored': 0.3544475569172815}
-{'run': 'convlstm_A_s0', 'model': 'convlstm', 'rows': 100000, 'max_abs_diff': 0.004819989204406738, 'mean_abs_diff': 0.0001610426019455784, 'auprc_saved': 0.3699394705334176, 'auprc_rescored': 0.37027603392656544}
-{'run': 'c1_A_s0', 'model': 'c1', 'rows': 100000, 'max_abs_diff': 0.005405247211456299, 'mean_abs_diff': 0.00015484472980536622, 'auprc_saved': 0.3655316324258462, 'auprc_rescored': 0.3659777163989249}
-{'run': 'c2_A_s0', 'model': 'c2', 'rows': 100000, 'max_abs_diff': 0.003666818141937256, 'mean_abs_diff': 0.00016832466403700105, 'auprc_saved': 0.37279990742265035, 'auprc_rescored': 0.3731358022504631}

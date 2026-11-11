@@ -1,5 +1,5 @@
 """Fire-history parity: the live code must reproduce the dataset cube and the stored footprint shares."""
-import os, sys, unittest
+import json, os, sys, unittest
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "website", "forecast", "live"))
 import fire  # noqa: E402
@@ -23,7 +23,10 @@ class FireParity(unittest.TestCase):
 
     def test_channels_match_cube(self):
         cells = pd.read_parquet(f"{CUBE}/cells.parquet"); cube = np.load(f"{CUBE}/cube.npy", mmap_mode="r")
-        det = pd.concat([pd.read_parquet(f"{DATA}/detections_forest.parquet"), pd.read_parquet(f"{DATA}/detections_new.parquet")]); det = det[det.cell_id.isin(set(cells.cell_id))]
+        det = pd.concat([pd.read_parquet(f"{DATA}/detections_forest.parquet"), pd.read_parquet(f"{DATA}/detections_new.parquet")], ignore_index=True)
+        A = f"{DATA}/../audit/false_detections"; hide = json.load(open(f"{A}/classifier_report_v2.json"))["thresholds_from_2019_2023"]["hide_keeps_98pct_of_confirmed"]
+        det["p"] = pd.read_parquet(f"{A}/detection_scores_all.parquet").sort_values("rid").p_scar.values   # the final data drops detections the quality classifier flags
+        det = det[(det.p >= hide) & det.cell_id.isin(set(cells.cell_id))]
         store = pd.DataFrame({"cell_id": det.cell_id.values, "date": det.date_utc.dt.normalize().values, "forest": det.bnd333.values >= 0.5}).groupby(["cell_id", "date"], as_index=False).forest.max(); t = 2250
         out = fire.fire_channels(store, cells.cell_id.values, pd.Timestamp("2019-01-01") + pd.Timedelta(days=t))
         names = [str(n) for n in np.load(f"{DATA}/scaler_forest_AG_train.npz", allow_pickle=True)["names"]]

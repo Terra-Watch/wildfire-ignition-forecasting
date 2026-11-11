@@ -5,7 +5,7 @@ import argparse, json, os
 import numpy as np, pandas as pd
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
-V4 = f"{ROOT}/wildfire-dataset"; DATA = f"{V4}/dataset"; A = f"{V4}/audit/false_detections"; MIN_BND = 0.5
+V4 = f"{ROOT}/terrawatch-datasets"; DATA = f"{V4}/dataset"; A = f"{V4}/audit/false_detections"; MIN_BND = 0.5
 ap = argparse.ArgumentParser(); ap.add_argument("--cells", required=True); ap.add_argument("--out", required=True); a = ap.parse_args()
 ids = set(pd.read_parquet(a.cells).cell_id)
 old = pd.read_parquet(f"{DATA}/detections_forest.parquet"); new = pd.read_parquet(f"{DATA}/detections_new.parquet")

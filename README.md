@@ -1,7 +1,7 @@
 # wildfire-ignition-forecasting
 
 Next-day forest fire detection forecasting for Indian forest cells: models, evaluation protocol and live scoring.
-The data comes from the sibling folder `../wildfire-dataset/dataset/` (override with `WILDFIRE_DATA`).
+The data comes from the sibling folder `../terrawatch-datasets/dataset/` (override with `WILDFIRE_DATA`).
 
 ## Layout
 

@@ -7,7 +7,7 @@ Daily sequence for forecast day d (the forecast is for d + 1), run after the 06 
 1. `make_bundle.py` (once per model release): builds the bundle and its golden test from finished study runs.
 2. Fire history: extend the store with FIRMS rows (`fire.fetch_firms` + `fire.daily_flags`), starting from `fire.store_from_dataset`. The store was back-filled from the dataset's last detections (3 Jan 2026) to 1 Nov 2026; `refresh_fire.py` extends it daily.
 3. `refresh_weather.py --day d --cells BUNDLE/cells.parquet --store W.parquet` (Open-Meteo; see its header for rate limits).
-4. `gfs_fetch.py --day YYYYMMDD ...` in the environment that has eccodes (`wildfire-dataset/.venv-gfs`).
+4. `gfs_fetch.py --day YYYYMMDD ...` in the environment that has eccodes (`terrawatch-datasets/.venv-gfs`).
 5. `score_daily.py --day d --bundle B --weather W --fire F --gfs gfs_YYYYMMDD.npz --out RUN` writes run.json, scores.parquet and scores.csv.
 6. `website/backend`: `python -m inference.import_live_run RUN` loads the run; the API serves it through `/api/risk/geojson` and `/api/risk/status`.
 

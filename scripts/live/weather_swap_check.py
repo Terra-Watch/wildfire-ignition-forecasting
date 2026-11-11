@@ -8,7 +8,7 @@ import numpy as np, pandas as pd, xgboost as xgb
 from scipy.stats import spearmanr
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
-DATA = f"{ROOT}/wildfire-dataset/dataset"
+DATA = f"{ROOT}/terrawatch-datasets/dataset"
 ap = argparse.ArgumentParser(); ap.add_argument("--probe", required=True); ap.add_argument("--model", required=True); ap.add_argument("--start", required=True); a = ap.parse_args()
 z = np.load(a.probe); truth_w, arch, fcst, cid = z["truth"], z["archive"], z["forecast"], z["cell_id"]
 nd = truth_w.shape[0]

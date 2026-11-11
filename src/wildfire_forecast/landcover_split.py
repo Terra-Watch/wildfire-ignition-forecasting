@@ -5,7 +5,7 @@ import numpy as np, pandas as pd
 from sklearn.metrics import average_precision_score as auprc, roc_auc_score as auroc
 
 ap = argparse.ArgumentParser(); ap.add_argument("--runs", required=True); ap.add_argument("--out", required=True); ap.add_argument("--split", default="test"); a = ap.parse_args()
-D = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "wildfire-dataset", "dataset", "forest_unseen_gfs" if a.split == "blind" else "forest_all_gfs")      # the blind states have their own cells
+D = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "terrawatch-datasets", "dataset", "forest_unseen_gfs" if a.split == "blind" else "forest_all_gfs")      # the blind states have their own cells
 c = pd.read_parquet(f"{D}/cells.parquet"); cls = np.where(c.crop >= 0.5, "crop_dominated", np.where(c.forest_land_frac >= 0.5, "forest_dominated", "other"))
 GROUPS = ["xgboost_A", "lstm_A", "rf_A", "c2_A", "c1_A", "convlstm_A", "mlp_A", "cnn_A", "lr_A", "convlstm_cell_A", "c2_cell_A", "ref_climatology", "ref_persistence", "ref_fwi"]; rows = []
 for g in GROUPS:

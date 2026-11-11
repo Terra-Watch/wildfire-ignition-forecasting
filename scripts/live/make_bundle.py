@@ -7,7 +7,7 @@ import argparse, glob, json, os, shutil
 import numpy as np, pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, "../../.."))
-DATA = os.environ.get("WILDFIRE_DATA") or f"{ROOT}/wildfire-dataset/dataset"      # the clean data root for the clean bundle
+DATA = os.environ.get("WILDFIRE_DATA") or f"{ROOT}/terrawatch-datasets/dataset"      # the clean data root for the clean bundle
 from bundle import sha256, Bundle  # noqa: E402
 
 STATIC = ["forest_fraction", "shrub_fraction", "grass_fraction", "crop_fraction", "elevation", "slope", "population_density", "distance_to_roads_km", "forest_land_frac", "nonforest_land_ring8", "crop_ring8"]

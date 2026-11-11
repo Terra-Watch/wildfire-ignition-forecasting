@@ -4,7 +4,7 @@ import numpy as np, pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "website", "forecast", "live"))
 import fire  # noqa: E402
 
-DATA = os.path.join(os.path.dirname(__file__), "..", "..", "wildfire-dataset", "dataset")
+DATA = os.path.join(os.path.dirname(__file__), "..", "..", "terrawatch-datasets", "dataset")
 CUBE = f"{DATA}/forest_all_gfs"
 HAVE = os.path.exists(f"{CUBE}/cube.npy")
 

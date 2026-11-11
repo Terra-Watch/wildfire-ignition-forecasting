@@ -5,7 +5,7 @@ import argparse, os
 import numpy as np, pandas as pd
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
-DATA = f"{ROOT}/wildfire-dataset/dataset"; MIN_BND = 0.5
+DATA = f"{ROOT}/terrawatch-datasets/dataset"; MIN_BND = 0.5
 ap = argparse.ArgumentParser(); ap.add_argument("--cells", required=True); ap.add_argument("--out", required=True); a = ap.parse_args()
 ids = set(pd.read_parquet(a.cells).cell_id)
 det = pd.concat([pd.read_parquet(f"{DATA}/detections_forest.parquet"), pd.read_parquet(f"{DATA}/detections_new.parquet")]); det = det[det.cell_id.isin(ids)]

@@ -9,7 +9,7 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from bundle import Bundle  # noqa: E402
-ROOT = os.path.abspath(os.path.join(HERE, "../../..")); D = f"{ROOT}/wildfire-dataset/dataset/forest_all_gfs"
+ROOT = os.path.abspath(os.path.join(HERE, "../../..")); D = f"{ROOT}/terrawatch-datasets/dataset/forest_all_gfs"
 
 ap = argparse.ArgumentParser(); ap.add_argument("--bundle", required=True); ap.add_argument("--out", required=True); a = ap.parse_args()
 b = Bundle(a.bundle); names = b.names; iN, iA = names.index("ndvi"), names.index("ndvi_age_days")

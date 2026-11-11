@@ -6,7 +6,7 @@ from sklearn.isotonic import IsotonicRegression
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 
 ap = argparse.ArgumentParser(); ap.add_argument("--runs", required=True); ap.add_argument("--out", required=True); ap.add_argument("--date", default=""); ap.add_argument("--group", default="xgboost_A"); a = ap.parse_args()
-D = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "wildfire-dataset", "dataset", "forest_all_gfs"); cells = pd.read_parquet(f"{D}/cells.parquet")
+D = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "terrawatch-datasets", "dataset", "forest_all_gfs"); cells = pd.read_parquet(f"{D}/cells.parquet")
 dirs = sorted(glob.glob(f"{a.runs}/{a.group}_s[0-9]")); tp, vp = [], []
 for d in dirs:
     v = pd.read_parquet(f"{d}/predictions/validation.parquet", columns=["y", "p"]); t = pd.read_parquet(f"{d}/predictions/test.parquet")

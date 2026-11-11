@@ -14,7 +14,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "../../.."))
 sys.path.insert(0, HERE)
 import weather as W  # same code the daily job uses
 
-DATA = f"{ROOT}/wildfire-dataset/dataset/forest_all_gfs"
+DATA = f"{ROOT}/terrawatch-datasets/dataset/forest_all_gfs"
 D0 = pd.Timestamp("2019-01-01")
 
 

@@ -14,7 +14,7 @@ import argparse, hashlib, json, os, platform, sys, time
 import numpy as np, pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA = os.environ.get("WILDFIRE_DATA") or os.path.join(os.path.dirname(ROOT), "wildfire-dataset", "dataset")
+DATA = os.environ.get("WILDFIRE_DATA") or os.path.join(os.path.dirname(ROOT), "terrawatch-datasets", "dataset")
 DATASET = "forest_all_gfs"
 FIRE = ["fire_days_7d", "fire_days_30d", "days_since_last_fire", "has_history", "fire_days_7d_f", "fire_days_30d_f", "days_since_last_fire_f"]
 GROUPS = {

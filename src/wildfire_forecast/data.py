@@ -2,7 +2,7 @@
 import os
 import numpy as np, pandas as pd
 
-DATA = os.environ.get("WILDFIRE_DATA") or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "wildfire-dataset", "dataset")   # a VM sets WILDFIRE_DATA
+DATA = os.environ.get("WILDFIRE_DATA") or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "terrawatch-datasets", "dataset")   # a VM sets WILDFIRE_DATA
 GROUPS = ("six", "D1", "D2", "south", "himachal", "northeast")      # leave-one-group-out groups = the `set` column
 COLS = ["cell_idx", "t", "date_t", "label_date", "state", "set", "split_t", "y_forest", "y_any", "ambiguous", "valid_primary", "valid_alt", "season_flag", "new_ignition_forest", "had_det_t_forest"]
 

@@ -21,3 +21,15 @@ print(t.groupby("state").apply(lambda d: pd.Series({"fires": int(d.y.sum()), "pr
 dd = t.groupby(["state", "date"]).agg(obs=("y", "sum"), exp=("q", "sum")).reset_index()
 print("\nDaily expected vs observed fire cells per state, median correlation over states:", round(dd.groupby("state").apply(lambda d: d.obs.corr(d.exp)).median(), 3))
 print("New-fire cell-days (no detection in the cell on day t):", int(t[t.had_det_t == 0].y.sum()), "of", int(t.y.sum()))
+
+# Relative economic value (cost-loss model): 0 = no better than always or never acting, 1 = perfect.
+def rev(y, s, a):
+    act = s >= a; H = (act & (y == 1)).sum(); F = (act & (y == 0)).sum(); M = ((~act) & (y == 1)).sum(); o = y.mean()
+    e_f = (a * (H + F) + M) / len(y); e_c = min(a, o); return (e_c - e_f) / (e_c - a * o)
+print("\nRelative value at cost-loss ratios (calibrated chance):", {a: round(rev(t.y.values, t.q.values, a), 3) for a in (0.02, 0.05, 0.1, 0.2, 0.3, 0.5)})
+# Area level: blocks of 0.5 degree (about a forest range or a small division). Chance of at least one fire tomorrow, assuming independent cells.
+from sklearn.metrics import average_precision_score, roc_auc_score
+cid = pd.read_parquet(f"{a.run}/predictions/test.parquet", columns=["cell_id"]).cell_id.values
+t["blk"] = (np.floor((cid // 1000) / 10.0 / 0.5)).astype(int) * 1000 + (np.floor((cid % 1000) / 10.0 / 0.5)).astype(int)
+A = t.groupby(["blk", "date"]).agg(obs=("y", "sum"), pany=("q", lambda s: 1 - np.prod(1 - s.values))).reset_index(); A["any"] = (A.obs > 0).astype(int)
+print(f"Area level (0.5 degree blocks): at least one fire tomorrow, prevalence {A['any'].mean():.3f}, AUROC {roc_auc_score(A['any'], A.pany):.3f}, AP {average_precision_score(A['any'], A.pany):.3f}")

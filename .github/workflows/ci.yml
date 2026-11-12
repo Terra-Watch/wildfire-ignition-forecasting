@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: make check PY=python
@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { path: wildfire-ignition-forecasting }
       # Two tests import the live scoring code of the dashboard repository, which sits next to this one as ../website.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { repository: Terra-Watch/dashboard, path: website }
       - uses: actions/setup-python@v5
         with:

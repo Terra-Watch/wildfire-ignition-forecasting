@@ -24,12 +24,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { path: wildfire-ignition-forecasting }
+      # Two tests import the live scoring code of the dashboard repository, which sits next to this one as ../website.
+      - uses: actions/checkout@v4
+        with: { repository: Terra-Watch/dashboard, path: website }
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: wildfire-ignition-forecasting/pyproject.toml
       # CPU-only torch keeps the install small. Tests that need the dataset or a built bundle skip themselves.
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install numpy pandas scikit-learn xgboost pyarrow scipy PyYAML joblib matplotlib
+      - run: pip install numpy pandas scikit-learn xgboost pyarrow scipy PyYAML joblib matplotlib pytest
       - run: make test PY=python
+        working-directory: wildfire-ignition-forecasting

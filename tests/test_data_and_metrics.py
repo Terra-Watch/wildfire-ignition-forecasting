@@ -1,11 +1,17 @@
 import os, sys, unittest
 import numpy as np
+import pytest
 from wildfire_forecast import data, metrics
+
+# The dataset is not in git: the tests that read it skip on a machine that does not have it (a CI runner, a fresh clone).
+HAVE_DATA = os.path.exists(os.path.join(data.DATA, "forest_all_gfs", "rows.parquet"))
+needs_data = unittest.skipUnless(HAVE_DATA, "dataset not on this machine")
 
 class T(unittest.TestCase):
     def test_unseen_guard(self):
         os.environ.pop("WILDFIRE_FINAL", None); self.assertRaises(PermissionError, data.load_unseen)
 
+    @needs_data
     def test_train_has_no_blind_states_and_counts_match_audit(self):
         import pandas as pd
         d = data.load_train(); self.assertFalse({"Uttar Pradesh", "West Bengal", "Kerala"} & set(d.rows.state))
@@ -13,6 +19,7 @@ class T(unittest.TestCase):
         r = d.rows[d.rows.valid_primary]; got = r.groupby(["state", "split_t"]).y_forest.agg(rows="size", positives="sum").reset_index()
         m = got.merge(aud, on=["state", "split_t"], suffixes=("", "_a")); self.assertEqual(len(m), len(got)); self.assertTrue((m.rows == m.rows_a).all() and (m.positives <= m.positives_a).all())   # removing false detections can only remove positives
 
+    @needs_data
     def test_tabular_matches_cube(self):
         d = data.load_train(); r = d.select("train", ["D2"]).head(50); x = d.tabular(r); s = r.iloc[7]
         ref = np.nan_to_num((np.asarray(d.cube[s.t, s.cell_idx]) - d.mean) / d.sd); self.assertTrue(np.allclose(x[7], ref)); self.assertEqual(x.shape, (50, 41))
@@ -26,6 +33,7 @@ class T(unittest.TestCase):
 if __name__ == "__main__": unittest.main()
 
 
+@pytest.mark.skipif(not HAVE_DATA, reason="dataset not on this machine")
 def test_gfs_dataset_has_41_channels_and_the_first_33_are_the_base_channels():
     a, b = data.load_train(), data.load_train(gfs=True)
     assert b.cube.shape[:2] == a.cube.shape[:2] and b.cube.shape[2] == 41 and len(b.mean) == 41 and len(b.sd) == 41

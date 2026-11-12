@@ -13,7 +13,7 @@ for tok in a.dates:
     if ":" in tok: days += [str(d.date()) for d in pd.date_range(*tok.split(":"))]
     else: days.append(tok)
 days = sorted(set(days)); levels = AF.load_levels(f"{ROOT}/results/forecast_levels.json"); places = pd.read_parquet(f"{ROOT}/results/named_places.parquet")
-cells = pd.read_parquet(f"{ROOT}/live_state_clean/bundle/cells.parquet", columns=["cell_id", "state", "lat", "lon"])
+cells = pd.read_parquet(f"{ROOT}/live_state_clean/bundle/cells.parquet", columns=["cell_id", "state", "lat", "lon", "forest_land_frac"])
 seeds = [f"{ROOT}/runs/xgboost_A_s{k}/predictions/test.parquet" for k in range(5)]
 want = sorted({str((pd.Timestamp(d) - pd.Timedelta(days=1)).date()) for d in days} | set(days))          # issue days = forecast date - 1; keep the day before too, for "yesterday"
 issue_days = sorted({(pd.Timestamp(d) - pd.Timedelta(days=1)) for d in days} | {(pd.Timestamp(d) - pd.Timedelta(days=2)) for d in days})
@@ -25,7 +25,7 @@ outdir = f"{a.out}/area_forecast"; os.makedirs(outdir, exist_ok=True); done = {}
 for fd in sorted({str((d + pd.Timedelta(days=1)).date()) for d in issue_days}):                          # every forecast date we can build, in order, so "yesterday" is available
     d0 = pd.Timestamp(fd) - pd.Timedelta(days=1); g = base[base.date == d0]
     if g.empty: continue
-    sc = g.merge(cells, on="cell_id", how="inner")[["cell_id", "state", "lat", "lon", "score"]]; det = g[g.y == 1][["cell_id"]]
+    sc = g.merge(cells, on="cell_id", how="inner")[["cell_id", "state", "lat", "lon", "score", "forest_land_frac"]]; det = g[g.y == 1][["cell_id"]]
     prev = done.get(str((pd.Timestamp(fd) - pd.Timedelta(days=1)).date()))
     out = AF.build(fd, sc, levels, places=places, previous=prev, detected=det, mode="replay", model={"id": "xgboost-nextday-forest", "version": "2026-11", "seeds": 5}, issued_at=f"{d0.date()}T05:00:00+00:00")
     done[fd] = out
